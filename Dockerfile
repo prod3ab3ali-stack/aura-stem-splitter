@@ -4,6 +4,7 @@ FROM python:3.9
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsndfile1 \
+    dnsutils \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory

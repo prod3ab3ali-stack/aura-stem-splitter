@@ -580,11 +580,12 @@ def start_youtube_job(
                     {'key': 'FFmpegExtractAudio', 'preferredcodec': 'wav', 'preferredquality': '192'},
                     # Removed EmbedThumbnail due to container incompatibility with WAV
                 ],
-                'noplaylist': True, 'nocheckcertificate': True,
-                'extractor_args': {'youtube': {'player_client': ['android', 'ios']}},
-                'quiet': True, 'no_warnings': True, 'progress_hooks': [ph],
-                'force_ipv4': True,
-                'source_address': '0.0.0.0' # Force IPv4 binding
+                'source_address': '0.0.0.0', # Force IPv4 binding
+                'socket_timeout': 15,
+                'nocheckcertificate': True,
+                'ignoreerrors': True,
+                'no_warnings': True,
+                'quiet': True,
             }
             
             meta_title = "Youtube Download"
