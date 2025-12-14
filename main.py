@@ -384,15 +384,24 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
         import static_ffmpeg
         static_ffmpeg.add_paths()
         current_env = os.environ.copy()
+        # LIMIT THREADS to prevent UI freeze
+        current_env["OMP_NUM_THREADS"] = "1"
+        current_env["MKL_NUM_THREADS"] = "1"
+        current_env["dthreads"] = "1" 
         
         # PERFORMANCE FIX: "shifts=1" is 4x faster than "shifts=4". 
         # Quality is still excellent with htdemucs_6s.
-        cmd = [
+        
+        # Use 'nice' to prevent starvation of the Web Server
+        cmd_prefix = ["nice", "-n", "15"] if sys.platform == "linux" else []
+        
+        cmd = cmd_prefix + [
             sys.executable, "-m", "demucs.separate",
             "-n", "htdemucs_6s",
             "--shifts", "1",  # SPEED OPTIMIZATION
             "--overlap", "0.25", # BALANCED
             "--float32",
+            "-j", "1", # Force single job within demucs
             "-o", str(OUTPUT_DIR),
             str(input_path)
         ]
