@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AURA | Audio Separation Engine</title>
+
+    <!-- Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="style.css?v=4.1">
+</head>
+
+<body>
+
+    <!-- Loading Curtain -->
+    <div id="loader-curtain">
+        <div class="loader-logo">AURA</div>
+        <div class="loader-bar">
+            <div class="bar-fill"></div>
+        </div>
+    </div>
+
+    <!-- Mouse Trail -->
+    <div id="cursor-follower"></div>
+
+    <!-- LANDING VIEW -->
+    <main id="view-landing" class="view active">
+
+        <!-- Navigation (Moved inside Landing View) -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="#" class="brand-logo" onclick="switchView('landing')">
+                    <span class="logo-mark">///</span> AURA
+                </a>
+
+                <div class="nav-desktop">
+                    <a href="#features">Features</a>
+                    <a href="#demo">Listen</a>
+                    <a href="#pricing">Pricing</a>
+                </div>
+
+                <div class="nav-actions">
+                    <button class="theme-toggle" id="theme-btn" aria-label="Toggle Theme">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <div class="auth-buttons">
+                        <button class="btn-text" onclick="toggleAuth('login')">Log In</button>
+                        <button class="btn-pill" onclick="toggleAuth('signup')">Try for Free</button>
+                    </div>
+                    <button class="mobile-menu-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div class="mobile-menu">
+                <a href="#features">Features</a>
+                <a href="#demo">Live Demo</a>
+                <a href="#pricing">Plans</a>
+                <hr>
+                <a href="#" onclick="toggleAuth('login')">Log In</a>
+                <a href="#" onclick="toggleAuth('signup')">Sign Up</a>
+            </div>
+        </nav>
+
+        <!-- Interactive Hero -->
+        <header class="hero">
+            <div class="hero-bg-anim">
+                <!-- Canvas for abstract fluid animation -->
+                <canvas id="hero-canvas"></canvas>
+            </div>
+
+            <div class="hero-content">
+                <div class="hero-badge fade-in">V4.0 NEURAL ENGINE</div>
+                <h1 class="hero-title fade-in delay-1">
+                    Uncover the <span class="serif-italic">Soul</span><br>
+                    Hidden in the <span class="highlight-text">Noise.</span>
+                </h1>
+                <p class="hero-sub fade-in delay-2">
+                    Professional grade source separation. Isolate Vocals, Drums, Bass, and Instruments with preservation
+                    of transient details.
+                </p>
+                <div class="hero-buttons fade-in delay-3">
+                    <button class="btn-large primary" onclick="toggleAuth('signup')">
+                        Upload Track <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button class="btn-large secondary" onclick="scrollToDemo()">
+                        <i class="fa-solid fa-play"></i> Live Demo
+                    </button>
+                </div>
+            </div>
+
+            <!-- "Floating" Stem Layers (Visual Metaphor) -->
+            <div class="hero-layers fade-in delay-4">
+                <div class="layer-card l-vocals">
+                    <div class="icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                    <span>VOCALS</span>
+                    <div class="mini-wave"></div>
+                </div>
+                <div class="layer-card l-drums">
+                    <div class="icon"><i class="fa-solid fa-drum"></i></div>
+                    <span>DRUMS</span>
+                    <div class="mini-wave"></div>
+                </div>
+                <div class="layer-card l-bass">
+                    <div class="icon"><i class="fa-solid fa-wave-square"></i></div>
+                    <span>BASS</span>
+                    <div class="mini-wave"></div>
+                </div>
+                <div class="layer-card l-other">
+                    <div class="icon"><i class="fa-solid fa-guitar"></i></div>
+                    <span>INST</span>
+                    <div class="mini-wave"></div>
+                </div>
+            </div>
+            </div>
+        </header>
+
+        <!-- 1. Infinite Marquee -->
+        <div class="marquee-wrap">
+            <div class="marquee-content">
+                <span class="marquee-tag"><i class="fa-brands fa-spotify"></i> SPOTIFY</span>
+                <span class="marquee-tag"><i class="fa-brands fa-soundcloud"></i> SOUNDCLOUD</span>
+                <span class="marquee-tag"><i class="fa-brands fa-apple"></i> APPLE MUSIC</span>
+                <span class="marquee-tag"><i class="fa-brands fa-youtube"></i> YOUTUBE</span>
+                <span class="marquee-tag"><i class="fa-solid fa-cloud-arrow-up"></i> UNIVERSAL</span>
+                <span class="marquee-tag"><i class="fa-solid fa-music"></i> SONY MUSIC</span>
+                <span class="marquee-tag"><i class="fa-solid fa-record-vinyl"></i> WARNER</span>
+                <!-- Duplicate for loop -->
+                <span class="marquee-tag"><i class="fa-brands fa-spotify"></i> SPOTIFY</span>
+                <span class="marquee-tag"><i class="fa-brands fa-soundcloud"></i> SOUNDCLOUD</span>
+                <span class="marquee-tag"><i class="fa-brands fa-apple"></i> APPLE MUSIC</span>
+                <span class="marquee-tag"><i class="fa-brands fa-youtube"></i> YOUTUBE</span>
+            </div>
+        </div>
+
+        <!-- Interactive Demo Section (Kept) -->
+        <section id="demo" class="section-demo">
+            <div class="container">
+                <div class="section-head">
+                    <h2>Auditory <span class="serif-italic">Clarity</span></h2>
+                    <p>Experience the separation quality. Toggle stems to isolate layers of the mix.</p>
+                </div>
+                <!-- ... existing demo widget ... -->
+                <div class="demo-player-widget">
+                    <div class="demo-visualizer">
+                        <canvas id="demo-canvas"></canvas>
+                        <div class="play-overlay" id="demo-play-btn"><i class="fa-solid fa-play"></i></div>
+                    </div>
+                    <div class="demo-controls">
+                        <div class="stem-toggle active" data-stem="vocals"><span class="s-name">VOX</span>
+                            <div class="s-bar"></div>
+                        </div>
+                        <div class="stem-toggle active" data-stem="drums"><span class="s-name">DRM</span>
+                            <div class="s-bar"></div>
+                        </div>
+                        <div class="stem-toggle active" data-stem="bass"><span class="s-name">BAS</span>
+                            <div class="s-bar"></div>
+                        </div>
+                        <div class="stem-toggle active" data-stem="other"><span class="s-name">MSC</span>
+                            <div class="s-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Bento Grid Features -->
+        <section id="features" class="section">
+            <div class="section-head centered">
+                <div class="hero-badge" style="margin: 0 auto 20px;">TECHNOLOGY</div>
+                <h2 class="display-text">Beyond <span class="text-gradient">EQ.</span></h2>
+                <p>A new era of audio processing powered by deep neural networks.</p>
+            </div>
+
+            <div class="bento-grid">
+                <!-- Card 1 -->
+                <div class="bento-card wide">
+                    <div class="deco-blob deco-1"></div>
+                    <h3><i class="fa-solid fa-microchip"></i> Float32 Precision</h3>
+                    <p>Processing pipeline operates at 32-bit floating point depth, preserving dynamic range well
+                        beyond human hearing limits.</p>
+                </div>
+                <!-- Card 2 -->
+                <div class="bento-card">
+                    <h3><i class="fa-solid fa-wind"></i> No Artifacts</h3>
+                    <p>Phase-aware reconstruction prevents "watery" sounds common in spectral subtraction.</p>
+                </div>
+                <!-- Card 3 -->
+                <div class="bento-card">
+                    <h3><i class="fa-solid fa-stopwatch"></i> GPU Accel</h3>
+                    <p>Running on NVIDIA A100 clusters for sub-minute processing.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Comparison Simulation -->
+        <section class="section centered" style="padding-top:0;">
+            <h2 style="margin-bottom:20px;">Hear the <span class="serif-italic">Difference</span></h2>
+            <div class="compare-container" id="compare-widget">
+                <div class="compare-before">ORIGINAL</div>
+                <div class="compare-after">AURA</div>
+                <div class="compare-handle"></div>
+            </div>
+        </section>
+
+        <!-- 4. FAQ -->
+        <section class="section">
+            <h2 class="display-text" style="text-align:center; font-size:2.5rem;">Common Questions</h2>
+            <div class="faq-grid">
+                <div class="faq-item" onclick="this.classList.toggle('open')">
+                    <div class="faq-question">What formats are supported? <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">We support WAV, MP3, FLAC, AIFF, M4A, and OGG. Conversions are lossless.
+                    </div>
+                </div>
+                <div class="faq-item" onclick="this.classList.toggle('open')">
+                    <div class="faq-question">Can I use this for commercial tracks? <i
+                            class="fa-solid fa-chevron-down"></i></div>
+                    <div class="faq-answer">Yes, the Studio plan includes a full commercial license for your
+                        separated stems.</div>
+                </div>
+                <div class="faq-item" onclick="this.classList.toggle('open')">
+                    <div class="faq-question">How are credits calculated? <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">1 Credit = 1 Song (up to 10 minutes). Longer tracks require multiple
+                        credits.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing (Previous) -->
+        <section id="pricing" class="section-pricing">
+            <!-- ... existing pricing ... -->
+            <div class="container">
+                <div class="section-head centered">
+                    <h2>Flexible <span class="serif-italic">Access</span></h2>
+                </div>
+                <div class="pricing-cards">
+                    <div class="p-card">
+                        <div class="p-header">Guest</div>
+                        <div class="p-price">Free</div>
+                        <ul>
+                            <li><i class="fa-solid fa-check"></i> 3 Credits</li>
+                            <li><i class="fa-solid fa-check"></i> Standard Quality</li>
+                        </ul>
+                        <button class="btn-block outline" onclick="toggleAuth('signup')">Get Started</button>
+                    </div>
+                    <div class="p-card featured">
+                        <div class="p-badge">MOST POPULAR</div>
+                        <div class="p-header">Creator</div>
+                        <div class="p-price">$9<small>/mo</small></div>
+                        <ul>
+                            <li><i class="fa-solid fa-check"></i> 50 Credits</li>
+                            <li><i class="fa-solid fa-check"></i> High Quality .WAV</li>
+                        </ul>
+                        <button class="btn-block filled" onclick="handleLandingSubscribe('pro')">Subscribe</button>
+                    </div>
+                    <div class="p-card">
+                        <div class="p-header">Studio</div>
+                        <div class="p-price">$29<small>/mo</small></div>
+                        <ul>
+                            <li><i class="fa-solid fa-check"></i> 200 Credits</li>
+                            <li><i class="fa-solid fa-check"></i> Commercial License</li>
+                        </ul>
+                        <button class="btn-block outline" onclick="handleLandingSubscribe('studio')">Contact</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Trusted Indicators -->
+        <section class="section" style="text-align:center; padding-top:0;">
+            <p style="color:var(--text-sec); font-weight:600; letter-spacing:1px;">TRUSTED BY PRODUCERS AT</p>
+            <div class="trust-badges">
+                <i class="fa-brands fa-spotify"></i>
+                <i class="fa-brands fa-soundcloud"></i>
+                <i class="fa-solid fa-music"></i>
+                <i class="fa-solid fa-cloud"></i>
+            </div>
+        </section>
+
+        <!-- 6. Mega Footer -->
+        <footer class="mega-footer">
+            <div class="footer-grid">
+                <div class="f-brand">
+                    <h2>/// AURA</h2>
+                    <p>Next-generation audio source separation powered by deep neural networks. <br>Designed for
+                        producers, DJs, and karaoke enthusiasts.</p>
+                </div>
+                <div class="f-links">
+                    <h4>PRODUCT</h4>
+                    <ul>
+                        <li><a href="#">Features</a></li>
+                        <li><a href="#">Pricing</a></li>
+                        <li><a href="#">API Access</a></li>
+                    </ul>
+                </div>
+                <div class="f-links">
+                    <h4>LEGAL</h4>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="f-links">
+                    <h4>SOCIAL</h4>
+                    <ul>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">Discord</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div
+                style="text-align:center; margin-top:60px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); color:var(--text-sec);">
+                &copy; 2025 Aura Audio Inc. All rights reserved.
+            </div>
+        </footer>
+
+        <!-- 7. Float CTA -->
+        <button class="float-cta visible" onclick="toggleAuth('signup')">
+            Get Started Free <i class="fa-solid fa-arrow-right" style="margin-left:10px;"></i>
+        </button>
+
+    </main>
+
+    <!-- APP DASHBOARD VIEW -->
+    <main id="view-app" class="view hidden">
+        <div class="dashboard-layout">
+
+            <!-- Sidebar -->
+            <aside class="app-sidebar expanded">
+                <div class="sidebar-head">
+                    <div class="app-logo">///</div>
+                    <div class="user-brief clickable" onclick="navTo('settings')" title="Edit Profile">
+                        <div class="user-avatar-placeholder"><i class="fa-solid fa-user"></i></div>
+                        <div>
+                            <div class="u-name" id="display-username">User</div>
+                            <div class="u-cr"><span id="credit-count">0</span> Credits</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <button class="nav-btn active" onclick="navTo('workspace')">
+                        <i class="fa-solid fa-sliders"></i> <span>Studio</span>
+                    </button>
+                    <button class="nav-btn" onclick="navTo('library')">
+                        <i class="fa-solid fa-box-archive"></i> <span>Library</span>
+                    </button>
+                    <button class="nav-btn" onclick="navTo('store')">
+                        <i class="fa-solid fa-bolt"></i> <span>Upgrade</span>
+                    </button>
+                    <button class="nav-btn" id="nav-admin" style="display:none" onclick="navTo('admin')">
+                        <i class="fa-solid fa-lock"></i> <span>Admin</span>
+                    </button>
+                </nav>
+
+                <div class="sidebar-foot">
+                    <button class="nav-btn logout" onclick="logout()">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Logout</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Workspace -->
+            <div class="app-content">
+
+                <!-- PANE: WORKSPACE -->
+                <div id="pane-workspace" class="pane active">
+                    <header class="pane-header">
+                        <h1>Studio Workspace</h1>
+                    </header>
+
+                    <!-- State: Drop Zone -->
+                    <div id="ws-drop" class="workspace-center">
+                        <div class="drop-target" id="drop-zone">
+                            <div class="input-tabs">
+                                <button class="tab-btn active" onclick="switchInput('file')">File Upload</button>
+                                <button class="tab-btn" onclick="switchInput('youtube')">YouTube URL</button>
+                            </div>
+
+                            <!-- File View -->
+                            <div id="view-file" class="view-section">
+                                <div style="margin-bottom:20px; color:var(--text-main); font-size:3rem; opacity:0.8;">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </div>
+                                <h3 style="font-size:1.5rem; margin-bottom:10px; font-weight:600;">Upload Master</h3>
+                                <p style="color:var(--text-sec); margin-bottom:30px; font-size:0.9rem;">WAV, FLAC, MP3,
+                                    AIFF</p>
+                                <button class="btn-primary" onclick="document.getElementById('file-input').click()"
+                                    style="width:100%; padding: 14px; border-radius:14px; background:var(--text-main); color:var(--bg-body); font-weight:700;">
+                                    Browse Files
+                                </button>
+                                <input type="file" id="file-input" hidden accept="audio/*">
+                            </div>
+
+                            <!-- Youtube View -->
+                            <div id="view-youtube" class="view-section hidden">
+                                <div style="margin-bottom:20px; color:#f00; font-size:3rem; opacity:0.8;">
+                                    <i class="fa-brands fa-youtube"></i>
+                                </div>
+                                <h3 style="font-size:1.5rem; margin-bottom:20px; font-weight:600;">YouTube Import</h3>
+                                <div class="hero-input-group">
+                                    <input type="text" id="yt-url-input" class="hero-input"
+                                        placeholder="Paste YouTube Link...">
+                                    <button class="hero-btn" onclick="processUrl()">Split</button>
+                                </div>
+                                <p style="margin-top:20px; color:var(--text-sec); font-size:0.8rem;">
+                                    <i class="fa-solid fa-bolt" style="color:var(--accent);"></i> Ultra-Fast Download
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- State: Loading / Processing -->
+                    <div id="ws-loading" class="workspace-center hidden">
+                        <!-- Visualizer Ring -->
+                        <div class="processing-orb">
+                            <div class="orb-ring"></div>
+                            <div class="orb-core"></div>
+                            <div class="orb-waves"></div>
+                        </div>
+
+                        <!-- Main Status -->
+                        <h2 id="loading-title">Initializing...</h2>
+                        <div id="process-timer"
+                            style="font-family:monospace; font-size:1.5rem; color:var(--accent); margin:10px 0;">00:00
+                        </div>
+
+                        <!-- Progress Container (For Uploads) -->
+                        <div id="upload-progress-container" class="progress-wrap hidden">
+                            <div class="progress-track">
+                                <div class="progress-fill" id="upload-bar" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-text">Uploading: <span id="upload-percent">0%</span></div>
+                        </div>
+
+                        <!-- Processing Steps (Simulated Terminal) -->
+                        <div id="processing-log" class="status-log">
+                            <div class="log-item active">Connecting to Neural Engine...</div>
+                        </div>
+
+                        <!-- 40 Features Dashboard (Visual Flavor) -->
+                        <div class="features-grid"
+                            style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:30px; opacity:0.6; transform:scale(0.9);">
+                            <div class="f-pill"><i class="fa-solid fa-wave-square"></i> Phase Correction</div>
+                            <div class="f-pill"><i class="fa-solid fa-wand-magic-sparkles"></i> Denoising</div>
+                            <div class="f-pill"><i class="fa-solid fa-layer-group"></i> 4-Stem Model</div>
+                            <div class="f-pill"><i class="fa-solid fa-bolt"></i> GPU Accel</div>
+                            <div class="f-pill"><i class="fa-solid fa-stopwatch"></i> Float32</div>
+                            <div class="f-pill"><i class="fa-solid fa-database"></i> Auto-Save</div>
+                            <div class="f-pill"><i class="fa-solid fa-sliders"></i> Normalization</div>
+                            <div class="f-pill"><i class="fa-solid fa-filter"></i> De-Mudding</div>
+                        </div>
+                    </div>
+
+                    <!-- State: Mixer -->
+                    <div id="ws-mixer" class="hidden">
+
+                        <!-- Header Bar -->
+                        <div class="mixer-header"
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+                            <h2 id="project-title" style="margin:0; font-size:1.4rem;">Project Name</h2>
+                            <div style="display:flex; gap:10px;">
+                                <button id="btn-zip-download" class="btn-pill small">
+                                    <i class="fa-solid fa-download"></i> ZIP
+                                </button>
+                                <button id="btn-close-mixer" class="btn-text"
+                                    style="color:var(--text-sec); font-size:1.2rem;">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Channels Grid -->
+                        <div id="mixer-channels" class="mixer-channels">
+                            <!-- JS Injection -->
+                        </div>
+
+                        <!-- Floating Transport Dock -->
+                        <div class="transport-dock-container"
+                            style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); z-index:100; pointer-events:none;">
+                            <div class="transport-dock"
+                                style="pointer-events:all; background:rgba(20,20,23,0.8); backdrop-filter:blur(20px); padding: 15px 30px; border-radius:50px; display:flex; gap:20px; align-items:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1);">
+                                <button class="t-btn main-play" id="play-btn" onclick="togglePlay()"><i
+                                        class="fa-solid fa-play"></i></button>
+                                <div style="width:1px; height:20px; background:rgba(255,255,255,0.1);"></div>
+                                <button class="fx-btn" id="btn-spatial" onclick="toggleFX('spatial')"
+                                    title="Stereo Widener"><i
+                                        class="fa-solid fa-arrows-left-right-to-line"></i></button>
+                                <button class="fx-btn" id="btn-reverb" onclick="toggleFX('reverb')"
+                                    title="Studio Reverb"><i class="fa-solid fa-cloud"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANE: LIBRARY -->
+                <div id="pane-library" class="pane hidden">
+                    <header class="pane-header">
+                        <h1>Library</h1>
+                    </header>
+                    <div class="library-grid" id="library-list">
+                        <p style="padding:20px; text-align:center;">Initializing Library View...</p>
+                    </div>
+                </div>
+
+                <!-- PANE: STORE -->
+                <div id="pane-store" class="pane hidden">
+                    <header class="pane-header">
+                        <h1>Plans</h1>
+                    </header>
+                    <div class="store-ui">
+                        <div class="s-card">
+                            <h3>Pro Plan</h3>
+                            <div class="price">$9.99</div>
+                            <button class="btn-pill" onclick="subscribe('pro')">Buy Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANE: ADMIN -->
+                <div id="pane-admin" class="pane hidden">
+                    <header class="pane-header">
+                        <h1>User Database</h1>
+                    </header>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Credits</th>
+                                    <th>Plan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PANE: SETTINGS -->
+                <div id="pane-settings" class="pane hidden">
+                    <header class="pane-header">
+                        <h1>Settings</h1>
+                        <p>Manage your account preferences and global configuration.</p>
+                    </header>
+
+                    <div class="settings-grid">
+                        <!-- Profile Card -->
+                        <div class="setting-card">
+                            <div class="sc-header">
+                                <div class="sc-icon"><i class="fa-solid fa-user-circle"></i></div>
+                                <h3>Profile</h3>
+                            </div>
+                            <div class="sc-body">
+                                <label>Username</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-solid fa-user"></i>
+                                    <input type="text" id="set-username" class="std-input" readonly value="User">
+                                </div>
+                                <label>Email Address</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-solid fa-envelope"></i>
+                                    <input type="email" id="set-email" class="std-input" placeholder="user@example.com">
+                                </div>
+
+                                <label style="margin-top:20px; display:block;">Change Password</label>
+                                <div class="input-with-icon">
+                                    <i class="fa-solid fa-key"></i>
+                                    <input type="password" id="set-old-pass" class="std-input"
+                                        placeholder="Current Password">
+                                </div>
+                                <div class="input-with-icon" style="margin-top:10px;">
+                                    <i class="fa-solid fa-lock"></i>
+                                    <input type="password" id="set-new-pass" class="std-input"
+                                        placeholder="New Password">
+                                </div>
+
+                                <button class="btn-outline small" onclick="updateProfile()"
+                                    style="margin-top:20px;">Save Changes</button>
+                            </div>
+                        </div>
+
+                        <!-- Preferences -->
+                        <div class="setting-card">
+                            <div class="sc-header">
+                                <div class="sc-icon"><i class="fa-solid fa-sliders"></i></div>
+                                <h3>Preferences</h3>
+                            </div>
+                            <div class="sc-body">
+                                <label>Interface Language</label>
+                                <select class="std-select" id="lang-select" onchange="showToast('Language updated')">
+                                    <option value="en">English (US)</option>
+                                    <option value="es">Español</option>
+                                    <option value="fr">Français</option>
+                                    <option value="jp">日本語</option>
+                                    <option value="ar">العربية</option>
+                                </select>
+
+                                <label>Theme Mode</label>
+                                <div class="theme-toggles">
+                                    <button class="theme-opt active" onclick="setTheme('dark')"><i
+                                            class="fa-solid fa-moon"></i> Dark</button>
+                                    <button class="theme-opt" onclick="setTheme('light')"><i
+                                            class="fa-solid fa-sun"></i> Light</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Danger Zone -->
+                        <div class="setting-card danger">
+                            <div class="sc-header">
+                                <div class="sc-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                <h3>Danger Zone</h3>
+                            </div>
+                            <div class="sc-body">
+                                <p>Once you delete your account, there is no going back. Please be certain.</p>
+                                <button class="btn-danger"
+                                    onclick="showToast('Contact support to delete account')">Delete Account</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Auth Slide-over -->
+    <div class="auth-shade" id="auth-shade" onclick="closeAuth()"></div>
+    <div class="auth-sidebar" id="auth-sidebar">
+        <button class="auth-close" onclick="closeAuth()">&times;</button>
+        <div class="auth-container">
+            <h2 id="auth-title">Welcome</h2>
+            <form id="auth-form">
+                <div class="input-float">
+                    <input type="text" id="auth-user" placeholder=" " required>
+                    <label>Username</label>
+                </div>
+                <div class="input-float" id="auth-email-group" style="display:none">
+                    <input type="email" id="auth-email" placeholder=" ">
+                    <label>Email Address</label>
+                </div>
+                <div class="input-float">
+                    <input type="password" id="auth-pass" placeholder=" " required>
+                    <label>Password</label>
+                </div>
+                <button type="submit" class="btn-block filled" id="auth-submit">Continue</button>
+            </form>
+            <div class="auth-footer">
+                <span id="auth-msg">New?</span> <a href="#" onclick="toggleAuthMode()" id="auth-tog">Create Account</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template -->
+    <template id="channel-template">
+        <div class="channel-strip">
+            <div class="ch-track">
+                <div class="ch-icon"><i class="fa-solid fa-music"></i></div>
+                <span class="ch-name">STEM</span>
+            </div>
+            <div class="ch-vis">
+                <canvas class="ch-canvas"></canvas>
+            </div>
+            <div class="ch-controls">
+                <button class="btn-mini solo">S</button>
+                <button class="btn-mini mute">M</button>
+            </div>
+            <div class="ch-fader-wrap">
+                <input type="range" class="ch-fader" min="0" max="1" step="0.01" value="1">
+            </div>
+            <a href="#" class="btn-mini dl" download><i class="fa-solid fa-download"></i></a>
+        </div>
+    </template>
+
+    <script src="script.js?v=4.1"></script>
+</body>
+
+</html>
