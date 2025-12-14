@@ -1419,7 +1419,8 @@ async function loadLibrary() {
 
     setTimeout(async () => {
         try {
-            await fetch(`${API_BASE}/sync`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
+            // await fetch(`${API_BASE}/sync`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
+
 
             const t = new Date().getTime();
             const res = await fetch(`${API_BASE}/history?t=${t}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
