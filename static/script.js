@@ -142,7 +142,7 @@ function startJobPolling(job_id) {
         // Check if job still valid? 
         // If server restarts, this might 404. Handle that.
         try {
-            const statusRes = await fetch(`${API_BASE} /jobs/${job_id} `);
+            const statusRes = await fetch(`${API_BASE}/jobs/${job_id}`);
 
             if (statusRes.status === 404) {
                 clearInterval(poll);
