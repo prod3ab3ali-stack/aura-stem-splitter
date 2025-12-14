@@ -583,7 +583,8 @@ def start_youtube_job(
                 'noplaylist': True, 'nocheckcertificate': True,
                 'extractor_args': {'youtube': {'player_client': ['android', 'ios']}},
                 'quiet': True, 'no_warnings': True, 'progress_hooks': [ph],
-                'force_ipv4': True
+                'force_ipv4': True,
+                'source_address': '0.0.0.0' # Force IPv4 binding
             }
             
             meta_title = "Youtube Download"
