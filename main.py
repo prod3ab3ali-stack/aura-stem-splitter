@@ -375,58 +375,62 @@ def update_job(jid, status, progress=0):
         JOBS[jid]["status"] = status
         JOBS[jid]["progress"] = progress
 
-# SHARED PIPELINE: Runs inside a background thread
-def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user: dict):
+# SHARED PIPELINE: Runs asynchronously to prevent blocking the Event Loop
+async def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user: dict):
     try:
         update_job(job_id, "Initializing Neural Engine...", 10)
         
-        # 1. Run Demucs (Optimized for Speed)
+        # 1. Run Demucs (Async Subprocess)
+        import asyncio
         import static_ffmpeg
         static_ffmpeg.add_paths()
         current_env = os.environ.copy()
-        # LIMIT THREADS to prevent UI freeze
+        
+        # Hard limits to ensure web responsiveness
         current_env["OMP_NUM_THREADS"] = "1"
         current_env["MKL_NUM_THREADS"] = "1"
-        current_env["dthreads"] = "1" 
         
-        # PERFORMANCE FIX: "shifts=1" is 4x faster than "shifts=4". 
-        # Quality is still excellent with htdemucs_6s.
-        
-        # Use 'nice' to prevent starvation of the Web Server
+        # Use 'nice' to deprioritize cpu hunger
         cmd_prefix = ["nice", "-n", "15"] if sys.platform == "linux" else []
         
         cmd = cmd_prefix + [
             sys.executable, "-m", "demucs.separate",
             "-n", "htdemucs_6s",
-            "--shifts", "1",  # SPEED OPTIMIZATION
-            "--overlap", "0.25", # BALANCED
+            "--shifts", "1",
+            "--overlap", "0.25",
             "--float32",
-            "-j", "1", # Force single job within demucs
+            "-j", "1",
             "-o", str(OUTPUT_DIR),
             str(input_path)
         ]
         
         update_job(job_id, "Separating Stems (Fast Mode)...", 20)
         
-        # Deadlock Prevention: Don't use capture_output=True for long running processes
-        # Redirect to DEVNULL for safety, or a temp file if debugging needed.
-        # We rely on exit code.
-        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True, env=current_env)
+        # Async execution prevents freezing the FastAPI event loop
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.PIPE,
+            env=current_env
+        )
         
-        if p.returncode != 0:
-            raise Exception(f"Demucs Failed (Code {p.returncode}): {p.stderr[:200]}")
+        # Wait for finish while letting other requests pass
+        stdout, stderr = await proc.communicate()
+        
+        if proc.returncode != 0:
+            err_text = stderr.decode() if stderr else "Unknown Error"
+            raise Exception(f"Demucs Failed (Code {proc.returncode}): {err_text[:500]}")
             
         update_job(job_id, "Polishing Audio (Normalization)...", 80)
         
-        # 2. Verify Output
+        # 2. Verify Output (Standard Blocking I/O is fine here, it's fast)
         internal_id = input_path.stem
         base_out = OUTPUT_DIR / "htdemucs_6s"
         created_folder = base_out / internal_id
         
         # Retry logic
         if not created_folder.exists():
-             import time
-             time.sleep(1)
+             await asyncio.sleep(1) # Async sleep
              
         if not created_folder.exists():
              raise Exception(f"Output folder not found: {created_folder}")
@@ -436,7 +440,7 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
         
         for f in created_folder.glob("*.wav"):
             try:
-                # B. Silence Detection Only (No FFmpeg Polish)
+                # B. Silence Detection
                 is_silent = True
                 with wave.open(str(f), 'rb') as wav_file:
                     if wav_file.getnframes() > 0:
