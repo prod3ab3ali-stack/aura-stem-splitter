@@ -1410,36 +1410,149 @@ function drawChanVis(cvs, stemData, color, currentTime, duration) {
 }
 
 // Procedural Waveform Generator (Visual Trick)
+// --- ULTRA-REALISTIC MOCK WAVEFORM GENERATOR ---
 function drawMockWaveform(ctx, w, h, color, type) {
-    const seed = w; // Static seed based on width
+    const steps = w / 2; // Resolution
+    const mid = h / 2;
+
     ctx.fillStyle = color;
-
-    // Check Theme
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light' || document.body.dataset.theme === 'light';
-    ctx.globalAlpha = isLight ? 0.6 : 0.3; // Bolder in light mode
-
     ctx.beginPath();
-    ctx.moveTo(0, h / 2);
+    ctx.moveTo(0, mid);
 
-    const steps = 50;
-    const stepW = w / steps;
+    // Seeded Random (LCG) for deterministic 'Stable' look
+    let seed = type.length * w;
+    const random = () => {
+        const x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+    };
+
+    // Pattern Configuration
+    let density = 0.5;   // How full the waveform is
+    let burst = 0;       // For vocals (phrasing)
+    let spikiness = 0.1; // For drums
+
+    if (type === 'vocals') { density = 0.3; burst = 0.98; spikiness = 0.3; }
+    if (type === 'drums') { density = 0.1; burst = 0.6; spikiness = 1.0; }
+    if (type === 'bass') { density = 0.9; burst = 0.1; spikiness = 0.05; }
+
+    // Smooth Envelope followers
+    let currentAmp = 0;
+    let isSinging = false; // For vocal gaps
 
     for (let i = 0; i <= steps; i++) {
-        const x = i * stepW;
-        // Pseudo-random deterministic noise
-        const r = Math.sin(i * 0.5) * Math.cos(i * 0.2) * Math.sin(i * 1.5);
-        let amp = r * (h * 0.4);
+        const x = (i / steps) * w;
 
-        // Characteristic shaping
-        if (type === 'drums') amp *= (Math.random() > 0.7 ? 1.5 : 0.2); // Spiky
-        if (type === 'bass') amp = Math.sin(i * 0.2) * (h * 0.3); // Smooth
+        // 1. Generate Base Noise
+        let noise = random();
 
-        ctx.lineTo(x, (h / 2) + amp);
+        // 2. Logic Per Type
+        if (type === 'vocals') {
+            // Random Phrasing (Gaps)
+            if (random() > 0.99) isSinging = !isSinging;
+            if (!isSinging) noise *= 0.1;
+        }
+
+        if (type === 'drums') {
+            // Sharp Transients
+            if (random() > 0.95) noise = 1.0;
+            else noise *= 0.2;
+        }
+
+        // 3. Smoothing (Linear Interpolation)
+        currentAmp += (noise - currentAmp) * 0.5;
+
+        // 4. Draw
+        const height = currentAmp * (h * 0.48) * (isLightMode() ? 1 : 0.9);
+
+        // Mirror visuals
+        ctx.lineTo(x, mid - height);
+        // We will do the bottom half in a second pass or just fill? 
+        // Let's do a symmetric fill for simplicity and look
     }
 
-    ctx.lineTo(w, h / 2);
+    // Draw bottom half mirrored
+    for (let i = steps; i >= 0; i--) {
+        const x = (i / steps) * w;
+        // We need to re-calculate simple noise or store points? 
+        // Storing points is better but let's cheat for speed:
+        // Actually, let's just make it a solid block for "Modern" look
+        ctx.lineTo(x, mid + 1); // Slight thickness center
+    }
+
+    // Standard aesthetic: Mirrored bars are tedious to calculate without array.
+    // Let's use a simpler loop for visual speed:
+    // Just drawing bars is faster and looks cooler:
+}
+
+// Redefining for BETTER VISUALS (Bars style)
+function drawMockWaveform(ctx, w, h, color, type) {
+    const bars = Math.floor(w / 3); // 3px per bar
+    const mid = h / 2;
+    const gap = 1;
+    const barW = 2;
+
+    ctx.fillStyle = color;
+
+    // Seeding
+    let seed = type.charCodeAt(0) + w;
+    const random = () => {
+        const x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+    };
+
+    let isSinging = false;
+    let silenceCounter = 0;
+
+    for (let i = 0; i < bars; i++) {
+        const x = i * (barW + gap);
+
+        let amp = random(); // 0..1
+
+        // SHAPING
+        if (type === 'vocals') {
+            if (silenceCounter > 0) {
+                amp *= 0.05;
+                silenceCounter--;
+            } else {
+                if (random() > 0.95) silenceCounter = Math.floor(random() * 50); // Gap
+                // Formant-like bumps
+                amp = amp * 0.8 + 0.2;
+            }
+        } else if (type === 'drums') {
+            // Spikes
+            amp = Math.pow(amp, 5); // very spiky
+            if (random() > 0.9) amp = 0.8 + random() * 0.2; // Hit
+        } else if (type === 'bass') {
+            // Wall
+            amp = 0.4 + (amp * 0.3);
+        } else {
+            // Other
+            amp = amp * 0.6;
+        }
+
+        // Apply
+        const height = amp * (h * 0.45);
+
+        // Rounded Bars look premium
+        roundRect(ctx, x, mid - height, barW, height * 2, 1);
+    }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
     ctx.fill();
-    ctx.globalAlpha = 1.0;
+}
+
+function isLightMode() {
+    return document.documentElement.getAttribute('data-theme') === 'light';
 }
 
 // --- SYNC ENGINE ---
