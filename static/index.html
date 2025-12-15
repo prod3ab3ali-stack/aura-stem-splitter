@@ -31,131 +31,237 @@
 
 
 
+    <!-- Global Dithering Texture -->
+    <div class="dither-overlay"></div>
+
     <!-- LANDING VIEW -->
-    <main id="view-landing" class="view active">
+    <main id="view-landing" class="view active groovy-gradient-bg">
 
-        <!-- --- VISUAL ASSETS (SVG FILTERS) --- -->
-        <svg style="display: none;">
-            <defs>
-                <filter id="liquid-distort">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.01 0.005" numOctaves="5" seed="2"
-                        result="noise" />
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="30" xChannelSelector="R"
-                        yChannelSelector="G" />
-                </filter>
-                <filter id="noise-dither">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
-                    <feColorMatrix type="saturate" values="0" />
-                </filter>
-            </defs>
-        </svg>
-
-        <!-- Global Dithering Layer -->
-        <div class="dither-overlay"></div>
-
-        <!-- MAIN APP WRAPPER -->
-        <div id="app-wrapper">
-
-            <!-- NAV (Existing) -->
-            <nav class="navbar">
-                <div class="nav-container">
-                    <a href="#" class="brand-logo" onclick="switchView('landing')">
-                        <span class="logo-mark groovy-spin">///</span> AURA
-                    </a>
-                    <div class="nav-desktop">
-                        <a href="#features" class="nav-link-wavy">Features</a>
-                        <a href="#demo" class="nav-link-wavy">Experience</a>
-                        <a href="#pricing" class="nav-link-wavy">Access</a>
-                    </div>
-                    <div class="nav-actions">
-                        <button class="theme-toggle" id="theme-btn" aria-label="Toggle Theme">
-                            <i class="fa-solid fa-moon"></i>
-                        </button>
-                        <div class="auth-buttons">
-                            <button class="btn-text" onclick="toggleAuth('login')">Log In</button>
-                            <button class="btn-pill hover-wobble" onclick="toggleAuth('signup')">Try for Free</button>
-                        </div>
-                        <button class="mobile-menu-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
-                    </div>
+        <!-- Navigation -->
+        <nav class="navbar glass-panel" style="margin: 20px; border-radius: 100px; width: calc(100% - 40px);">
+            <!-- ... (Nav content kept simple/same) ... -->
+            <div class="nav-container">
+                <a href="#" class="brand-logo" onclick="switchView('landing')">
+                    <span class="logo-mark">///</span> AURA
+                </a>
+                <div class="nav-desktop">
+                    <a href="#features">Services</a>
+                    <a href="#process">Process</a>
+                    <a href="#pricing">Access</a>
                 </div>
-                <!-- Mobile Menu -->
-                <div class="mobile-menu">
-                    <div class="mobile-links">
-                        <a href="#features">Features</a>
-                        <a href="#demo">Experience</a>
-                        <a href="#pricing">Access</a>
+                <div class="nav-actions">
+                    <button class="theme-toggle" id="theme-btn"><i class="fa-solid fa-moon"></i></button>
+                    <div class="auth-buttons">
+                        <button class="btn-text" onclick="toggleAuth('login')">Log In</button>
+                        <button class="btn-pill" onclick="toggleAuth('signup')">Sign Up</button>
                     </div>
-                    <div class="mobile-auth">
-                        <a href="#" onclick="toggleAuth('login')">Log In</a>
-                        <a href="#" class="btn-block filled" onclick="toggleAuth('signup')">Sign Up</a>
-                    </div>
+                    <button class="mobile-menu-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
                 </div>
-            </nav>
+            </div>
 
-            <!-- 1. HERO SECTION (Upgraded Maximalist) -->
-            <header class="hero-split section-max">
-                <div class="hero-bg-fluid"></div>
-                <div class="hero-left">
-                    <div class="max-badge">V4.0 // NEURAL ENGINE</div>
-                    <h1 class="hero-title-max liquid-text">
-                        UNLEASH<br>
-                        <span class="gradient-stroke">THE MUSIC</span><br>
-                        WITHIN
-                    </h1>
-                    <p class="hero-desc-max">
-                        Deconstruct audio with <strong>mathematical precision</strong>. Separate stems instantly using
-                        our enterprise-grade neural lattice.
-                    </p>
-                    <div class="hero-actions-max">
-                        <button class="btn-max-fill" onclick="toggleAuth('signup')">START SPLITTING</button>
-                        <button class="btn-max-outline" onclick="scrollToDemo()">LISTEN LIVE</button>
-                    </div>
+            <!-- Mobile Menu -->
+            <div class="mobile-menu">
+                <a href="#features">Services</a>
+                <a href="#process">Process</a>
+                <a href="#pricing">Access</a>
+                <hr>
+                <a href="#" onclick="toggleAuth('login')">Log In</a>
+                <a href="#" onclick="toggleAuth('signup')">Sign Up</a>
+            </div>
+        </nav>
 
-                    <div class="hero-stats-row">
-                        <div class="stat-max">
-                            <span class="stat-val">0.05s</span>
-                            <span class="stat-lbl">Latency</span>
-                        </div>
-                        <div class="stat-max">
-                            <span class="stat-val">50TB</span>
-                            <span class="stat-lbl">Training Data</span>
-                        </div>
-                    </div>
+        <!-- Interactive Hero (Enhanced Text) -->
+        <header class="hero-split">
+            <div class="hero-left">
+                <div class="hero-badge fade-in" style="background: var(--accent); color:black; font-weight:800;">V4.0
+                    MAXIMALIST</div>
+                <!-- FLUID TEXT SHADER -->
+                <h1 class="hero-title-split fade-in delay-1">
+                    Unleash<br>
+                    <span class="liquid-text">The Music</span><br>
+                    Within.
+                </h1>
+                <p class="hero-sub-split fade-in delay-2" style="font-size: 1.2rem; max-width: 500px;">
+                    Experience audio separation through a kaleidoscope of neural networks.
+                    Groovy separation. Maximum fidelity.
+                </p>
+                <div class="hero-actions fade-in delay-3">
+                    <button class="btn-primary-glow" onclick="toggleAuth('signup')"
+                        style="border-radius: 50px; padding: 15px 40px; font-weight: 800;">
+                        Start Splitting
+                    </button>
+                    <button class="btn-text-glow" onclick="scrollToDemo()">
+                        <i class="fa-solid fa-play"></i> Listen
+                    </button>
                 </div>
-
-                <!-- Existing 3D Stack Logic (Preserved but styled) -->
-                <div class="hero-right">
-                    <div class="glass-stack-container">
-                        <div class="glass-layer layer-1" style="--z: 40px;">
-                            <span class="layer-label">VOCALS</span>
-                            <div class="layer-wave w1"></div>
-                        </div>
-                        <div class="glass-layer layer-2" style="--z: 0px;">
-                            <span class="layer-label">INSTRUMENTAL</span>
-                            <div class="layer-wave w2"></div>
-                        </div>
-                        <div class="glass-layer layer-3" style="--z: -40px;">
-                            <span class="layer-label">BASS</span>
-                            <div class="layer-wave w3"></div>
-                        </div>
-                        <div class="glass-layer layer-4" style="--z: -80px;">
-                            <span class="layer-label">DRUMS</span>
-                            <div class="layer-wave w4"></div>
-                        </div>
+                <!-- Stats (Kept) -->
+                <div class="hero-stats fade-in delay-4">
+                    <div class="stat-item"><span class="stat-num">4.0</span><span class="stat-lbl">Model Ver</span>
                     </div>
+                    <div class="stat-item"><span class="stat-num">99%</span><span class="stat-lbl">Accuracy</span></div>
+                    <div class="stat-item"><span class="stat-num">0ms</span><span class="stat-lbl">Latency</span></div>
+                </div>
+            </div>
+            <!-- Hero Right (3D Glass Stack - Kept) -->
+            <div class="hero-right fade-in delay-2">
+                <div class="glass-stack-container">
+                    <!-- ... existing stack content ... -->
+                    <div class="stack-layer layer-1">VOCALS</div>
+                    <div class="stack-layer layer-2">OTHER</div>
+                    <div class="stack-layer layer-3">BASS</div>
+                    <div class="stack-layer layer-4">DRUMS</div>
                     <div class="hero-ambient-light"></div>
                 </div>
-            </header>
+            </div>
+        </header>
 
-            <li><a href="#">Instagram</a></li>
-            <li><a href="#">Discord</a></li>
-            </ul>
+        <!-- SECTION 1: SONIC ALCHEMY (Features) -->
+        <div class="section-wave" style="background: var(--bg-body);">
+            <div class="wave-separator">
+                <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"
+                    preserveAspectRatio="none">
+                    <path
+                        d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+                        class="shape-fill"></path>
+                </svg>
+            </div>
+
+            <section id="features" class="container scroll-hidden" style="margin-top: 50px;">
+                <div class="section-head centered">
+                    <h2 class="groovy-font">Sonic Alchemy</h2>
+                    <p style="font-size: 1.2rem; margin-top: 20px;">Transmuting raw audio into pure gold stems.</p>
+                </div>
+
+                <div class="holo-grid" style="gap: 40px;">
+                    <!-- Card 1 -->
+                    <div class="max-card">
+                        <div class="holo-icon" style="color: #ec4899;"><i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <h3>AI Sorcery</h3>
+                        <p>Our neural nets don't just split audio; they dream it apart. Zero artifacts, pure magic.</p>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="max-card">
+                        <div class="holo-icon" style="color: #a855f7;"><i class="fa-solid fa-water"></i></div>
+                        <h3>Liquid Flow</h3>
+                        <p>Workflow so smooth it feels like water. Drag, drop, dissolve.</p>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="max-card">
+                        <div class="holo-icon" style="color: #eab308;"><i class="fa-solid fa-bolt"></i></div>
+                        <h3>Instant Zap</h3>
+                        <p>Powered by GPU clusters that process tracks faster than you can say "groovy".</p>
+                    </div>
+                </div>
+            </section>
         </div>
+
+        <!-- SECTION 2: THE FLOW (Process) -->
+        <section class="section scroll-hidden" id="process" style="padding: 100px 0;">
+            <div class="container">
+                <div class="section-head centered">
+                    <h2 class="groovy-font text-gradient">The Audio Flow</h2>
+                </div>
+
+                <div
+                    style="display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 50px; text-align: center;">
+                    <div class="process-step" style="flex: 1; min-width: 250px; padding: 20px;">
+                        <div style="font-size: 4rem; font-weight: 800; opacity: 0.2;">01</div>
+                        <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Upload</h3>
+                        <p>Drop your wav/mp3 into the vortex.</p>
+                    </div>
+                    <div class="process-step" style="flex: 1; min-width: 250px; padding: 20px;">
+                        <div style="font-size: 4rem; font-weight: 800; opacity: 0.2; color: var(--accent);">02</div>
+                        <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Alchemy</h3>
+                        <p>The system deconstructs the spectrum.</p>
+                    </div>
+                    <div class="process-step" style="flex: 1; min-width: 250px; padding: 20px;">
+                        <div style="font-size: 4rem; font-weight: 800; opacity: 0.2;">03</div>
+                        <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Ascend</h3>
+                        <p>Download your stems and create.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: VIBE CHECK (Testimonials/Social) -->
+        <div class="section-wave" style="background: var(--bg-surface);">
+            <div class="wave-separator" style="transform: rotate(180deg); top: -1px;">
+                <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"
+                    preserveAspectRatio="none">
+                    <path
+                        d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+                        class="shape-fill" style="fill: var(--bg-body);"></path>
+                </svg>
+            </div>
+
+            <section class="container scroll-hidden" style="text-align: center; margin-top: 50px;">
+                <h2 class="groovy-font">Vibe Check</h2>
+                <div style="display: flex; gap: 30px; overflow-x: auto; padding: 40px 0; scrollbar-width: none;">
+                    <!-- Review 1 -->
+                    <div class="max-card" style="min-width: 300px; text-align: left;">
+                        <p style="font-size: 1.1rem; font-style: italic;">"Absolutely melted my brain. The separation is
+                            cleaner than soap."</p>
+                        <div style="margin-top: 20px; font-weight: 700;">- DJ Wavy</div>
+                    </div>
+                    <!-- Review 2 -->
+                    <div class="max-card" style="min-width: 300px; text-align: left;">
+                        <p style="font-size: 1.1rem; font-style: italic;">"I use this for every remix. It's an essential
+                            part of my flow."</p>
+                        <div style="margin-top: 20px; font-weight: 700;">- Producer X</div>
+                    </div>
+                    <!-- Review 3 -->
+                    <div class="max-card" style="min-width: 300px; text-align: left;">
+                        <p style="font-size: 1.1rem; font-style: italic;">"Enterprise grade? Check. Groovy visuals?
+                            Double check."</p>
+                        <div style="margin-top: 20px; font-weight: 700;">- Studio One</div>
+                    </div>
+                </div>
+            </section>
         </div>
-        <div
-            style="text-align:center; margin-top:60px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); color:var(--text-sec);">
-            &copy; 2025 Aura Audio Inc. All rights reserved.
-        </div>
+
+        <!-- SECTION 4: ACCESS (Pricing) -->
+        <section id="pricing" class="section scroll-hidden" style="padding-bottom: 100px;">
+            <div class="section-head centered">
+                <h2 class="groovy-font">Get Access</h2>
+                <p>Choose your level of ascension.</p>
+            </div>
+            <!-- Reusing Access Grid but with Max Cards -->
+            <div class="access-grid">
+                <div class="max-card" style="width: 320px; text-align: center;">
+                    <h3>Guest</h3>
+                    <div class="access-price" style="margin: 20px 0;">Free</div>
+                    <ul class="access-features" style="text-align: left; margin: 0 auto; display: inline-block;">
+                        <li>3 Credits</li>
+                        <li>Standard Waves</li>
+                    </ul>
+                    <button class="btn-primary-glow" style="width: 100%; margin-top: 30px;"
+                        onclick="toggleAuth('signup')">Start</button>
+                </div>
+                <div class="max-card" style="width: 320px; text-align: center; border-color: var(--accent);">
+                    <div class="access-badge" style="position:relative; top:-20px; margin-bottom: -10px;">RECOMMENDED
+                    </div>
+                    <h3>Creator</h3>
+                    <div class="access-price" style="margin: 20px 0;">$9<small>/mo</small></div>
+                    <ul class="access-features" style="text-align: left; margin: 0 auto; display: inline-block;">
+                        <li>50 Credits</li>
+                        <li>Hi-Res WAV</li>
+                    </ul>
+                    <button class="btn-primary-glow"
+                        style="width: 100%; margin-top: 30px; background: var(--accent); color: #000;"
+                        onclick="handleLandingSubscribe('pro')">Ascend</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: MEGA FOOTER -->
+        <footer class="mega-footer scroll-hidden" style="background: #000; padding: 80px 0; text-align: center;">
+            <h2 class="groovy-font" style="opacity: 0.5;">AURA /// STEMS</h2>
+            <p style="opacity: 0.3; margin-top: 20px;">Designed for the bold.</p>
+            <div
+                style="text-align:center; margin-top:60px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); color:var(--text-sec);">
+                &copy; 2025 Aura Audio Inc. All rights reserved.
+            </div>
         </footer>
 
         <!-- 7. Float CTA -->

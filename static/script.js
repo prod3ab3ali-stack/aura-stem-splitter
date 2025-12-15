@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initHeroVisuals();
     initScrollObs();
     initDemoPlayer();
+    initMaximalistEffects();
 
     // Simulate initial loading
     setTimeout(() => {
@@ -80,44 +81,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 3. Parallax & Shader Interaction
-    let lastX = 0;
-    let lastY = 0;
-    let speed = 0;
-
+    // 3. Parallax Effect
     document.addEventListener('mousemove', (e) => {
-        // Parallax existing
         const x = (window.innerWidth - e.pageX * 2) / 100;
         const y = (window.innerHeight - e.pageY * 2) / 100;
+
+        // Move Background Elements
         const bg = document.querySelector('.workspace-center');
         if (bg) {
             bg.style.backgroundPosition = `${x}px ${y} px, ${x * 0.5 + 15}px ${y * 0.5 + 15} px`;
-        }
-
-        // Fluid Text Shader Interaction
-        // Calculate mouse speed for turbulence
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
-        speed = Math.sqrt(dx * dx + dy * dy);
-        lastX = e.clientX;
-        lastY = e.clientY;
-
-        // Update SVG Filter 'baseFrequency' based on speed logic
-        // We use requestAnimationFrame loops usually, but direct update for simplicity here
-        const turb = document.querySelector('#liquid-distort feTurbulence');
-        const disp = document.querySelector('#liquid-distort feDisplacementMap');
-
-        if (turb && disp && speed > 5) {
-            // Subtle change in frequency
-            const freq = 0.01 + (speed * 0.0001);
-            // Clamp
-            const safeFreq = Math.min(Math.max(freq, 0.01), 0.05);
-            turb.setAttribute('baseFrequency', `0.01 ${safeFreq}`);
-            disp.setAttribute('scale', Math.min(speed, 100));
-        } else if (turb && disp) {
-            // Return to calm
-            turb.setAttribute('baseFrequency', '0.01 0.005');
-            disp.setAttribute('scale', '30');
         }
     });
 
@@ -2227,3 +2199,30 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 });
+
+// --- Maximalist Effects ---
+function initMaximalistEffects() {
+    const cards = document.querySelectorAll('.max-card');
+
+    cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const rotateX = ((y - centerY) / centerY) * -10; // Max 10deg rotation
+            const rotateY = ((x - centerX) / centerX) * 10;
+
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+            card.style.borderColor = 'var(--accent)';
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+            card.style.borderColor = '';
+        });
+    });
+}
