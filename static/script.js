@@ -1055,21 +1055,35 @@ function loadMixer(title, stems) {
         visualizerContainer.id = `ws-${name}`;
         if (canvas) canvas.replaceWith(visualizerContainer);
 
+        // Add Explicit Download Button
+        const controls = strip.querySelector('.ch-controls');
+        if (controls) {
+            const dlBtn = document.createElement('a');
+            dlBtn.className = 'btn-mini download-stem-btn';
+            dlBtn.href = url;
+            dlBtn.download = '';
+            dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
+            dlBtn.style.marginRight = '10px';
+            dlBtn.style.textDecoration = 'none';
+            dlBtn.style.color = 'var(--text-sec)';
+            controls.prepend(dlBtn);
+        }
+
         container.appendChild(stripDiv);
 
-        // Init WaveSurfer
+        // Init WaveSurfer (Instant Playback Mode)
         const ws = WaveSurfer.create({
             container: `#ws-${name}`,
             waveColor: color,
-            progressColor: '#ffffff', // White line cursor
-            cursorColor: '#ffffff', // Cursor also white
+            progressColor: '#ffffff',
+            cursorColor: '#ffffff',
             cursorWidth: 2,
-            barWidth: 3, // Bar style like SoundCloud/LANDR
+            barWidth: 3,
             barGap: 2,
             barRadius: 2,
             height: 60,
             normalize: true,
-            backend: 'WebAudio', // Necessary for Gain control
+            backend: 'MediaElement', // INSTANT PLAYBACK
         });
 
         ws.load(url);

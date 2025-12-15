@@ -3770,3 +3770,94 @@ h3 {
 /* Remove Canvas styles as we use WS now */
 .ch-canvas { display: none; }
 
+
+/* --- DASHBOARD & TRANSPORT FIXES v4 --- */
+
+/* Active Projects (Job Cards) Redesign */
+.job-card {
+    background: rgba(30, 30, 35, 0.6); /* Glass Dark */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+[data-theme="light"] .job-card {
+    background: #fff;
+    border: 1px solid #e4e4e7;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.job-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.job-card h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.job-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    width: fit-content;
+}
+.job-status.completed { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+.job-status.processing { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+.job-status.failed { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+/* Transport Time Fix */
+#time-display, #duration-display {
+    font-size: 0.9rem;
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 500;
+    min-width: 50px;
+    text-align: center;
+}
+
+/* Play Button Polish */
+#play-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem; /* Icon size */
+    margin: 0 10px;
+}
+
+/* Download Button Polish */
+.download-stem-btn {
+    color: var(--text-sec);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; 
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 12px;
+    transition: 0.2s;
+}
+.download-stem-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+[data-theme="light"] .download-stem-btn:hover {
+    background: rgba(0,0,0,0.05); 
+    color: #000;
+}
+
