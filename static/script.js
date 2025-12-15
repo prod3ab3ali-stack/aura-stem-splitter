@@ -930,6 +930,19 @@ function toggleFX(type) {
 }
 
 // --- Mix Logic ---
+// --- MIXER LOGIC & GRAPH ---
+
+const STEM_COLORS = {
+    vocals: '#D291BC', // Pink/Purple
+    drums: '#CFA567',  // Gold/Brown (Percussion)
+    bass: '#5D8AA8',   // Blue/Grey
+    other: '#48C9B0'   // Teal (Instruments)
+};
+
+// Global Transport State
+let globalDuration = 0;
+let seekerInterval = null;
+
 async function downloadZip(projectId) {
     if (!projectId) return showToast("Project ID missing");
     window.location.href = `${API_BASE}/download_zip/${projectId}`;
@@ -940,20 +953,21 @@ function closeMixer() {
     if (audioContext) audioContext.suspend();
     Object.values(stemsAudio || {}).forEach(s => s.audio.pause());
 
+    // Stop Seeker
+    if (seekerInterval) clearInterval(seekerInterval);
+
     wsMixer.classList.add('hidden');
-    // Reload Library to ensure fresh state
     loadLibrary();
 }
 
 function loadMixer(title, stems) {
     if (!stems) return;
 
-    // Find project ID from stems path or just use title if needed?
-    // Stems dict values are like "/stems/htdemucs_6s/{UUID}/{stem}.wav"
-    // Extract UUID
+    // Extract ID
     const firstStem = Object.values(stems)[0];
     const projectId = firstStem.split('/')[3];
 
+    // UI Setup
     wsLoad.classList.add('hidden');
     wsDrop.classList.add('hidden');
     wsMixer.classList.remove('hidden');
@@ -962,18 +976,16 @@ function loadMixer(title, stems) {
     const titleEl = document.getElementById('project-title');
     if (titleEl) titleEl.textContent = title;
 
-    // Setup ZIP Button
+    // Buttons
     const zipBtn = document.getElementById('btn-zip-download');
     if (zipBtn) {
         zipBtn.onclick = () => downloadZip(projectId);
-        // Clean Text
-        zipBtn.innerHTML = '<i class="fa-solid fa-file-zipper"></i> Download Stems';
+        zipBtn.innerHTML = '<i class="fa-solid fa-file-zipper"></i> ZIP';
     }
-
-    // Setup Close Button
     const closeBtn = document.getElementById('btn-close-mixer');
     if (closeBtn) closeBtn.onclick = closeMixer;
 
+    // Reset Container
     const container = document.getElementById('mixer-channels');
     container.innerHTML = '';
 
@@ -981,28 +993,43 @@ function loadMixer(title, stems) {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         masterGain = audioContext.createGain();
-        initMasterFX(audioContext); // Setup FX Chain
+        initMasterFX(audioContext);
     } else {
         masterGain.disconnect();
-        // Re-route if existing
         if (FX.spatial) masterGain.connect(FX.spatial.node);
         else masterGain.connect(audioContext.destination);
     }
-
     if (audioContext.state === 'suspended') audioContext.resume();
 
     stemsAudio = {};
     const tpl = document.getElementById('channel-template');
 
-    Object.entries(stems).forEach(([name, url]) => {
+    // Determine Order: Vocals, Drums, Bass, Instruments
+    const sortOrder = ['vocals', 'drums', 'bass', 'other'];
+    const sortedKeys = Object.keys(stems).sort((a, b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
+
+    // Global Duration Sync
+    globalDuration = 0;
+    const seekSlider = document.getElementById('seek-slider');
+    const timeDisplay = document.getElementById('time-display');
+    const durDisplay = document.getElementById('duration-display');
+
+    // Reset inputs
+    if (seekSlider) { seekSlider.value = 0; seekSlider.disabled = true; }
+    if (timeDisplay) timeDisplay.textContent = "00:00";
+    if (durDisplay) durDisplay.textContent = "00:00";
+
+    sortedKeys.forEach((name, index) => {
+        const url = stems[name];
         const audio = new Audio(url);
         audio.crossOrigin = 'anonymous';
-        audio.loop = true;
+        audio.loop = false; // We handle loop or end manually? Let's just stop at end.
 
         const src = audioContext.createMediaElementSource(audio);
         const gain = audioContext.createGain();
         const anal = audioContext.createAnalyser();
-        anal.fftSize = 64;
+        anal.fftSize = 2048; // Higher res for waveform
+        anal.smoothingTimeConstant = 0.8;
 
         src.connect(gain);
         gain.connect(anal);
@@ -1010,38 +1037,80 @@ function loadMixer(title, stems) {
 
         stemsAudio[name] = { audio, gain, anal, muted: false };
 
-        // UI
-        const strip = tpl.content.cloneNode(true);
+        // Duration Logic (Use first stem as master)
+        if (index === 0) {
+            audio.addEventListener('loadedmetadata', () => {
+                globalDuration = audio.duration;
+                if (seekSlider) {
+                    seekSlider.max = globalDuration;
+                    seekSlider.disabled = false;
+                }
+                const m = Math.floor(globalDuration / 60);
+                const s = Math.floor(globalDuration % 60).toString().padStart(2, '0');
+                if (durDisplay) durDisplay.textContent = `${m}:${s}`;
+            });
 
-        let displayName = name.toUpperCase();
-        if (name === 'other') displayName = 'SYNTH / FX';
-        if (name === 'drums') displayName = 'PERCUSSION'; // As requested
-
-        strip.querySelector('.ch-name').textContent = displayName;
-        strip.querySelector('a').href = url;
-
-        // Special highlighting for Synths
-        if (name === 'other') {
-            strip.querySelector('.ch-name').style.color = '#A855F7'; // Purple
+            // Seeking Listener ONLY on Master Transport
+            if (seekSlider) {
+                seekSlider.oninput = (e) => {
+                    const time = parseFloat(e.target.value);
+                    Object.values(stemsAudio).forEach(s => {
+                        s.audio.currentTime = time;
+                    });
+                    const m = Math.floor(time / 60);
+                    const s = Math.floor(time % 60).toString().padStart(2, '0');
+                    if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
+                };
+            }
         }
 
-        // Mute
+        // UI Strip
+        const strip = tpl.content.cloneNode(true);
+        let displayName = name.toUpperCase();
+        let color = STEM_COLORS.other;
+
+        if (name === 'vocals') { color = STEM_COLORS.vocals; }
+        if (name === 'drums') { displayName = 'DRUMS'; color = STEM_COLORS.drums; }
+        if (name === 'percussion') { displayName = 'DRUMS'; color = STEM_COLORS.drums; } // Handle both names
+        if (name === 'bass') { color = STEM_COLORS.bass; }
+        if (name === 'other') { displayName = 'INSTRUMENTS'; color = STEM_COLORS.other; }
+
+        strip.querySelector('.ch-name').textContent = displayName;
+        strip.querySelector('.ch-name').style.color = color;
+        strip.querySelector('a').href = url; // Hidden link usually
+
+        // Icon
+        const iconDiv = strip.querySelector('.ch-icon');
+        iconDiv.style.color = color;
+        if (name === 'vocals') iconDiv.innerHTML = '<i class="fa-solid fa-microphone-lines"></i>';
+        if (name === 'drums' || name === 'percussion') iconDiv.innerHTML = '<i class="fa-solid fa-drum"></i>';
+        if (name === 'bass') iconDiv.innerHTML = '<i class="fa-solid fa-wave-square"></i>';
+        if (name === 'other') iconDiv.innerHTML = '<i class="fa-solid fa-guitar"></i>';
+
+        // Styling the Strip Border to match Stem
+        const stripDiv = strip.querySelector('.channel-strip');
+        stripDiv.style.borderLeft = `4px solid ${color}`;
+
+        // Mute/Solo Logic
         const mBtn = strip.querySelector('.mute');
         mBtn.onclick = () => {
             stemsAudio[name].muted = !stemsAudio[name].muted;
             mBtn.classList.toggle('active', stemsAudio[name].muted);
             gain.gain.value = stemsAudio[name].muted ? 0 : 1;
         };
-
-        // Solo
         const sBtn = strip.querySelector('.solo');
+        sBtn.innerHTML = '<i class="fa-solid fa-headphones"></i>'; // Headphone Icon like Image 2
         sBtn.onclick = () => {
             const isSolo = sBtn.classList.contains('active');
+            // Clear all solo
             document.querySelectorAll('.solo').forEach(b => b.classList.remove('active'));
 
             if (isSolo) {
+                // Un-solo -> All Unmuted (unless manually muted) are 1
+                // Simplification: Reset all to Unmuted state logic
                 Object.values(stemsAudio).forEach(t => t.gain.gain.value = 1);
             } else {
+                // Solo this
                 sBtn.classList.add('active');
                 Object.entries(stemsAudio).forEach(([k, t]) => {
                     t.gain.gain.value = k === name ? 1 : 0;
@@ -1049,41 +1118,79 @@ function loadMixer(title, stems) {
             }
         };
 
-        // Fader
         const fader = strip.querySelector('.ch-fader');
         if (fader) fader.oninput = e => {
             if (!stemsAudio[name].muted) gain.gain.value = e.target.value;
         };
 
-        // Visualizer
+        // Canvas Visualizer
         const cvs = strip.querySelector('canvas');
-        if (cvs) drawChanVis(cvs, anal);
+        if (cvs) drawChanVis(cvs, anal, color);
 
-        container.appendChild(strip);
+        container.appendChild(stripDiv);
     });
+
+    // Start Seeker Loop
+    if (seekerInterval) clearInterval(seekerInterval);
+    seekerInterval = setInterval(() => {
+        if (masterState === 'playing' && stemsAudio) {
+            // Get time from first stem
+            const first = Object.values(stemsAudio)[0];
+            if (first && !first.audio.paused) {
+                const t = first.audio.currentTime;
+                if (seekSlider) seekSlider.value = t;
+                const m = Math.floor(t / 60);
+                const s = Math.floor(t % 60).toString().padStart(2, '0');
+                if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
+            }
+        }
+    }, 200);
 }
 
-function drawChanVis(cvs, anal) {
+function drawChanVis(cvs, anal, color) {
     const ctx = cvs.getContext('2d');
+
     function draw() {
-        if (wsMixer.style.display === 'none') return;
+        if (wsMixer.style.display === 'none') {
+            requestAnimationFrame(draw);
+            return;
+        }
         requestAnimationFrame(draw);
 
         const w = cvs.width = cvs.clientWidth;
         const h = cvs.height = cvs.clientHeight;
         const data = new Uint8Array(anal.frequencyBinCount);
-        anal.getByteFrequencyData(data);
+        anal.getByteTimeDomainData(data); // WAVEFORM
 
         ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = currentTheme === 'light' ? '#000' : '#fff';
 
-        const barW = (w / data.length) * 2;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+
+        const sliceWidth = w * 1.0 / data.length;
         let x = 0;
+
         for (let i = 0; i < data.length; i++) {
-            const v = data[i] / 255;
-            ctx.fillRect(x, h - v * h, barW, v * h);
-            x += barW + 1;
+            const v = data[i] / 128.0; // 128 is 0-axis
+            const y = (v * h) / 2; // Scale to half height to center? No, v goes 0..2
+
+            // Mirror Logic
+            // v ranges 0 to 2. 1 is center.
+            // When v=1, y = h/2.
+            // Let's amplify signal
+            const amp = (v - 1) * 1.5; // -0.5 to 0.5 roughly
+
+            const yMid = h / 2;
+            const yOffset = amp * (h * 0.8);
+
+            if (i === 0) ctx.moveTo(x, yMid + yOffset);
+            else ctx.lineTo(x, yMid + yOffset);
+
+            x += sliceWidth;
         }
+
+        ctx.stroke();
     }
     draw();
 }
@@ -1101,6 +1208,7 @@ if (playBtn) playBtn.onclick = () => {
         playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
     }
 };
+
 
 const stopBtn = document.getElementById('stop-btn');
 if (stopBtn) stopBtn.onclick = stopPlayback;

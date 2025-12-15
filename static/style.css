@@ -3433,3 +3433,161 @@ h3 {
     }
     .hero-actions { justify-content: center; }
 }
+
+/* --- MIXER REDESIGN v2 (LANDR Style) --- */
+.mixer-channels {
+    gap: 15px;
+    padding-bottom: 120px; /* Space for dock */
+}
+
+.channel-strip {
+    background: rgba(30, 30, 35, 0.6);
+    border: 1px solid rgba(255,255,255,0.05); /* Dark border */
+    border-radius: 16px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 140px 1fr 180px;
+    align-items: center;
+    gap: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+[data-theme="light"] .channel-strip {
+    background: #fff;
+    border-color: var(--border);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.ch-track {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ch-icon {
+    font-size: 1.5rem;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    width: fit-content;
+}
+
+[data-theme="light"] .ch-icon { background: rgba(0,0,0,0.05); }
+
+.ch-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.ch-vis {
+    height: 60px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+[data-theme="light"] .ch-vis { background: rgba(0,0,0,0.03); }
+
+.ch-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.ch-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.btn-mini {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: transparent;
+    color: var(--text-sec);
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.btn-mini:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-main);
+}
+
+.btn-mini.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+/* Solo Button Special Style (Headphones) */
+.btn-mini.solo.active {
+    background: #fff;
+    color: #000;
+}
+
+[data-theme="light"] .btn-mini.solo.active {
+    background: #000;
+    color: #fff;
+}
+
+.ch-fader-wrap {
+    display: none; /* Hide fader if using Image 2 style (only buttons visible?) or re-style it */
+}
+/* Re-enable fader if needed, but Image 2 shows minimal controls */
+/* Let's keep fader but style it minimal */
+.ch-fader-wrap {
+    display: block;
+    width: 80px;
+}
+
+/* --- TRANSPORT DOCK UPDATES --- */
+.transport-dock {
+    width: 600px;
+    justify-content: space-between;
+}
+
+.transport-seeker {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+#seek-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+#seek-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+[data-theme="light"] #seek-slider { background: rgba(0,0,0,0.1); }
+[data-theme="light"] #seek-slider::-webkit-slider-thumb { background: #000; }
+
+.transport-time, .transport-duration {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--text-sec);
+    width: 45px;
+    text-align: center;
+}

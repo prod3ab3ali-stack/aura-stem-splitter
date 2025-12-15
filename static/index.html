@@ -509,151 +509,159 @@
                         </div>
 
                         <!-- Floating Transport Dock -->
-                        <div class="transport-dock-container"
-                            style="position:fixed; bottom:30px; left:50%; transform:translateX(-50%); z-index:100; pointer-events:none;">
-                            <div class="transport-dock"
-                                style="pointer-events:all; background:rgba(20,20,23,0.8); backdrop-filter:blur(20px); padding: 15px 30px; border-radius:50px; display:flex; gap:20px; align-items:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1);">
-                                <button class="t-btn main-play" id="play-btn" onclick="togglePlay()"><i
-                                        class="fa-solid fa-play"></i></button>
-                                <div style="width:1px; height:20px; background:rgba(255,255,255,0.1);"></div>
+                        <!-- Floating Transport & Seek Dock -->
+                        <div class="transport-dock-container">
+                            <div class="transport-dock">
+                                <button class="t-btn main-play" id="play-btn"><i class="fa-solid fa-play"></i></button>
+
+                                <div class="transport-time" id="time-display">00:00</div>
+
+                                <div class="transport-seeker">
+                                    <input type="range" id="seek-slider" min="0" value="0" step="0.1">
+                                </div>
+
+                                <div class="transport-duration" id="duration-display">00:00</div>
+
+                                <div class="transport-sep"></div>
+
                                 <button class="fx-btn" id="btn-spatial" onclick="toggleFX('spatial')"
                                     title="Stereo Widener"><i
-                                        class="fa-solid fa-arrows-left-right-to-line"></i></button>
+                                        class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
                                 <button class="fx-btn" id="btn-reverb" onclick="toggleFX('reverb')"
-                                    title="Studio Reverb"><i class="fa-solid fa-cloud"></i></button>
+                                    title="Space Reverb"><i class="fa-solid fa-wind"></i></button>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- PANE: LIBRARY -->
-                <div id="pane-library" class="pane hidden">
-                    <header class="pane-header">
-                        <h1>Library</h1>
-                    </header>
-                    <div class="library-grid" id="library-list">
-                        <p style="padding:20px; text-align:center;">Initializing Library View...</p>
-                    </div>
-                </div>
-
-                <!-- PANE: STORE -->
-                <div id="pane-store" class="pane hidden">
-                    <header class="pane-header">
-                        <h1>Plans</h1>
-                    </header>
-                    <div class="store-ui">
-                        <div class="s-card">
-                            <h3>Pro Plan</h3>
-                            <div class="price">$9.99</div>
-                            <button class="btn-pill" onclick="subscribe('pro')">Buy Now</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PANE: ADMIN -->
-                <div id="pane-admin" class="pane hidden">
-                    <header class="pane-header">
-                        <h1>User Database</h1>
-                    </header>
-                    <div class="table-wrap">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Credits</th>
-                                    <th>Plan</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-list"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- PANE: SETTINGS -->
-                <div id="pane-settings" class="pane hidden">
-                    <header class="pane-header">
-                        <h1>Settings</h1>
-                        <p>Manage your account preferences and global configuration.</p>
-                    </header>
-
-                    <div class="settings-grid">
-                        <!-- Profile Card -->
-                        <div class="setting-card">
-                            <div class="sc-header">
-                                <div class="sc-icon"><i class="fa-solid fa-user-circle"></i></div>
-                                <h3>Profile</h3>
-                            </div>
-                            <div class="sc-body">
-                                <label>Username</label>
-                                <div class="input-with-icon">
-                                    <i class="fa-solid fa-user"></i>
-                                    <input type="text" id="set-username" class="std-input" readonly value="User">
-                                </div>
-                                <label>Email Address</label>
-                                <div class="input-with-icon">
-                                    <i class="fa-solid fa-envelope"></i>
-                                    <input type="email" id="set-email" class="std-input" placeholder="user@example.com">
-                                </div>
-
-                                <label style="margin-top:20px; display:block;">Change Password</label>
-                                <div class="input-with-icon">
-                                    <i class="fa-solid fa-key"></i>
-                                    <input type="password" id="set-old-pass" class="std-input"
-                                        placeholder="Current Password">
-                                </div>
-                                <div class="input-with-icon" style="margin-top:10px;">
-                                    <i class="fa-solid fa-lock"></i>
-                                    <input type="password" id="set-new-pass" class="std-input"
-                                        placeholder="New Password">
-                                </div>
-
-                                <button class="btn-outline small" onclick="updateProfile()"
-                                    style="margin-top:20px;">Save Changes</button>
-                            </div>
-                        </div>
-
-                        <!-- Preferences -->
-                        <div class="setting-card">
-                            <div class="sc-header">
-                                <div class="sc-icon"><i class="fa-solid fa-sliders"></i></div>
-                                <h3>Preferences</h3>
-                            </div>
-                            <div class="sc-body">
-                                <label>Interface Language</label>
-                                <select class="std-select" id="lang-select" onchange="showToast('Language updated')">
-                                    <option value="en">English (US)</option>
-                                    <option value="es">Español</option>
-                                    <option value="fr">Français</option>
-                                    <option value="jp">日本語</option>
-                                    <option value="ar">العربية</option>
-                                </select>
-
-                                <label>Theme Mode</label>
-                                <div class="theme-toggles">
-                                    <button class="theme-opt active" onclick="setTheme('dark')"><i
-                                            class="fa-solid fa-moon"></i> Dark</button>
-                                    <button class="theme-opt" onclick="setTheme('light')"><i
-                                            class="fa-solid fa-sun"></i> Light</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Danger Zone -->
-                        <div class="setting-card danger">
-                            <div class="sc-header">
-                                <div class="sc-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                                <h3>Danger Zone</h3>
-                            </div>
-                            <div class="sc-body">
-                                <p>Once you delete your account, there is no going back. Please be certain.</p>
-                                <button class="btn-danger"
-                                    onclick="showToast('Contact support to delete account')">Delete Account</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+        </div>
+
+        <!-- PANE: LIBRARY -->
+        <div id="pane-library" class="pane hidden">
+            <header class="pane-header">
+                <h1>Library</h1>
+            </header>
+            <div class="library-grid" id="library-list">
+                <p style="padding:20px; text-align:center;">Initializing Library View...</p>
+            </div>
+        </div>
+
+        <!-- PANE: STORE -->
+        <div id="pane-store" class="pane hidden">
+            <header class="pane-header">
+                <h1>Plans</h1>
+            </header>
+            <div class="store-ui">
+                <div class="s-card">
+                    <h3>Pro Plan</h3>
+                    <div class="price">$9.99</div>
+                    <button class="btn-pill" onclick="subscribe('pro')">Buy Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANE: ADMIN -->
+        <div id="pane-admin" class="pane hidden">
+            <header class="pane-header">
+                <h1>User Database</h1>
+            </header>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Credits</th>
+                            <th>Plan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-list"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PANE: SETTINGS -->
+        <div id="pane-settings" class="pane hidden">
+            <header class="pane-header">
+                <h1>Settings</h1>
+                <p>Manage your account preferences and global configuration.</p>
+            </header>
+
+            <div class="settings-grid">
+                <!-- Profile Card -->
+                <div class="setting-card">
+                    <div class="sc-header">
+                        <div class="sc-icon"><i class="fa-solid fa-user-circle"></i></div>
+                        <h3>Profile</h3>
+                    </div>
+                    <div class="sc-body">
+                        <label>Username</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" id="set-username" class="std-input" readonly value="User">
+                        </div>
+                        <label>Email Address</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-envelope"></i>
+                            <input type="email" id="set-email" class="std-input" placeholder="user@example.com">
+                        </div>
+
+                        <label style="margin-top:20px; display:block;">Change Password</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-key"></i>
+                            <input type="password" id="set-old-pass" class="std-input" placeholder="Current Password">
+                        </div>
+                        <div class="input-with-icon" style="margin-top:10px;">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="set-new-pass" class="std-input" placeholder="New Password">
+                        </div>
+
+                        <button class="btn-outline small" onclick="updateProfile()" style="margin-top:20px;">Save
+                            Changes</button>
+                    </div>
+                </div>
+
+                <!-- Preferences -->
+                <div class="setting-card">
+                    <div class="sc-header">
+                        <div class="sc-icon"><i class="fa-solid fa-sliders"></i></div>
+                        <h3>Preferences</h3>
+                    </div>
+                    <div class="sc-body">
+                        <label>Interface Language</label>
+                        <select class="std-select" id="lang-select" onchange="showToast('Language updated')">
+                            <option value="en">English (US)</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                            <option value="jp">日本語</option>
+                            <option value="ar">العربية</option>
+                        </select>
+
+                        <label>Theme Mode</label>
+                        <div class="theme-toggles">
+                            <button class="theme-opt active" onclick="setTheme('dark')"><i class="fa-solid fa-moon"></i>
+                                Dark</button>
+                            <button class="theme-opt" onclick="setTheme('light')"><i class="fa-solid fa-sun"></i>
+                                Light</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="setting-card danger">
+                    <div class="sc-header">
+                        <div class="sc-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <h3>Danger Zone</h3>
+                    </div>
+                    <div class="sc-body">
+                        <p>Once you delete your account, there is no going back. Please be certain.</p>
+                        <button class="btn-danger" onclick="showToast('Contact support to delete account')">Delete
+                            Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
         </div>
     </main>
 
