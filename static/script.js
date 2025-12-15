@@ -326,21 +326,21 @@ async function updateDashboard() {
             else if (job.status === 'failed') statusBadge = '<span class="badge error">Failed</span>';
             else statusBadge = '<span class="badge warning">Processing</span>';
 
-            card.innerHTML = \`
+            card.innerHTML = `
                 <div class="job-head">
                     <div class="job-icon"><i class="fa-solid fa-music"></i></div>
                     <div class="job-meta">
-                         <h3>\${job.original_filename || 'Untitled'}</h3>
-                         <span>\${new Date(job.created_at).toLocaleDateString()}</span>
+                         <h3>${job.original_filename || 'Untitled'}</h3>
+                         <span>${new Date(job.created_at).toLocaleDateString()}</span>
                     </div>
                 </div>
-                <div class="job-status">\${statusBadge}</div>
-             \`;
-             
-             if(job.status === 'completed') {
-                 card.onclick = () => loadMixer(job.original_filename, job.stems);
-             }
-             grid.appendChild(card);
+                <div class="job-status">${statusBadge}</div>
+             `;
+
+            if (job.status === 'completed') {
+                card.onclick = () => loadMixer(job.original_filename, job.stems);
+            }
+            grid.appendChild(card);
         });
     }
 }
@@ -362,7 +362,7 @@ let seekerInterval = null;
 
 function loadMixer(title, stems) {
     if (!stems) return;
-    
+
     // UI Transition
     wsLoad.classList.add('hidden');
     wsDrop.classList.add('hidden');
@@ -374,43 +374,43 @@ function loadMixer(title, stems) {
     // Reset Container
     const container = document.getElementById('mixer-channels');
     container.innerHTML = '';
-    
+
     // Reset Transport
     const playBtn = document.getElementById('play-btn');
-    if(playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+    if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
     isPlaying = false;
-    
+
     const timeDisplay = document.getElementById('time-display');
     const durDisplay = document.getElementById('duration-display');
     const seekSlider = document.getElementById('seek-slider');
-    
+
     if (seekSlider) { seekSlider.value = 0; seekSlider.disabled = true; }
     if (timeDisplay) timeDisplay.textContent = "00:00";
     if (durDisplay) durDisplay.textContent = "00:00";
 
     stemsWS = {};
     const tpl = document.getElementById('channel-template');
-    
+
     // Sort: Vocals, Drums, Bass, Instruments
     const sortOrder = ['vocals', 'drums', 'bass', 'other'];
-    const sortedKeys = Object.keys(stems).sort((a,b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
+    const sortedKeys = Object.keys(stems).sort((a, b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
 
     // Master WS for event driving
     let masterWS = null;
 
     sortedKeys.forEach((name, index) => {
         const url = stems[name];
-        
+
         // 1. Create Audio Element for INSTANT PLAYBACK
         const audioEl = new Audio();
         audioEl.src = url;
         audioEl.crossOrigin = 'anonymous';
-        audioEl.preload = 'auto'; 
-        
+        audioEl.preload = 'auto';
+
         // 2. Clone Strip
         const strip = tpl.content.cloneNode(true);
         const stripDiv = strip.querySelector('.channel-strip');
-        
+
         // Styling...
         let displayName = name.toUpperCase();
         let color = STEM_COLORS.other;
@@ -422,23 +422,23 @@ function loadMixer(title, stems) {
 
         strip.querySelector('.ch-name').textContent = displayName;
         strip.querySelector('.ch-name').style.color = color;
-        stripDiv.style.borderLeft = \`4px solid \${color}\`;
+        stripDiv.style.borderLeft = `4px solid ${color}`;
 
         // Icons
         const iconDiv = strip.querySelector('.ch-icon');
         iconDiv.style.color = color;
-        if(name === 'vocals') iconDiv.innerHTML = '<i class="fa-solid fa-microphone-lines"></i>';
-        if(name.includes('drum')) iconDiv.innerHTML = '<i class="fa-solid fa-drum"></i>';
-        if(name === 'bass') iconDiv.innerHTML = '<i class="fa-solid fa-wave-square"></i>';
-        
+        if (name === 'vocals') iconDiv.innerHTML = '<i class="fa-solid fa-microphone-lines"></i>';
+        if (name.includes('drum')) iconDiv.innerHTML = '<i class="fa-solid fa-drum"></i>';
+        if (name === 'bass') iconDiv.innerHTML = '<i class="fa-solid fa-wave-square"></i>';
+
         // Download Button (New Location)
         const dlBtn = document.createElement('a');
         dlBtn.href = url;
-        dlBtn.download = \`\${title}-\${name}.wav\`;
+        dlBtn.download = `${title}-${name}.wav`;
         dlBtn.className = 'ch-download-btn';
         dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
         dlBtn.title = 'Download Stem';
-        
+
         // Append DL Button to controls
         const controlsDiv = strip.querySelector('.ch-controls');
         controlsDiv.appendChild(dlBtn);
@@ -447,15 +447,15 @@ function loadMixer(title, stems) {
         const canvas = strip.querySelector('canvas');
         const visualizerContainer = document.createElement('div');
         visualizerContainer.className = 'ws-waveform-container';
-        visualizerContainer.id = \`ws-\${name}\`;
-        if(canvas) canvas.replaceWith(visualizerContainer);
+        visualizerContainer.id = `ws-${name}`;
+        if (canvas) canvas.replaceWith(visualizerContainer);
 
         container.appendChild(stripDiv);
 
         // 3. Init WaveSurfer with MEDIA ELEMENT
         // This is crucial for Instant Play + Large File support
         const ws = WaveSurfer.create({
-            container: \`#ws-\${name}\`,
+            container: `#ws-${name}`,
             waveColor: color,
             progressColor: '#ffffff',
             cursorColor: '#ffffff',
@@ -476,23 +476,23 @@ function loadMixer(title, stems) {
 
         // 4. Events
         ws.on('ready', () => {
-             // Set duration once active
-             if(index === 0) {
-                 const dur = ws.getDuration();
-                 const m = Math.floor(dur / 60);
-                 const s = Math.floor(dur % 60).toString().padStart(2, '0');
-                 durDisplay.textContent = \`\${m}:\${s}\`;
-                 seekSlider.max = dur;
-                 seekSlider.disabled = false;
-             }
+            // Set duration once active
+            if (index === 0) {
+                const dur = ws.getDuration();
+                const m = Math.floor(dur / 60);
+                const s = Math.floor(dur % 60).toString().padStart(2, '0');
+                durDisplay.textContent = `${m}:${s}`;
+                seekSlider.max = dur;
+                seekSlider.disabled = false;
+            }
         });
-        
+
         // Sync Seeking
         ws.on('interaction', (newTime) => {
-             Object.values(stemsWS).forEach(s => {
-                 if(s.ws !== ws) s.ws.setTime(newTime);
-             });
-             seekSlider.value = newTime;
+            Object.values(stemsWS).forEach(s => {
+                if (s.ws !== ws) s.ws.setTime(newTime);
+            });
+            seekSlider.value = newTime;
         });
 
         // Mute/Solo
@@ -503,37 +503,37 @@ function loadMixer(title, stems) {
             mBtn.classList.toggle('active', track.muted);
             track.ws.setVolume(track.muted ? 0 : 1);
         };
-        
+
         const sBtn = stripDiv.querySelector('.solo');
         sBtn.innerHTML = '<i class="fa-solid fa-headphones"></i>';
         sBtn.onclick = () => {
-             const isSolo = sBtn.classList.contains('active');
-             document.querySelectorAll('.solo').forEach(b => b.classList.remove('active'));
-             
-             if(isSolo) {
-                 // Unsolo
-                 Object.values(stemsWS).forEach(t => t.ws.setVolume(t.muted ? 0 : 1));
-             } else {
-                 // Solo
-                 sBtn.classList.add('active');
-                 Object.values(stemsWS).forEach(t => {
-                     t.ws.setVolume(t === stemsWS[name].ws ? 1 : 0);
-                 });
-             }
+            const isSolo = sBtn.classList.contains('active');
+            document.querySelectorAll('.solo').forEach(b => b.classList.remove('active'));
+
+            if (isSolo) {
+                // Unsolo
+                Object.values(stemsWS).forEach(t => t.ws.setVolume(t.muted ? 0 : 1));
+            } else {
+                // Solo
+                sBtn.classList.add('active');
+                Object.values(stemsWS).forEach(t => {
+                    t.ws.setVolume(t === stemsWS[name].ws ? 1 : 0);
+                });
+            }
         };
 
-        if(index === 0) masterWS = ws;
+        if (index === 0) masterWS = ws;
     });
 
     // Transport Listeners
-    if(masterWS) {
+    if (masterWS) {
         masterWS.on('audioprocess', (t) => {
             seekSlider.value = t;
             const m = Math.floor(t / 60);
             const s = Math.floor(t % 60).toString().padStart(2, '0');
-            timeDisplay.textContent = \`\${m}:\${s}\`;
+            timeDisplay.textContent = `${m}:${s}`;
         });
-        
+
         masterWS.on('finish', () => {
             isPlaying = false;
             playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -542,7 +542,7 @@ function loadMixer(title, stems) {
 
     // Play Button Logic
     playBtn.onclick = () => {
-        if(isPlaying) {
+        if (isPlaying) {
             Object.values(stemsWS).forEach(s => s.ws.pause());
             isPlaying = false;
             playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -552,7 +552,7 @@ function loadMixer(title, stems) {
             playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
         }
     };
-    
+
     // Slider Logic
     seekSlider.oninput = (e) => {
         const t = parseFloat(e.target.value);
