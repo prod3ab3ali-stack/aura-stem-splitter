@@ -653,22 +653,22 @@ def get_history(user: dict = Depends(get_current_user)):
     projects = []
     for r in rows:
         folder_name = r["folder_path"]
-        folder_path = OUTPUT_DIR / "htdemucs_6s" / folder_name
+        folder_path = OUTPUT_DIR / "htdemucs" / folder_name
         
         stems = {}
         thumbnail_url = None
         
         if folder_path.exists():
             for f in folder_path.glob("*.wav"):
-                stems[f.stem] = f"/stems/htdemucs_6s/{folder_name}/{f.name}"
+                stems[f.stem] = f"/stems/htdemucs/{folder_name}/{f.name}"
             if not stems:
                 for f in folder_path.glob("*.mp3"):
-                    stems[f.stem] = f"/stems/htdemucs_6s/{folder_name}/{f.name}"
+                    stems[f.stem] = f"/stems/htdemucs/{folder_name}/{f.name}"
             
             # Find Thumbnail
             for img in folder_path.glob("thumbnail.*"): 
                 if img.suffix in ['.jpg', '.jpeg', '.png', '.webp']:
-                    thumbnail_url = f"/stems/htdemucs_6s/{folder_name}/{img.name}"
+                    thumbnail_url = f"/stems/htdemucs/{folder_name}/{img.name}"
                     break
         
         projects.append({
