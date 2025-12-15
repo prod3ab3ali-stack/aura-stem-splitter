@@ -426,8 +426,8 @@ async function processFile(file) {
     xhr.onload = () => {
         if (xhr.status === 200) {
             const data = JSON.parse(xhr.responseText);
-            // Switch to Job Polling
-            document.getElementById('upload-progress-container').classList.add('hidden');
+            // Switch to Job Polling (Keep bar visible but maybe reset or indeterminate?)
+            document.getElementById('loading-title').textContent = "Initializing Engine...";
             startJobPolling(data.job_id);
         } else {
             showToast("Upload Failed");
