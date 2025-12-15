@@ -251,13 +251,12 @@ os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
 # Needed because our DNS patch forces IP connections which fail hostname checks.
 original_request = requests.sessions.Session.request
 
-def patched_request(self, method, url, *args, **kwargs):
+def patched_request(self, *args, **kwargs):
     kwargs['verify'] = False # FORCE DISABLE SSL VERIFY
-    return original_request(self, method, url, *args, **kwargs)
+    return original_request(self, *args, **kwargs)
 
 requests.sessions.Session.request = patched_request
-# Also patch the top-level API just in case
-requests.api.request = patched_request
+# REMOVED: requests.api.request patch (not needed and caused signature mismatch)
 
 # 3. Patch SSL Context default (Double Tap)
 ssl._create_default_https_context = ssl._create_unverified_context
