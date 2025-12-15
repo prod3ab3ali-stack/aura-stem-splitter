@@ -1074,29 +1074,35 @@ function loadMixer(title, stems) {
 
         stemsAudio[name] = { audio, gain, anal, muted: false };
 
-        // Duration Logic (Use first stem as master)
-        if (index === 0) {
-            audio.addEventListener('loadedmetadata', () => {
-                globalDuration = audio.duration;
-                if (seekSlider) {
-                    seekSlider.max = globalDuration;
-                    seekSlider.disabled = false;
-                }
-                const m = Math.floor(globalDuration / 60);
-                const s = Math.floor(globalDuration % 60).toString().padStart(2, '0');
-                if (durDisplay) durDisplay.textContent = `${m}:${s}`;
-            });
+        // Duration Logic (Any stem can unlock the UI)
+        audio.addEventListener('loadedmetadata', () => {
+            if (audio.duration && audio.duration > 0) {
+                // Only update if globalDuration is not set or valid
+                if (!globalDuration || globalDuration < audio.duration) {
+                    globalDuration = audio.duration;
+                    const seekSlider = document.getElementById('seek-slider');
+                    const durDisplay = document.getElementById('duration-display');
 
-            // Seeking Listener ONLY on Master Transport
+                    if (seekSlider) {
+                        seekSlider.max = globalDuration;
+                        seekSlider.disabled = false;
+                    }
+                    if (durDisplay) {
+                        const m = Math.floor(globalDuration / 60);
+                        const s = Math.floor(globalDuration % 60).toString().padStart(2, '0');
+                        durDisplay.textContent = `${m}:${s}`;
+                    }
+                }
+            }
+        });
+
+        // Seeking Listener ONLY on Master Transport (Once)
+        if (index === 0) {
+            const seekSlider = document.getElementById('seek-slider');
             if (seekSlider) {
                 seekSlider.oninput = (e) => {
                     const time = parseFloat(e.target.value);
-                    Object.values(stemsAudio).forEach(s => {
-                        s.audio.currentTime = time;
-                    });
-                    const m = Math.floor(time / 60);
-                    const s = Math.floor(time % 60).toString().padStart(2, '0');
-                    if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
+                    if (isFinite(time) && time > 0) seekTo(time);
                 };
             }
         }
