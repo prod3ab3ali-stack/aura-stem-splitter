@@ -1141,14 +1141,25 @@ function loadMixer(title, stems) {
             });
 
             // Interaction: Click to Seek
-            cvs.onclick = (e) => {
-                const rect = cvs.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const per = x / rect.width;
+            cvs.onclick = async (e) => {
+                const width = cvs.clientWidth;
+                const x = e.offsetX; // More reliable than clientX - rect.left
+                const per = x / width;
+
                 // Get duration from THIS stem preferably, or global
-                const dur = stemsAudio[name].audio.duration || globalDuration;
+                let dur = 0;
+                if (stemsAudio[name].audio && stemsAudio[name].audio.duration) dur = stemsAudio[name].audio.duration;
+                if (!dur || isNaN(dur)) dur = globalDuration;
+
                 if (dur > 0) {
-                    seekTo(per * dur);
+                    const target = per * dur;
+                    seekTo(target);
+
+                    // If blocked/paused, maybe start?
+                    if (audioContext && audioContext.state === 'suspended') await audioContext.resume();
+
+                    // Optional: If user wants instant play on click
+                    // if(masterState !== 'playing') playBtn.click();
                 }
             };
         }
@@ -1353,7 +1364,10 @@ function drawChanVis(cvs, stemData, color, currentTime, duration) {
 function drawMockWaveform(ctx, w, h, color, type) {
     const seed = w; // Static seed based on width
     ctx.fillStyle = color;
-    ctx.globalAlpha = 0.3; // Dimmer than real
+
+    // Check Theme
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light' || document.body.dataset.theme === 'light';
+    ctx.globalAlpha = isLight ? 0.6 : 0.3; // Bolder in light mode
 
     ctx.beginPath();
     ctx.moveTo(0, h / 2);
