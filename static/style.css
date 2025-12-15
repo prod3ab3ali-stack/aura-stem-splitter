@@ -3228,6 +3228,7 @@ h3 {
         opacity: 0.6;
     }
 }
+
 /* --- HERO RELOADED (SPLIT LAYOUT) --- */
 .hero-split {
     min-height: 100vh;
@@ -3296,13 +3297,13 @@ h3 {
     font-weight: 700;
     border: none;
     cursor: pointer;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .btn-primary-glow:hover {
     transform: translateY(-2px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .btn-text-glow {
@@ -3314,7 +3315,7 @@ h3 {
     font-weight: 600;
     cursor: pointer;
     transition: 0.2s;
-     color: var(--text-main);
+    color: var(--text-main);
 }
 
 .btn-text-glow:hover {
@@ -3363,8 +3364,15 @@ h3 {
 }
 
 @keyframes floatStack {
-    0%, 100% { transform: rotateX(55deg) rotateZ(-35deg) translateZ(0); }
-    50% { transform: rotateX(55deg) rotateZ(-35deg) translateZ(20px); }
+
+    0%,
+    100% {
+        transform: rotateX(55deg) rotateZ(-35deg) translateZ(0);
+    }
+
+    50% {
+        transform: rotateX(55deg) rotateZ(-35deg) translateZ(20px);
+    }
 }
 
 .layer-plate {
@@ -3381,20 +3389,37 @@ h3 {
     font-weight: 700;
     letter-spacing: 2px;
     backdrop-filter: blur(5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     transition: transform 0.5s;
 }
 
 [data-theme="light"] .layer-plate {
     background: rgba(255, 255, 255, 0.4);
-    border-color: rgba(0,0,0,0.05);
+    border-color: rgba(0, 0, 0, 0.05);
     color: #000;
 }
 
-.p-drums { transform: translateZ(0px); z-index: 1; }
-.p-bass { transform: translateZ(60px); z-index: 2; }
-.p-other { transform: translateZ(120px); z-index: 3; }
-.p-vocals { transform: translateZ(180px); z-index: 4; border-color: var(--accent); color: var(--accent); }
+.p-drums {
+    transform: translateZ(0px);
+    z-index: 1;
+}
+
+.p-bass {
+    transform: translateZ(60px);
+    z-index: 2;
+}
+
+.p-other {
+    transform: translateZ(120px);
+    z-index: 3;
+}
+
+.p-vocals {
+    transform: translateZ(180px);
+    z-index: 4;
+    border-color: var(--accent);
+    color: var(--accent);
+}
 
 .layer-plate:hover {
     background: var(--accent);
@@ -3420,42 +3445,50 @@ h3 {
         text-align: center;
         padding-top: 120px;
     }
+
     .hero-left {
         padding: 0 20px;
         align-items: center;
     }
+
     .hero-right {
         height: 500px;
         width: 100%;
     }
+
     .hero-title-split {
         font-size: 3.5rem;
     }
-    .hero-actions { justify-content: center; }
+
+    .hero-actions {
+        justify-content: center;
+    }
 }
 
 /* --- MIXER REDESIGN v2 (LANDR Style) --- */
 .mixer-channels {
     gap: 15px;
-    padding-bottom: 120px; /* Space for dock */
+    padding-bottom: 120px;
+    /* Space for dock */
 }
 
 .channel-strip {
     background: rgba(30, 30, 35, 0.6);
-    border: 1px solid rgba(255,255,255,0.05); /* Dark border */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    /* Dark border */
     border-radius: 16px;
     padding: 20px;
     display: grid;
     grid-template-columns: 140px 1fr 180px;
     align-items: center;
     gap: 30px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="light"] .channel-strip {
     background: #fff;
     border-color: var(--border);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .ch-track {
@@ -3467,12 +3500,14 @@ h3 {
 .ch-icon {
     font-size: 1.5rem;
     padding: 10px;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
     width: fit-content;
 }
 
-[data-theme="light"] .ch-icon { background: rgba(0,0,0,0.05); }
+[data-theme="light"] .ch-icon {
+    background: rgba(0, 0, 0, 0.05);
+}
 
 .ch-name {
     font-weight: 700;
@@ -3482,14 +3517,16 @@ h3 {
 
 .ch-vis {
     height: 60px;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     overflow: hidden;
     position: relative;
     width: 100%;
 }
 
-[data-theme="light"] .ch-vis { background: rgba(0,0,0,0.03); }
+[data-theme="light"] .ch-vis {
+    background: rgba(0, 0, 0, 0.03);
+}
 
 .ch-canvas {
     width: 100%;
@@ -3506,7 +3543,7 @@ h3 {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     background: transparent;
     color: var(--text-sec);
     cursor: pointer;
@@ -3518,7 +3555,7 @@ h3 {
 }
 
 .btn-mini:hover {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     color: var(--text-main);
 }
 
@@ -3540,8 +3577,10 @@ h3 {
 }
 
 .ch-fader-wrap {
-    display: none; /* Hide fader if using Image 2 style (only buttons visible?) or re-style it */
+    display: none;
+    /* Hide fader if using Image 2 style (only buttons visible?) or re-style it */
 }
+
 /* Re-enable fader if needed, but Image 2 shows minimal controls */
 /* Let's keep fader but style it minimal */
 .ch-fader-wrap {
@@ -3565,7 +3604,7 @@ h3 {
     width: 100%;
     -webkit-appearance: none;
     height: 4px;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 2px;
     outline: none;
     cursor: pointer;
@@ -3578,13 +3617,19 @@ h3 {
     border-radius: 50%;
     background: #fff;
     cursor: pointer;
-    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
-[data-theme="light"] #seek-slider { background: rgba(0,0,0,0.1); }
-[data-theme="light"] #seek-slider::-webkit-slider-thumb { background: #000; }
+[data-theme="light"] #seek-slider {
+    background: rgba(0, 0, 0, 0.1);
+}
 
-.transport-time, .transport-duration {
+[data-theme="light"] #seek-slider::-webkit-slider-thumb {
+    background: #000;
+}
+
+.transport-time,
+.transport-duration {
     font-family: monospace;
     font-size: 0.85rem;
     color: var(--text-sec);
@@ -3592,130 +3637,120 @@ h3 {
     text-align: center;
 }
 
-/* --- FINAL POLISH v3 (Pro Audio UI) --- */
+/* --- FINAL POLISH v4 (Theme Sync & Layout) --- */
 
-/* Force Sidebar Styling */
+/* Sidebar Theme Sync */
 .app-sidebar {
-    background: #09090b; /* Zinc-950 */
-    border-right: 1px solid rgba(255,255,255,0.08);
+    background: var(--bg-panel);
+    /* Use variable! */
+    border-right: 1px solid var(--border);
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
+
+[data-theme="dark"] .app-sidebar {
+    background: #09090b;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .app-sidebar {
+    background: #ffffff;
+    border-color: #e4e4e7;
+}
+
+/* Logo Theme Sync */
 .app-logo {
     font-size: 1.8rem;
     font-weight: 800;
     letter-spacing: -1px;
-    background: linear-gradient(135deg, #fff, #a1a1aa);
+    background: var(--text-main);
+    /* Fallback */
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-image: linear-gradient(135deg, var(--text-main), var(--text-sec));
 }
-.nav-btn {
-    border-radius: 12px;
-    margin-bottom: 4px;
-    padding: 14px 16px;
-    color: #a1a1aa; /* Zinc-400 */
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-.nav-btn:hover {
-    background: rgba(255,255,255,0.05);
-    color: #fff;
-}
-.nav-btn.active {
-    background: #fff;
-    color: #000;
-    box-shadow: 0 4px 12px rgba(255,255,255,0.2);
-}
-.nav-btn i { width: 24px; text-align: center; margin-right: 12px; font-size: 1.1rem; }
 
-/* Force Mixer Card Styling (Dark Mode Preference) */
-.channel-strip {
-    background: #18181b; /* Zinc-900 */
-    border: 1px solid rgba(255,255,255,0.05);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    padding: 14px 24px;
-    height: 90px; /* Fixed height for consistency */
+/* Nav Buttons Theme Sync */
+.nav-btn {
+    color: var(--text-sec);
 }
+
+.nav-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+}
+
+.nav-btn.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Mixer Card Theme Sync */
+.channel-strip {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    padding: 14px 24px;
+    height: 100px;
+    display: grid;
+    /* Ensure grid columns are preserved from previous edit */
+    grid-template-columns: 140px 1fr 180px;
+    align-items: center;
+    gap: 20px;
+}
+
+[data-theme="dark"] .channel-strip {
+    background: #18181b;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
 [data-theme="light"] .channel-strip {
     background: #ffffff;
-    border: 1px solid #e4e4e7;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-color: #e4e4e7;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
-.ch-name {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
-    opacity: 0.9;
+/* Transport Dock Sizing Fix */
+.transport-dock-container {
+    bottom: 20px;
+    /* Lift up */
 }
 
-/* Rounded Mute/Solo Buttons */
-.btn-mini {
-    width: 32px;
-    height: 32px;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px; /* Squircle */
-    font-size: 0.8rem;
-    background: #27272a;
-}
-.btn-mini:hover { background: #3f3f46; border-color: rgba(255,255,255,0.2); }
-.btn-mini.active { background: #fff; color: #000; border-color: #fff; }
-
-/* Transport Dock Polish */
 .transport-dock {
-    background: rgba(24, 24, 27, 0.7); /* Zinc-900 with Blur */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.08); /* Subtle border */
-    border-radius: 24px;
-    padding: 12px 24px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    width: 500px;
+    /* Reduced width */
+    padding: 10px 20px;
+    /* Reduced padding */
+    background: rgba(24, 24, 27, 0.85);
+    /* Darker blur */
 }
 
-.t-btn.main-play {
-    width: 44px;
-    height: 44px;
-    background: #fff;
+[data-theme="light"] .transport-dock {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .transport-time,
+[data-theme="light"] .transport-duration {
     color: #000;
-    border-radius: 50%;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 0 15px rgba(255,255,255,0.3);
-    transition: transform 0.1s;
 }
-.t-btn.main-play:active { transform: scale(0.95); }
 
-/* Seek Slider track */
-#seek-slider {
-    height: 4px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 2px;
+[data-theme="light"] #seek-slider {
+    background: rgba(0, 0, 0, 0.1);
 }
-#seek-slider::-webkit-slider-thumb {
-    width: 12px;
-    height: 12px;
-    background: #fff;
-    border-radius: 50%;
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.1); /* Glow ring */
-    margin-top: -4px; /* Align center */
+
+[data-theme="light"] #seek-slider::-webkit-slider-thumb {
+    background: #000;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
 }
-        
-/* Time Display Font */
-.transport-time, .transport-duration {
-    font-family: 'Roboto Mono', monospace;
-    font-size: 0.8rem;
-    opacity: 0.6;
-    letter-spacing: -0.5px;
-}
+
 
 /* --- THEME REPAIR & WAVESURFER --- */
 
 /* Sidebar Theme Logic */
 .app-sidebar {
-    background: var(--bg-panel) !important; /* Respect Theme Variable */
+    background: var(--bg-panel) !important;
+    /* Respect Theme Variable */
     border-right: 1px solid var(--border) !important;
 }
 
@@ -3731,16 +3766,19 @@ h3 {
 }
 
 [data-theme="light"] .nav-btn {
-    color: #52525b; /* Zinc-600 */
+    color: #52525b;
+    /* Zinc-600 */
 }
+
 [data-theme="light"] .nav-btn:hover {
     background: #f4f4f5;
     color: #000;
 }
+
 [data-theme="light"] .nav-btn.active {
     background: #000;
     color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* WaveSurfer Container */
@@ -3750,34 +3788,39 @@ h3 {
     position: relative;
     border-radius: 8px;
     overflow: hidden;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0, 0, 0, 0.2);
     /* No border, clean look */
 }
+
 [data-theme="light"] .ws-waveform-container {
-    background: rgba(0,0,0,0.03);
+    background: rgba(0, 0, 0, 0.03);
 }
 
 /* Mixer Card Light Mode Repair */
 [data-theme="light"] .channel-strip {
     background: #ffffff !important;
     border: 1px solid #e4e4e7 !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
 }
+
 [data-theme="light"] .ch-name {
     color: #000 !important;
 }
 
 /* Remove Canvas styles as we use WS now */
-.ch-canvas { display: none; }
+.ch-canvas {
+    display: none;
+}
 
 
 /* --- DASHBOARD & TRANSPORT FIXES v4 --- */
 
 /* Active Projects (Job Cards) Redesign */
 .job-card {
-    background: rgba(30, 30, 35, 0.6); /* Glass Dark */
+    background: rgba(30, 30, 35, 0.6);
+    /* Glass Dark */
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
     padding: 20px;
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -3788,6 +3831,7 @@ h3 {
     flex-direction: column;
     gap: 10px;
 }
+
 [data-theme="light"] .job-card {
     background: #fff;
     border: 1px solid #e4e4e7;
@@ -3796,8 +3840,8 @@ h3 {
 
 .job-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(255,255,255,0.2);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .job-card h4 {
@@ -3819,12 +3863,25 @@ h3 {
     border-radius: 6px;
     width: fit-content;
 }
-.job-status.completed { color: #10b981; background: rgba(16, 185, 129, 0.1); }
-.job-status.processing { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
-.job-status.failed { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+.job-status.completed {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.job-status.processing {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.job-status.failed {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
 
 /* Transport Time Fix */
-#time-display, #duration-display {
+#time-display,
+#duration-display {
     font-size: 0.9rem;
     font-family: 'Roboto Mono', monospace;
     font-weight: 500;
@@ -3836,7 +3893,8 @@ h3 {
 #play-btn {
     width: 48px;
     height: 48px;
-    font-size: 1.2rem; /* Icon size */
+    font-size: 1.2rem;
+    /* Icon size */
     margin: 0 10px;
 }
 
@@ -3846,18 +3904,20 @@ h3 {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px; 
+    width: 36px;
     height: 36px;
     border-radius: 50%;
     margin-right: 12px;
     transition: 0.2s;
 }
+
 .download-stem-btn:hover {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     color: #fff;
 }
+
 [data-theme="light"] .download-stem-btn:hover {
-    background: rgba(0,0,0,0.05); 
+    background: rgba(0, 0, 0, 0.05);
     color: #000;
 }
 
@@ -3865,7 +3925,8 @@ h3 {
 /* --- ACTIVE PROJECTS & MIXER CONTROLS FIX --- */
 
 /* Dashboard Job List */
-#active-jobs-list, #history-list {
+#active-jobs-list,
+#history-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 15px;
@@ -3887,25 +3948,47 @@ h3 {
 
 .job-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     border-color: var(--accent);
 }
 
 .jc-icon {
     width: 40px;
     height: 40px;
-    background: rgba(255,255,255,0.05); /* Dark mode tint */
+    background: rgba(255, 255, 255, 0.05);
+    /* Dark mode tint */
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-main);
 }
-[data-theme="light"] .jc-icon { background: rgba(0,0,0,0.05); color: #000; }
 
-.jc-info { flex: 1; min-width: 0; }
-.jc-info h4 { font-size: 0.95rem; margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
-.jc-meta { display: flex; gap: 10px; font-size: 0.75rem; color: var(--text-sec); }
+[data-theme="light"] .jc-icon {
+    background: rgba(0, 0, 0, 0.05);
+    color: #000;
+}
+
+.jc-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.jc-info h4 {
+    font-size: 0.95rem;
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-main);
+}
+
+.jc-meta {
+    display: flex;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: var(--text-sec);
+}
 
 .status-badge {
     padding: 2px 6px;
@@ -3914,16 +3997,28 @@ h3 {
     font-size: 0.65rem;
     font-weight: 700;
 }
-.status-badge.success { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-.status-badge.warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-.status-badge.error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+.status-badge.success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.status-badge.warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.status-badge.error {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
 
 
 /* Mixer Channel Strip - Layout Fix */
 .channel-strip {
     /* 3 Columns: Info | Waveform | Actions */
     display: grid;
-    grid-template-columns: 140px 1fr auto; 
+    grid-template-columns: 140px 1fr auto;
     align-items: center;
     gap: 20px;
     padding: 15px 20px;
@@ -3936,9 +4031,9 @@ h3 {
     gap: 15px;
 }
 
-.ch-controls { 
-    display: flex; 
-    gap: 8px; 
+.ch-controls {
+    display: flex;
+    gap: 8px;
 }
 
 /* Volume Fader Styling */
@@ -3947,15 +4042,19 @@ h3 {
     display: flex;
     align-items: center;
 }
+
 .ch-fader {
     -webkit-appearance: none;
     width: 100%;
     height: 4px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
     outline: none;
 }
-[data-theme="light"] .ch-fader { background: rgba(0,0,0,0.1); }
+
+[data-theme="light"] .ch-fader {
+    background: rgba(0, 0, 0, 0.1);
+}
 
 .ch-fader::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -3966,7 +4065,10 @@ h3 {
     cursor: pointer;
     transition: background 0.2s;
 }
-.ch-fader:hover::-webkit-slider-thumb { background: var(--text-main); }
+
+.ch-fader:hover::-webkit-slider-thumb {
+    background: var(--text-main);
+}
 
 /* Download Button Position */
 .btn-mini.dl {
@@ -3974,34 +4076,43 @@ h3 {
     color: var(--text-sec);
     border: none;
 }
-.btn-mini.dl:hover { color: var(--text-main); background: transparent; }
+
+.btn-mini.dl:hover {
+    color: var(--text-main);
+    background: transparent;
+}
 
 /* Remove Canvas styles */
-.ch-canvas { display: none; }
+.ch-canvas {
+    display: none;
+}
 
 
 /* --- ACTIVE PROJECTS FACELIFT --- */
 .job-card {
-    background: linear-gradient(145deg, rgba(20,20,23, 0.9), rgba(10,10,12, 1)) !important;
+    background: linear-gradient(145deg, rgba(20, 20, 23, 0.9), rgba(10, 10, 12, 1)) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 16px !important;
     padding: 16px 20px !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
 }
+
 .job-card:hover {
     transform: translateY(-2px);
     border-color: rgba(255, 255, 255, 0.15) !important;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
 }
+
 [data-theme="light"] .job-card {
     background: #fff !important;
-    border: 1px solid rgba(0,0,0,0.05) !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
 }
+
 [data-theme="light"] .job-card:hover {
-    border-color: rgba(0,0,0,0.1) !important;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08) !important;
 }
 
 .job-card h4 {
@@ -4028,10 +4139,11 @@ h3 {
 
 .channel-strip {
     /* Grid Update: Name | Waveform | Download | Mute/Solo */
-    grid-template-columns: 100px 1fr 50px 120px !important; 
+    grid-template-columns: 100px 1fr 50px 120px !important;
     padding: 12px 20px !important;
     gap: 20px !important;
-    height: 80px !important; /* Slightly more compact */
+    height: 80px !important;
+    /* Slightly more compact */
 }
 
 /* Explicit Download Button Position */
@@ -4039,7 +4151,7 @@ h3 {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
     color: var(--text-sec);
     display: flex;
     align-items: center;
@@ -4047,10 +4159,12 @@ h3 {
     transition: all 0.2s;
     border: 1px solid transparent;
 }
+
 .ch-download-btn:hover {
     background: var(--text-main);
     color: var(--bg-body);
 }
+
 [data-theme="light"] .ch-download-btn:hover {
     background: #000;
     color: #fff;
@@ -4066,10 +4180,11 @@ h3 {
 /* 1. Active Project Card Glow Up */
 .job-card.active-project {
     background: linear-gradient(145deg, #18181b, #09090b);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 30px rgba(124, 58, 237, 0.1);
     padding: 20px;
 }
+
 .job-card.active-project h3 {
     font-size: 1.2rem;
     background: linear-gradient(to right, #fff, #a1a1aa);
@@ -4082,7 +4197,7 @@ h3 {
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: #71717a;
     background: transparent;
     cursor: pointer;
@@ -4091,15 +4206,17 @@ h3 {
     justify-content: center;
     transition: all 0.2s;
 }
+
 .ch-download-btn:hover {
     color: #fff;
     border-color: #fff;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 /* 3. Transport Dock Cleanups */
 .transport-dock {
-    height: 70px; /* Fixed height */
+    height: 70px;
+    /* Fixed height */
     padding: 0 40px;
     gap: 30px;
     display: flex;
@@ -4108,7 +4225,8 @@ h3 {
 }
 
 /* Fix Duration Fonts */
-.transport-time, .transport-duration {
+.transport-time,
+.transport-duration {
     font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
     font-size: 0.9rem;
     font-weight: 500;
@@ -4126,13 +4244,16 @@ h3 {
 }
 
 /* Hide the old download button if it was loose */
-.ch-waveform-overlay-dl { display: none !important; }
+.ch-waveform-overlay-dl {
+    display: none !important;
+}
 
 /* Grid Columns Update for Download Button */
 .channel-strip {
     /* Name | Waveform | Controls (Mute/Solo/DL) */
-    grid-template-columns: 120px 1fr 200px !important; 
+    grid-template-columns: 120px 1fr 200px !important;
 }
+
 .ch-controls {
     display: flex;
     gap: 10px;
@@ -4143,8 +4264,8 @@ h3 {
 
 /* Job Card (Active Projects) Dark Style */
 .job-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 12px;
     padding: 16px;
     display: flex;
@@ -4153,19 +4274,33 @@ h3 {
     margin-bottom: 10px;
     transition: all 0.2s;
 }
+
 .job-card:hover {
-    background: rgba(255,255,255,0.06);
+    background: rgba(255, 255, 255, 0.06);
     transform: translateY(-2px);
 }
+
 [data-theme="light"] .job-card {
     background: #fff;
     border: 1px solid #e4e4e7;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.job-info { display: flex; flex-direction: column; gap: 4px; }
-.job-title { font-weight: 600; font-size: 0.95rem; }
-.job-meta { font-size: 0.8rem; opacity: 0.6; }
+.job-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.job-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.job-meta {
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
 
 .badge {
     padding: 4px 10px;
@@ -4174,9 +4309,21 @@ h3 {
     font-weight: 600;
     text-transform: uppercase;
 }
-.badge.completed { background: rgba(16, 185, 129, 0.2); color: #10B981; }
-.badge.processing { background: rgba(245, 158, 11, 0.2); color: #F59E0B; }
-.badge.failed { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
+
+.badge.completed {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10B981;
+}
+
+.badge.processing {
+    background: rgba(245, 158, 11, 0.2);
+    color: #F59E0B;
+}
+
+.badge.failed {
+    background: rgba(239, 68, 68, 0.2);
+    color: #EF4444;
+}
 
 .btn-action.open-mix {
     background: #fff;
@@ -4197,7 +4344,9 @@ h3 {
     align-items: center;
     height: 70px;
 }
-.transport-time, .transport-duration {
+
+.transport-time,
+.transport-duration {
     min-width: 50px;
     text-align: center;
     font-feature-settings: "tnum";
@@ -4206,11 +4355,13 @@ h3 {
 
 /* Download Button in Strip */
 .btn-mini.btn-download {
-    margin-left: auto; /* Push to right */
+    margin-left: auto;
+    /* Push to right */
     background: transparent;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-sec);
 }
+
 .btn-mini.btn-download:hover {
     background: #fff;
     color: #000;
@@ -4218,8 +4369,10 @@ h3 {
 
 /* WaveSurfer Correction */
 .ws-waveform-container {
-    background: transparent !important; /* Let body bg shine or slight tint */
+    background: transparent !important;
+    /* Let body bg shine or slight tint */
 }
+
 /* Ensure canvas inside WS is visible */
 .ws-pattern canvas {
     /* Ensure no weird filters */
@@ -4229,8 +4382,15 @@ h3 {
 /* --- HERO VISIBILITY FIX --- */
 /* Ensure Hero elements animate via CSS, independent of JS */
 @keyframes fadeInUpRaw {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .hero-title-split,
@@ -4240,13 +4400,25 @@ h3 {
     animation: fadeInUpRaw 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-.hero-title-split { animation-delay: 0.1s; }
-.hero-sub-split { animation-delay: 0.3s; }
-.hero-actions { animation-delay: 0.5s; }
-.hero-stats { animation-delay: 0.7s; }
+.hero-title-split {
+    animation-delay: 0.1s;
+}
+
+.hero-sub-split {
+    animation-delay: 0.3s;
+}
+
+.hero-actions {
+    animation-delay: 0.5s;
+}
+
+.hero-stats {
+    animation-delay: 0.7s;
+}
 
 /* Override the .fade-in opacity:0 rule for these specific elements if they have it */
 .hero-split .fade-in {
-    opacity: 1 !important; /* Fallback */
+    opacity: 1 !important;
+    /* Fallback */
     transform: none !important;
 }
