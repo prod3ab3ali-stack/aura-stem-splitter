@@ -235,17 +235,27 @@ def logout(authorization: Optional[str] = Header(None)):
 import yt_dlp
 
 # --- DNS MONKEY PATCH FOR YOUTUBE ---
-# Fixes [Errno -5] No address associated with hostname in broken containers
 import socket
 _original_getaddrinfo = socket.getaddrinfo
+_original_gethostbyname = socket.gethostbyname
+
+# Known working IPs for www.youtube.com (Google Global Cache)
+YT_IPS = ['142.250.72.78', '142.250.188.46', '172.217.164.174']
 
 def patched_getaddrinfo(host, *args, **kwargs):
-    if host == 'www.youtube.com':
-        # Hardcode one of YouTube's IPs (Google) if DNS fails
-        # Using a list of known IPs for redundancy
-        return _original_getaddrinfo('142.250.72.78', *args, **kwargs)
+    if 'youtube' in str(host):
+        # print(f"DEBUG: Intercepted DNS for {host}, returning {YT_IPS[0]}")
+        return _original_getaddrinfo(YT_IPS[0], *args, **kwargs)
     return _original_getaddrinfo(host, *args, **kwargs)
 
+def patched_gethostbyname(host):
+    if 'youtube' in str(host):
+        return YT_IPS[0]
+    return _original_gethostbyname(host)
+
+socket.getaddrinfo = patched_getaddrinfo
+socket.gethostbyname = patched_gethostbyname
+# ------------------------------------
 # --- Core Logic Refactored ---
 def core_process_track(input_path: Path, original_name: str, user: dict):
     # 1. Run Demucs (High Quality V4.1)
