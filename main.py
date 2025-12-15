@@ -234,9 +234,21 @@ def logout(authorization: Optional[str] = Header(None)):
 # --- Process Routes ---
 import yt_dlp
 
-# --- GLOBAL DNS PATCH (The "Nuclear" Solution) ---
-# The container has broken DNS (libc/stub resolver).
-# We replace it with a full python-native DNS client (dnspython).
+# --- GLOBAL SSL & DNS PATCH (The "Nuclear" Solution) ---
+# 1. SSL Fix: Force certifi and disable verification if needed
+import os
+import ssl
+import certifi
+
+# Force Python to use Certifi's bundles
+os.environ['SSL_CERT_FILE'] = certifi.where()
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+
+# BYPASS SSL VERIFICATION COMPLETELY (Fixes "unable to get local issuer certificate")
+# This overrides the default SSL context creation to skip verification.
+ssl._create_default_https_context = ssl._create_unverified_context
+
+# 2. DNS Fix: Replace broken container resolver with dnspython
 try:
     import dns.resolver
     import socket
