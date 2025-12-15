@@ -1160,36 +1160,46 @@ function drawChanVis(cvs, anal, color) {
         const w = cvs.width = cvs.clientWidth;
         const h = cvs.height = cvs.clientHeight;
         const data = new Uint8Array(anal.frequencyBinCount);
-        anal.getByteTimeDomainData(data); // WAVEFORM
+        anal.getByteTimeDomainData(data);
 
         ctx.clearRect(0, 0, w, h);
 
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = color;
+        // Create Gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, h);
+        gradient.addColorStop(0, color + '00'); // Transparent top
+        gradient.addColorStop(0.5, color);      // Solid middle
+        gradient.addColorStop(1, color + '00'); // Transparent bottom
+
+        ctx.fillStyle = gradient;
         ctx.beginPath();
 
         const sliceWidth = w * 1.0 / data.length;
         let x = 0;
 
+        // Draw top half
+        ctx.moveTo(0, h / 2);
+
+        // We need to construct a closed shape for filling
+        // 1. Trace the waveform
         for (let i = 0; i < data.length; i++) {
-            const v = data[i] / 128.0; // 128 is 0-axis
-            const y = (v * h) / 2; // Scale to half height to center? No, v goes 0..2
-
-            // Mirror Logic
-            // v ranges 0 to 2. 1 is center.
-            // When v=1, y = h/2.
-            // Let's amplify signal
-            const amp = (v - 1) * 1.5; // -0.5 to 0.5 roughly
-
-            const yMid = h / 2;
-            const yOffset = amp * (h * 0.8);
-
-            if (i === 0) ctx.moveTo(x, yMid + yOffset);
-            else ctx.lineTo(x, yMid + yOffset);
-
+            const v = data[i] / 128.0;
+            const amp = (v - 1) * 2.0; // Amplify
+            const y = (h / 2) + (amp * (h * 0.4));
+            ctx.lineTo(x, y);
             x += sliceWidth;
         }
 
+        // 2. Close pattern
+        ctx.lineTo(w, h / 2);
+        ctx.lineTo(0, h / 2);
+
+        ctx.fill();
+
+        // Add a Center Line for "Zero Crossing" reference styling
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.beginPath();
+        ctx.moveTo(0, h / 2);
+        ctx.lineTo(w, h / 2);
         ctx.stroke();
     }
     draw();

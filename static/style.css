@@ -3591,3 +3591,122 @@ h3 {
     width: 45px;
     text-align: center;
 }
+
+/* --- FINAL POLISH v3 (Pro Audio UI) --- */
+
+/* Force Sidebar Styling */
+.app-sidebar {
+    background: #09090b; /* Zinc-950 */
+    border-right: 1px solid rgba(255,255,255,0.08);
+}
+.app-logo {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #fff, #a1a1aa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.nav-btn {
+    border-radius: 12px;
+    margin-bottom: 4px;
+    padding: 14px 16px;
+    color: #a1a1aa; /* Zinc-400 */
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.nav-btn:hover {
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+}
+.nav-btn.active {
+    background: #fff;
+    color: #000;
+    box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+}
+.nav-btn i { width: 24px; text-align: center; margin-right: 12px; font-size: 1.1rem; }
+
+/* Force Mixer Card Styling (Dark Mode Preference) */
+.channel-strip {
+    background: #18181b; /* Zinc-900 */
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 14px 24px;
+    height: 90px; /* Fixed height for consistency */
+}
+[data-theme="light"] .channel-strip {
+    background: #ffffff;
+    border: 1px solid #e4e4e7;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.ch-name {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    opacity: 0.9;
+}
+
+/* Rounded Mute/Solo Buttons */
+.btn-mini {
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; /* Squircle */
+    font-size: 0.8rem;
+    background: #27272a;
+}
+.btn-mini:hover { background: #3f3f46; border-color: rgba(255,255,255,0.2); }
+.btn-mini.active { background: #fff; color: #000; border-color: #fff; }
+
+/* Transport Dock Polish */
+.transport-dock {
+    background: rgba(24, 24, 27, 0.7); /* Zinc-900 with Blur */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08); /* Subtle border */
+    border-radius: 24px;
+    padding: 12px 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+.t-btn.main-play {
+    width: 44px;
+    height: 44px;
+    background: #fff;
+    color: #000;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    transition: transform 0.1s;
+}
+.t-btn.main-play:active { transform: scale(0.95); }
+
+/* Seek Slider track */
+#seek-slider {
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+}
+#seek-slider::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.1); /* Glow ring */
+    margin-top: -4px; /* Align center */
+}
+        
+/* Time Display Font */
+.transport-time, .transport-duration {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.8rem;
+    opacity: 0.6;
+    letter-spacing: -0.5px;
+}
