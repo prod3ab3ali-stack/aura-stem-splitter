@@ -275,45 +275,7 @@ except ImportError:
 
 # (Rest of imports...)
 
-# ... In Youtube Wrapper ...
-            
-            # --- YT-DLP Standard Logic (Restored) ---
-            import static_ffmpeg
-            static_ffmpeg.add_paths()
-            ffmpeg_path = shutil.which("ffmpeg")
-            
-            ydl_opts = {
-                'format': 'bestaudio/best',
-                'ffmpeg_location': str(ffmpeg_path),
-                'outtmpl': str(input_path),
-                'writethumbnail': True, 
-                'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'wav', 'preferredquality': '192'}],
-                'nocheckcertificate': True,
-                'ignoreerrors': True,
-                'no_warnings': False,
-                'quiet': False, 
-                'verbose': True,
-                'socket_timeout': 15,
-                'retries': 10,
-                'force_ipv4': True,
-                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
-                'progress_hooks': [ph]
-            }
-            
-            meta_title = "Youtube Download"
-            thumb_url = None
-            
-            try:
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(u, download=True)
-                    meta_title = info.get('title', meta_title)
-                    thumb_url = info.get('thumbnail', None)
-            except Exception as e:
-                print(f"YT-DLP FINAL ERROR: {e}")
-                raise e
-                
-            # No need for manual file checks, yt-dlp raises if failed.
-            pass
+
 # --- Core Logic Refactored ---
 def core_process_track(input_path: Path, original_name: str, user: dict):
     # 1. Run Demucs (High Quality V4.1)
