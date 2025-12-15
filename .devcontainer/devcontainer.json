@@ -15,5 +15,6 @@
     "forwardPorts": [
         7860
     ],
+    "onCreateCommand": "sudo apt-get update && sudo apt-get install -y ffmpeg libsndfile1",
     "postCreateCommand": "pip install -r requirements.txt"
 }
