@@ -705,23 +705,22 @@
                 <div class="ch-icon"><i class="fa-solid fa-music"></i></div>
                 <span class="ch-name">STEM</span>
             </div>
-            <!-- WaveSurfer Container -->
-            <div class="ch-vis"></div>
-
-            <div class="ch-actions">
-                <div class="ch-controls">
-                    <button class="btn-mini solo" title="Solo">S</button>
-                    <button class="btn-mini mute" title="Mute">M</button>
-                </div>
-                <div class="ch-fader-wrap">
-                    <input type="range" class="ch-fader" min="0" max="1" step="0.01" value="1" title="Volume">
-                </div>
-                <a href="#" class="btn-mini dl" download title="Download Stem"><i class="fa-solid fa-download"></i></a>
+            <div class="ch-vis">
+                <canvas class="ch-canvas"></canvas>
             </div>
+            <div class="ch-controls">
+                <button class="btn-mini solo">S</button>
+                <button class="btn-mini mute">M</button>
+            </div>
+            <div class="ch-fader-wrap">
+                <input type="range" class="ch-fader" min="0" max="1" step="0.01" value="1">
+            </div>
+            <a href="#" class="btn-mini dl" download><i class="fa-solid fa-download"></i></a>
         </div>
     </template>
 
-    <script src="script.js?v=4.2"></script>
+    <script src="particles.js"></script>
+    <script src="script.js?v=7.0"></script>
 </body>
 
 </html>
