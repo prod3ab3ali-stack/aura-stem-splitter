@@ -543,3 +543,28 @@ async function processFile(file) {
     xhr.send(formData);
 }
 
+
+// Restore missing toggleAuth function
+function toggleAuth(mode) {
+    const title = document.getElementById('auth-title');
+    const btn = document.getElementById('auth-submit');
+    const switchBtn = document.getElementById('auth-switch-btn');
+    const emailGroup = document.getElementById('auth-email-group');
+    
+    showAuth();
+
+    if (mode === 'signup') {
+        if(title) title.textContent = 'Create Account';
+        if(btn) btn.textContent = 'Start Splitting'; // Matches check in handleLogin
+        if(switchBtn) switchBtn.textContent = 'Login';
+        if(emailGroup) emailGroup.style.display = 'block';
+        if(switchBtn) switchBtn.onclick = () => toggleAuth('login');
+    } else {
+        if(title) title.textContent = 'Welcome Back';
+        if(btn) btn.textContent = 'Login';
+        if(switchBtn) switchBtn.textContent = 'Create Account';
+        if(emailGroup) emailGroup.style.display = 'none';
+        if(switchBtn) switchBtn.onclick = () => toggleAuth('signup');
+    }
+}
+window.toggleAuth = toggleAuth; // Ensure global scope
