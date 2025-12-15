@@ -396,7 +396,9 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
         
         # PERFORMANCE FIX: "shifts=0" is fastest. 
         # Using "htdemucs" (Hybrid Transformer) - standard version.
+        # USE RAM/CPU BALANCING: 'nice -n 15' lowers priority so Web UI doesn't freeze.
         cmd = [
+            "nice", "-n", "15",
             sys.executable, "-m", "demucs.separate",
             "-n", "htdemucs",  # Lighter model
             "--shifts", "0",   # FASTEST MODE
