@@ -264,17 +264,17 @@ function renderDashboard(jobs) {
     container.classList.remove('hidden');
     list.innerHTML = '';
 
-    // Only show active jobs (processing/queued/downloading)
-    const activeJobs = jobs.filter(j => ['processing', 'queued', 'downloading'].includes(j.status));
+    // Show recent jobs (Active + Last completed)
+    // We don't strictly filter 'active' because user wants to see what happened active or not.
+    // Just take the top 3
+    const showJobs = jobs.slice(0, 3);
 
-    // If no active jobs, maybe hide? Or show history? 
-    // The user said "Active Projects", let's assume this list is strictly for active.
-    if (activeJobs.length === 0) {
+    if (showJobs.length === 0) {
         container.classList.add('hidden');
         return;
     }
 
-    activeJobs.forEach(job => {
+    showJobs.forEach(job => {
         const div = document.createElement('div');
         div.className = 'job-card-premium';
 
@@ -1151,7 +1151,13 @@ function loadMixer(title, stems) {
             stemsAudio[name].canvas = cvs;
             stemsAudio[name].color = color;
 
-            // Trigger Background Load for Static Waveform
+            // 1. Instant Mock Waveform (Visual Feedback)
+            // Ensure canvas has dimensions
+            cvs.width = cvs.clientWidth || 800;
+            cvs.height = cvs.clientHeight || 100;
+            drawMockWaveform(cvs.getContext('2d'), cvs.width, cvs.height, color, name);
+
+            // 2. Trigger Background Load for Accurate Static Waveform
             loadAndDecode(url).then(buffer => {
                 if (!buffer) return;
                 // Pre-render
@@ -1200,56 +1206,79 @@ function loadMixer(title, stems) {
     // Start Seeker Loop
     if (seekerInterval) cancelAnimationFrame(seekerInterval);
 
+    // --- SYNC LOOP ---
     function updateSeekerLoop() {
-        if (!wsMixer || wsMixer.classList.contains('hidden')) return; // Stop if closed
+        if (!wsMixer || wsMixer.classList.contains('hidden')) return;
 
+        // 1. Sync Logic (Anti-Drift)
         if (masterState === 'playing' && stemsAudio) {
-            const first = Object.values(stemsAudio)[0];
-            if (first && !first.audio.paused) {
-                const t = first.audio.currentTime;
-                const d = first.audio.duration || globalDuration;
+            const stems = Object.values(stemsAudio);
+            if (stems.length > 0) {
+                const master = stems[0].audio; // Use first stem as timing master
+                const masterTime = master.currentTime;
+                const masterDur = master.duration || globalDuration;
 
-                // Update Slider if NOT dragging (checking valid state)
-                // We assume user drag stops the update via 'input' event listener logic if we had one
-                // But for now, just update
-                if (seekSlider && document.activeElement !== seekSlider) {
-                    seekSlider.value = t;
+                // Sync others to master if drift > 0.05s
+                for (let i = 1; i < stems.length; i++) {
+                    const s = stems[i].audio;
+                    if (Math.abs(s.currentTime - masterTime) > 0.05) {
+                        s.currentTime = masterTime;
+                    }
                 }
 
-                const m = Math.floor(t / 60);
-                const s = Math.floor(t % 60).toString().padStart(2, '0');
-                if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
-
-                // Draw Visualizers
-                Object.entries(stemsAudio).forEach(([name, stemData]) => {
-                    const strip = document.querySelectorAll('.channel-strip'); // Inefficient selector
-                    // Better: find canvas in loop
-                    // Let's assume drawChanVis handles finding canvas? No, it takes CVS arg.
-                    // We need to store canvas ref in stemsAudio
-                });
+                // Update UI
+                if (timeDisplay) {
+                    const m = Math.floor(masterTime / 60);
+                    const s = Math.floor(masterTime % 60).toString().padStart(2, '0');
+                    timeDisplay.textContent = `${m}:${s}`;
+                }
+                if (seekSlider && !seekSlider.disabled) {
+                    seekSlider.value = masterTime;
+                    if (masterDur && masterDur !== Infinity) {
+                        seekSlider.max = masterDur;
+                        if (durDisplay) {
+                            const dm = Math.floor(masterDur / 60);
+                            const ds = Math.floor(masterDur % 60).toString().padStart(2, '0');
+                            durDisplay.textContent = `${dm}:${ds}`;
+                        }
+                    }
+                }
             }
         }
 
-        // Draw Loop separate from Time Loop? 
-        // We need to redraw Playhead every frame.
-        Object.entries(stemsAudio).forEach(([name, stem]) => {
-            if (stem.canvas) {
+        // 2. Visual Loop
+        if (stemsAudio) {
+            Object.entries(stemsAudio).forEach(([name, stem]) => {
                 const t = stem.audio.currentTime;
                 const d = stem.audio.duration || globalDuration;
-                let color = '#fff';
-                if (STEM_COLORS[name]) color = STEM_COLORS[name];
-                // Vocals etc are not direct keys usually, need mapping
-                // Actually we passed color to drawChanVis...
-                // Let's rely on the fact that stemsAudio has everything?
-                // We need to store color in stemsAudio
-                drawChanVis(stem.canvas, stem, stem.color || '#fff', t, d);
-            }
-        });
+                let color = stem.color || '#fff';
+
+                // Force draw immediately (Mock or Real)
+                if (stem.canvas) {
+                    drawChanVis(stem.canvas, stem, color, t, d);
+                }
+            });
+        }
 
         seekerInterval = requestAnimationFrame(updateSeekerLoop);
     }
 
-    seekerInterval = requestAnimationFrame(updateSeekerLoop);
+    // Fixed Seek Handler
+    function seekTo(time) {
+        if (!stemsAudio) return;
+        if (!Number.isFinite(time)) return; // Protection
+
+        // Clamp
+        if (time < 0) time = 0;
+
+        Object.values(stemsAudio).forEach(s => {
+            s.audio.currentTime = time;
+        });
+
+        // Update Slider UI immediately
+        const slide = document.getElementById('seek-slider');
+        if (slide) slide.value = time;
+    }
 }
 
 // Ensure stemsAudio items have canvas refs
