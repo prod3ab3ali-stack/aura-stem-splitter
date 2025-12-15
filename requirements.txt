@@ -5,3 +5,5 @@ yt-dlp==2023.11.16
 demucs==4.0.1
 static-ffmpeg==2.5
 numpy<2.0.0
+torchaudio
+soundfile
