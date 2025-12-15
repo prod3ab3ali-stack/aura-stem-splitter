@@ -502,18 +502,51 @@ function initHeroVisuals() {
 }
 
 // --- Scroll Observer ---
+// --- Scroll Observer ---
 function initScrollObs() {
     const obs = new IntersectionObserver(entries => {
         entries.forEach(e => {
             if (e.isIntersecting) {
-                e.target.classList.add('visible');
-                // Don't unobserve if we want repeat triggers, but usually one-time is good
+                // For .scroll-hidden elements -> add .scroll-visible
+                if (e.target.classList.contains('scroll-hidden')) {
+                    e.target.classList.add('scroll-visible');
+                    e.target.classList.remove('scroll-hidden');
+                }
+
+                // Legacy fade-in support
+                if (e.target.classList.contains('fade-in')) {
+                    e.target.classList.add('visible');
+                }
                 obs.unobserve(e.target);
             }
         });
     }, { threshold: 0.1 });
 
-    document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+    document.querySelectorAll('.scroll-hidden, .fade-in').forEach(el => obs.observe(el));
+
+    // Init Parallax for Glass Stack
+    initGlassParallax();
+}
+
+function initGlassParallax() {
+    const heroSection = document.querySelector('.hero-split'); // Corrected class
+    const glassStack = document.querySelector('.glass-stack-container');
+
+    if (heroSection && glassStack) {
+        document.addEventListener('mousemove', (e) => {
+            // Calculate mouse position relative to center
+            const cx = window.innerWidth / 2;
+            const cy = window.innerHeight / 2;
+            const dx = (e.clientX - cx) / cx;
+            const dy = (e.clientY - cy) / cy;
+
+            // Limit tilt angles
+            const tiltX = 55 + (dy * 10);  // Base 55deg
+            const tiltZ = -35 + (dx * 10); // Base -35deg
+
+            glassStack.style.transform = `rotateX(${tiltX}deg) rotateZ(${tiltZ}deg) rotateY(10deg)`;
+        });
+    }
 }
 
 // --- Interactive Demo (Landing) ---

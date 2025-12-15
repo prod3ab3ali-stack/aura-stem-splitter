@@ -112,28 +112,28 @@
             </div>
 
             <div class="hero-right">
-                <!-- Abstract 3D Layer Construction -->
-                <div class="layer-stack-3d">
-                    <div class="layer-plate p-vocals">
-                        <span>VOCALS</span>
-                        <div class="wave-line"></div>
+                <!-- Premium Glass Stack Visualization (3D) -->
+                <div class="glass-stack-container">
+                    <div class="stack-plane p-vocals">
+                        <span class="label">VOCALS</span>
+                        <div class="glass-shine"></div>
                     </div>
-                    <div class="layer-plate p-other">
-                        <span>INST</span>
-                        <div class="wave-line"></div>
+                    <div class="stack-plane p-inst">
+                        <span class="label">INST</span>
+                        <div class="glass-shine"></div>
                     </div>
-                    <div class="layer-plate p-bass">
-                        <span>BASS</span>
-                        <div class="wave-line"></div>
+                    <div class="stack-plane p-bass">
+                        <span class="label">BASS</span>
+                        <div class="glass-shine"></div>
                     </div>
-                    <div class="layer-plate p-drums">
-                        <span>DRUMS</span>
-                        <div class="wave-line"></div>
+                    <div class="stack-plane p-drums">
+                        <span class="label">DRUMS</span>
+                        <div class="glass-shine"></div>
                     </div>
-                    <div class="plate-base"></div>
+                    <div class="stack-shadow"></div>
                 </div>
-                <!-- Background Glow -->
-                <div class="hero-glow-orb"></div>
+                <!-- Ambient Backdrop -->
+                <div class="hero-ambient-light"></div>
             </div>
         </header>
 
@@ -156,7 +156,7 @@
         </div>
 
         <!-- Interactive Demo Section (Kept) -->
-        <section id="demo" class="section-demo">
+        <section id="demo" class="section-demo scroll-hidden">
             <div class="container">
                 <div class="section-head centered">
                     <h2><span class="highlight">Sonic</span> Deconstruction</h2>
@@ -187,7 +187,7 @@
         </section>
 
         <!-- 2. Bento Grid Features -->
-        <section id="features" class="section">
+        <section id="features" class="section scroll-hidden">
             <div class="section-head centered">
                 <div class="hero-badge" style="margin: 0 auto 20px;">TECHNOLOGY</div>
                 <h2 class="display-text">Beyond <span class="text-gradient">EQ.</span></h2>
@@ -216,7 +216,7 @@
         </section>
 
         <!-- 3. Comparison Simulation -->
-        <section class="section centered" style="padding-top:0;">
+        <section class="section centered scroll-hidden" style="padding-top:0;">
             <h2 style="margin-bottom:20px;">Hear the <span class="serif-italic">Difference</span></h2>
             <div class="compare-container" id="compare-widget">
                 <div class="compare-before">ORIGINAL</div>
@@ -226,7 +226,7 @@
         </section>
 
         <!-- 4. FAQ -->
-        <section class="section">
+        <section class="section scroll-hidden">
             <h2 class="display-text" style="text-align:center; font-size:2.5rem;">Common Questions</h2>
             <div class="faq-grid">
                 <div class="faq-item" onclick="this.classList.toggle('open')">
@@ -251,7 +251,7 @@
         </section>
 
         <!-- Pricing (Previous) -->
-        <section id="pricing" class="section-pricing">
+        <section id="pricing" class="section-pricing scroll-hidden">
             <!-- ... existing pricing ... -->
             <div class="container">
                 <div class="section-head centered">
@@ -291,7 +291,7 @@
         </section>
 
         <!-- 5. Trusted Indicators -->
-        <section class="section" style="text-align:center; padding-top:0;">
+        <section class="section scroll-hidden" style="text-align:center; padding-top:0;">
             <p style="color:var(--text-sec); font-weight:600; letter-spacing:1px;">TRUSTED BY PRODUCERS AT</p>
             <div class="trust-badges">
                 <i class="fa-brands fa-spotify"></i>
@@ -734,8 +734,7 @@
         </div>
     </template>
 
-    <!-- Main App Logic -->
-    <script src="/static/script.js?v=4.3"></script>
+    <script src="script.js?v=7.0"></script>
 </body>
 
 </html>
