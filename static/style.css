@@ -2941,26 +2941,44 @@ body::before {
 .std-input {
     width: 100%;
     padding: 14px 14px 14px 45px;
-    background: var(--bg-body);
+    background: var(--bg-body) !important;
     border: 1px solid var(--border);
     border-radius: 12px;
-    color: var(--text-main);
+    color: var(--text-main) !important;
     font-family: inherit;
     font-size: 1rem;
     outline: none;
     transition: 0.2s;
+    /* Fix for invisible text on autofill */
+    box-shadow: 0 0 0px 1000px var(--bg-body) inset !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    caret-color: var(--text-main);
+}
+
+.std-input::placeholder {
+    color: #888 !important;
+    /* Explicit Grey */
+    opacity: 1;
+    -webkit-text-fill-color: #888 !important;
+    /* Override autofill fill color for placeholder if needed */
+}
+
+/* Ensure placeholder is visible when input is focused */
+.std-input:focus::placeholder {
+    color: #666 !important;
 }
 
 .std-input:focus {
     border-color: var(--accent);
-    background: var(--bg-surface);
-    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.1);
+    background: var(--bg-surface) !important;
+    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.1), 0 0 0px 1000px var(--bg-surface) inset !important;
 }
 
 .std-input:focus+i,
 .input-with-icon:focus-within i {
     color: var(--accent);
     opacity: 1;
+    z-index: 10;
 }
 
 /* 71. Settings Card Polish */
@@ -3390,14 +3408,13 @@ h3 {
     justify-content: center;
 }
 
+/* .hero-right handled in Hero V2 block (~line 2530) */
+/* Kept empty to let earlier styles cascade or adding specific overrides if needed */
 .hero-right {
     flex: 1;
     height: 100%;
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    perspective: 1000px;
+    /* Consolidate styling to the primary block above */
 }
 
 .hero-title-split {
@@ -4920,63 +4937,4 @@ h3 {
 /* 4. Fix floating Vol Slider in Light Mode */
 [data-theme="light"] .ch-fader {
     background: rgba(0, 0, 0, 0.2) !important;
-}
-
-/* --- AUTH INPUT VISIBILITY FIX --- */
-.auth-sidebar input {
-    color: var(--text-main) !important;
-    /* Ensure text is visible in light/dark mode */
-    background: rgba(255, 255, 255, 0.05);
-    /* Slight tint for contrast */
-}
-
-/* Specific Selection Fix for Auth Inputs */
-.auth-sidebar input::selection {
-    background: var(--accent);
-    color: #ffffff;
-    /* White text on Purple background */
-    text-shadow: none;
-    /* remove shadow if any */
-}
-
-/* Ensure placeholder is Grey as requested */
-.auth-sidebar input::placeholder {
-    color: #888 !important;
-    opacity: 1;
-}
-
-[data-theme="light"] .auth-sidebar input {
-    background: #f5f5f5;
-    color: #000 !important;
-}
-
-[data-theme="light"] .auth-sidebar input::selection {
-    color: #fff;
-    background: var(--accent);
-}
-
-/* --- HERO ALIGNMENT TWEAKS --- */
-.hero-split {
-    /* Ensure content is centered and not cut off */
-    padding-bottom: 60px;
-    align-items: center;
-    /* Vertically center */
-}
-
-.hero-left {
-    /* Better spacing on large screens */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-left: 10%;
-    /* Consistent padding */
-}
-
-.hero-right {
-    /* Ensure 3D stack doesn't overflow or look weird */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: visible;
-    /* Allow 3D elements to stick out slightly */
 }
