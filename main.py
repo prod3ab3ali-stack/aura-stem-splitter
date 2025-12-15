@@ -594,7 +594,11 @@ def start_youtube_job(
                 'http_headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},
                 'extractor_args': {'youtube': {'player_client': ['android', 'web']}}, # Use robust clients
                 'quiet': False, 'no_warnings': False, 'progress_hooks': [ph], # Enable logs to see why it fails
-                'verbose': True
+                'verbose': True,
+                # EXTERNAL DOWNLOADER FIX (aria2)
+                # Bypasses Python DNS/Socket issues
+                'external_downloader': 'aria2c',
+                'external_downloader_args': ['-x', '16', '-k', '1M']
             }
             
             meta_title = "Youtube Download"

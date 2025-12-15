@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     dnsutils \
     iputils-ping \
     libsndfile1 \
+    aria2 \
     && rm -rf /var/lib/apt/lists/*
     
 # Update Certs
