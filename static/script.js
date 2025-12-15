@@ -397,7 +397,7 @@ function initDemoPlayer() {
     if (!cvs) return;
     const ctx = cvs.getContext('2d');
     const playBtn = document.getElementById('demo-play-btn');
-    // Reading file content...
+    const toggles = document.querySelectorAll('.stem-toggle');
 
     if (playBtn) playBtn.onclick = () => {
         isDemoPlaying = !isDemoPlaying;
