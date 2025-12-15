@@ -234,28 +234,86 @@ def logout(authorization: Optional[str] = Header(None)):
 # --- Process Routes ---
 import yt_dlp
 
-# --- DNS MONKEY PATCH FOR YOUTUBE ---
-import socket
-_original_getaddrinfo = socket.getaddrinfo
-_original_gethostbyname = socket.gethostbyname
+# --- GLOBAL DNS PATCH (The "Nuclear" Solution) ---
+# The container has broken DNS (libc/stub resolver).
+# We replace it with a full python-native DNS client (dnspython).
+try:
+    import dns.resolver
+    import socket
 
-# Known working IPs for www.youtube.com (Google Global Cache)
-YT_IPS = ['142.250.72.78', '142.250.188.46', '172.217.164.174']
+    # Configure Google DNS
+    my_resolver = dns.resolver.Resolver()
+    my_resolver.nameservers = ['8.8.8.8', '8.8.4.4', '1.1.1.1']
 
-def patched_getaddrinfo(host, *args, **kwargs):
-    if 'youtube' in str(host):
-        # print(f"DEBUG: Intercepted DNS for {host}, returning {YT_IPS[0]}")
-        return _original_getaddrinfo(YT_IPS[0], *args, **kwargs)
-    return _original_getaddrinfo(host, *args, **kwargs)
+    _orig_getaddrinfo = socket.getaddrinfo
 
-def patched_gethostbyname(host):
-    if 'youtube' in str(host):
-        return YT_IPS[0]
-    return _original_gethostbyname(host)
+    def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+        # 1. Try standard first (mostly for localhost/IPs)
+        try:
+             # If it's an IP, this returns immediately
+             return _orig_getaddrinfo(host, port, family, type, proto, flags)
+        except:
+             pass
+        
+        # 2. Manual Resolve via 8.8.8.8
+        try:
+            # print(f"DEBUG: Manual DNS Resolve for {host}")
+            answers = my_resolver.resolve(host, 'A')
+            ip = answers[0].to_text()
+            # print(f"DEBUG: Resolved {host} -> {ip}")
+            return _orig_getaddrinfo(ip, port, family, type, proto, flags)
+        except Exception as e:
+            # print(f"DEBUG: DNS Fail {host}: {e}")
+            raise socket.gaierror(f"DNS Resolution Failed for {host}")
+            
+    socket.getaddrinfo = patched_getaddrinfo
+    
+except ImportError:
+    print("WARNING: dnspython not installed. DNS Patch skipped.")
 
-socket.getaddrinfo = patched_getaddrinfo
-socket.gethostbyname = patched_gethostbyname
-# ------------------------------------
+# -----------------------------------
+
+# (Rest of imports...)
+
+# ... In Youtube Wrapper ...
+            
+            # --- YT-DLP Standard Logic (Restored) ---
+            import static_ffmpeg
+            static_ffmpeg.add_paths()
+            ffmpeg_path = shutil.which("ffmpeg")
+            
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'ffmpeg_location': str(ffmpeg_path),
+                'outtmpl': str(input_path),
+                'writethumbnail': True, 
+                'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'wav', 'preferredquality': '192'}],
+                'nocheckcertificate': True,
+                'ignoreerrors': True,
+                'no_warnings': False,
+                'quiet': False, 
+                'verbose': True,
+                'socket_timeout': 15,
+                'retries': 10,
+                'force_ipv4': True,
+                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+                'progress_hooks': [ph]
+            }
+            
+            meta_title = "Youtube Download"
+            thumb_url = None
+            
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(u, download=True)
+                    meta_title = info.get('title', meta_title)
+                    thumb_url = info.get('thumbnail', None)
+            except Exception as e:
+                print(f"YT-DLP FINAL ERROR: {e}")
+                raise e
+                
+            # No need for manual file checks, yt-dlp raises if failed.
+            pass
 # --- Core Logic Refactored ---
 def core_process_track(input_path: Path, original_name: str, user: dict):
     # 1. Run Demucs (High Quality V4.1)
@@ -583,113 +641,50 @@ def start_youtube_job(
                 elif d['status'] == 'finished':
                     update_job(jid, "Formatting Audio...", 35)
 
-            # --- COBALT API BYPASS (Firewall Logic) ---
-            # yt-dlp is blocked. We use an external API to resolve the stream.
-            import requests
-            import time
+            # --- YT-DLP Standard Logic (Restored) ---
+            import static_ffmpeg
+            static_ffmpeg.add_paths()
+            ffmpeg_path = shutil.which("ffmpeg")
             
-            # List of Cobalt Instances (Public)
-            COBALT_INSTANCES = [
-                "https://co.wuk.sh", 
-                "https://cobalt.tools", 
-                "https://api.cobalt.tools"
-            ]
-            
-            download_url = None
-            
-            update_job(jid, "Routing via Cobalt API...", 10)
-            
-            for instance in COBALT_INSTANCES:
-                try:
-                    headers = {"Accept": "application/json", "Content-Type": "application/json"}
-                    payload = {
-                        "url": u,
-                        "isAudioOnly": True,
-                        "aFormat": "wav"
-                    }
-                    
-                    print(f"DEBUG: Trying Cobalt instance {instance}...")
-                    res = requests.post(f"{instance}/api/json", json=payload, headers=headers, timeout=15)
-                    
-                    if res.status_code == 200:
-                        data = res.json()
-                        if 'url' in data:
-                            download_url = data['url']
-                            print(f"DEBUG: Got URL from {instance}")
-                            break
-                        elif 'status' in data and data['status'] == 'error': 
-                            print(f"Cobalt Error: {data.get('text')}")
-                    else:
-                        print(f"Cobalt {instance} returned {res.status_code}")
-                        
-                except Exception as e:
-                    print(f"Cobalt {instance} failed: {e}")
-                    continue
-            
-            if not download_url:
-                raise Exception("Unable to resolve YouTube URL via Cobalt (Firewall Bypass Failed). Try Manual Upload.")
-                
-            update_job(jid, "Downloading Audio Stream...", 20)
-            
-            # Download the resolved file
-            # user-agent helps sometimes
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            with requests.get(download_url, stream=True, headers=headers, timeout=30) as r:
-                r.raise_for_status()
-                total_size = int(r.headers.get('content-length', 0))
-                downloaded = 0
-                
-                with open(input_path, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        if chunk:
-                            f.write(chunk)
-                            downloaded += len(chunk)
-                            if total_size > 0:
-                                percent = (downloaded / total_size) * 100
-                                if downloaded % (1024 * 1024) == 0: # Update every MB
-                                     update_job(jid, f"Downloading: {int(percent)}%", 20 + (percent * 0.1))
-
-            update_job(jid, "Formatting Audio...", 35)
-            
-            # Ensure it ends with .wav for consistency downstream
-            # Cobalt might return mp3 if wav not supported on instance
-            # We already stream-saved to 'input_path' (no extension).
-            # ffmpeg check usually happens next in pipeline? 
-            # The pipeline expects input_path to be a file.
-            pass
-
-            """
-            # Add writethumbnail
             ydl_opts = {
-                 # ... OLD YT-DLP CODE COMMENTED OUT ...
+                'format': 'bestaudio/best',
+                'ffmpeg_location': str(ffmpeg_path),
+                'outtmpl': str(input_path), # yt-dlp will add extension
+                'writethumbnail': True, 
+                'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'wav', 'preferredquality': '192'}],
+                'nocheckcertificate': True,
+                'ignoreerrors': True,
+                'no_warnings': False,
+                'quiet': False, 
+                'verbose': True,
+                'socket_timeout': 15,
+                'retries': 10,
+                'force_ipv4': True,
+                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+                'progress_hooks': [ph]
             }
-            """
             
-            # Retrieve Metadata from Cobalt?
-            # Usually filename is in Content-Disposition or we use the URL.
-            meta_title = "Youtube Import (Cobalt)" 
-            try:
-                # Attempt to get title from headers or just use ID
-                # For now, default.
-                pass
-            except: pass
-            
+            meta_title = "Youtube Download"
             thumb_url = None
             
-            """
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(u, download=True)
                     meta_title = info.get('title', meta_title)
                     thumb_url = info.get('thumbnail', None)
             except Exception as e:
-                # Log the specific DNS/Network error
-                print(f"YT-DLP ERROR: {e}")
+                print(f"YT-DLP FINAL ERROR: {e}")
                 raise e
-            """
+                
+            # Find the actual downloaded audio file (yt-dlp adds extension)
+            downloaded_audio_path = None
+            for f in INPUT_DIR.glob(f"{internal_id}.*"):
+                if f.suffix in ['.wav', '.mp3', '.m4a', '.ogg', '.flac']: # Common audio extensions
+                    downloaded_audio_path = f
+                    break
             
-            final_path = INPUT_DIR / f"{internal_id}.wav"
-            if not final_path.exists(): raise Exception("Download failed")
+            if not downloaded_audio_path:
+                raise Exception("YT-DLP download failed to produce an audio file.")
             
             # Hand over to main pipeline, passing thumbnail if possible?
             # We can modify core pipeline later, for now let's just process.
