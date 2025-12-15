@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     dnsutils \
     iputils-ping \
+    libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
     
 # Update Certs
