@@ -14,6 +14,7 @@ RUN chown 1000:1000 /app
 # Switch to non-root user
 USER 1000
 ENV HOME=/app
+ENV PATH="/app/.local/bin:$PATH"
 
 # 3. Install Python Dependencies
 COPY --chown=1000 requirements.txt .
@@ -30,4 +31,4 @@ RUN mkdir -p input output && chmod 777 input output
 EXPOSE 7860
 
 # 7. Start the Application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
