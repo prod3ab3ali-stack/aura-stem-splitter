@@ -1,90 +1,108 @@
 // --- Global State ---
 let authToken = localStorage.getItem('aura_token');
 let currentUser = null;
+let currentTheme = localStorage.getItem('aura_theme') || 'dark';
+
+// --- API ---
 const API_BASE = '/api';
 
-// --- Constants ---
-const STEM_COLORS = {
-    vocals: '#D291BC', // Pink
-    drums: '#e67e22',  // Orange
-    bass: '#3498db',   // Blue
-    other: '#1abc9c'   // Teal
-};
+// --- UI Elements ---
+const wsLoad = document.getElementById('ws-loading');
+const wsDrop = document.getElementById('ws-drop');
+const wsMixer = document.getElementById('ws-mixer');
+const authSidebar = document.getElementById('auth-sidebar');
+const toastContainer = document.getElementById('toast-container') || createToastContainer();
 
-// --- Theme ---
-function setTheme(mode) {
-    document.documentElement.setAttribute('data-theme', mode);
-    localStorage.setItem('aura_theme', mode);
-    document.querySelectorAll('.theme-opt').forEach(btn => {
-        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(mode));
-    });
+function createToastContainer() {
+    const d = document.createElement('div');
+    d.id = 'toast-container';
+    document.body.appendChild(d);
+    return d;
 }
-const currentTheme = localStorage.getItem('aura_theme') || 'dark';
 
 // --- Init ---
 document.addEventListener('DOMContentLoaded', async () => {
-    setTheme(currentTheme);
+    applyTheme(currentTheme);
+    initHeroVisuals();
     initScrollObs();
     initDemoPlayer();
 
-    // Curtain
+    // Simulate initial loading
     setTimeout(() => {
         const loader = document.getElementById('loader-curtain');
-        if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.remove(), 500);
-        }
+        if (loader) loader.style.opacity = '0';
+        setTimeout(() => loader?.remove(), 500);
     }, 800);
 
-    // Auth & Session
-    await fetchUser();
+    // 1. Recover Session
+    await fetchUser(); // Get user & credits
 
-    // Recovery
+    // 2. Check for Active Job (Persistence)
     const activeJobId = localStorage.getItem('active_stem_job');
     if (activeJobId) {
         console.log("Recovering job:", activeJobId);
         startJobPolling(activeJobId);
     }
 
-    // Init Visuals
-    const heroCanvas = document.getElementById('hero-canvas');
-    if (heroCanvas) initHeroVisuals(); // Legacy checks
+    // 3. Init Dashboard
+    if (currentUser) {
+        updateDashboard();
+    }
 });
+
+function applyTheme(mode) {
+    document.documentElement.setAttribute('data-theme', mode);
+    localStorage.setItem('aura_theme', mode);
+}
+
+function setTheme(mode) {
+    currentTheme = mode;
+    applyTheme(mode);
+}
+
+function showToast(msg, type = 'info') {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerText = msg;
+    toastContainer.appendChild(t);
+    setTimeout(() => {
+        t.style.opacity = '0';
+        setTimeout(() => t.remove(), 300);
+    }, 3000);
+}
 
 // --- Auth Logic ---
 async function fetchUser() {
-    if (!authToken) return showAuth();
+    if (!authToken) return;
     try {
-        const res = await fetch(`${API_BASE}/me`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const res = await fetch(`${API_BASE}/users/me`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
         if (res.ok) {
             currentUser = await res.json();
             updateUI(currentUser);
+            // Switch to App View
+            document.getElementById('view-landing').classList.remove('active');
+            document.getElementById('view-app').classList.remove('hidden');
+            document.getElementById('view-app').classList.add('active');
+            updateDashboard();
         } else {
-            logout();
+            console.warn("Session invalid");
+            localStorage.removeItem('aura_token');
         }
-    } catch (e) { logout(); }
+    } catch (e) {
+        console.error(e);
+    }
 }
 
-function updateUI(user) {
-    document.getElementById('auth-sidebar').classList.remove('open');
-    document.getElementById('auth-shade').classList.remove('open');
-    document.querySelector('.auth-trigger').style.display = 'none';
-    document.querySelector('.user-brief').style.display = 'flex';
-    document.getElementById('display-username').textContent = user.username;
-    document.getElementById('credit-count').textContent = user.credits_left;
-
-    // Unlock Views
-    document.querySelectorAll('.app-sidebar .nav-btn').forEach(b => b.classList.remove('disabled'));
-}
-
-function showAuth() {
-    document.getElementById('auth-sidebar').classList.add('open');
-    document.getElementById('auth-shade').classList.add('open');
+function openAuth() {
+    document.getElementById('auth-shade').style.display = 'block';
+    authSidebar.classList.add('open');
 }
 
 function closeAuth() {
-    document.getElementById('auth-sidebar').classList.remove('open');
-    document.getElementById('auth-shade').classList.remove('open');
+    document.getElementById('auth-shade').style.display = 'none';
+    authSidebar.classList.remove('open');
 }
 
 function logout() {
@@ -92,122 +110,115 @@ function logout() {
     location.reload();
 }
 
-// --- Navigation ---
-function navTo(page) {
-    if (!currentUser) return showAuth();
+async function handleAuth(e) {
+    e.preventDefault();
+    const isRegister = document.getElementById('auth-email-group').style.display !== 'none';
+    const user = document.getElementById('auth-user').value;
+    const pass = document.getElementById('auth-pass').value;
 
-    document.querySelectorAll('.pane').forEach(p => {
-        p.classList.add('hidden');
-        p.classList.remove('active');
-    });
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const endpoint = isRegister ? '/register' : '/token';
+    const payload = isRegister ?
+        new URLSearchParams({ username: user, password: pass }) :
+        new URLSearchParams({ username: user, password: pass });
 
-    const target = document.getElementById(`pane-${page}`);
-    if (target) {
-        target.classList.remove('hidden');
-        target.classList.add('active');
+    try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: payload
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            if (isRegister) {
+                showToast("Account created! Please login.");
+                toggleAuthMode();
+            } else {
+                authToken = data.access_token;
+                localStorage.setItem('aura_token', authToken);
+                closeAuth();
+                fetchUser();
+                showToast("Welcome back!");
+            }
+        } else {
+            showToast(data.detail || "Error");
+        }
+    } catch (err) {
+        showToast("Network Error");
     }
-
-    // Update Button State
-    const btnMap = { 'workspace': 0, 'library': 1, 'store': 2, 'admin': 3 };
-    const btns = document.querySelectorAll('.app-sidebar .nav-btn');
-    if (btns[btnMap[page]]) btns[btnMap[page]].classList.add('active');
-
-    // Logic
-    if (page === 'library') loadLibrary();
-    if (page === 'workspace') updateDashboard();
 }
+
+function toggleAuthMode() {
+    const isLogin = document.getElementById('auth-title').innerText === 'Welcome';
+    document.getElementById('auth-title').innerText = isLogin ? 'Create Account' : 'Welcome';
+    document.getElementById('auth-email-group').style.display = isLogin ? 'none' : 'none'; // Email optional / unused for now
+    document.getElementById('auth-submit').innerText = isLogin ? 'Sign Up' : 'Login';
+    document.getElementById('auth-toggle-text').innerHTML = isLogin ?
+        'Already have an account? <span onclick="toggleAuthMode()">Login</span>' :
+        'New here? <span onclick="toggleAuthMode()">Create Account</span>';
+}
+
+document.getElementById('auth-form').onsubmit = handleAuth;
+
+
+// --- Workspace Logic ---
 
 function switchView(viewName) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById(`view-${viewName}`).classList.add('active');
     if (viewName === 'app') {
-        navTo('workspace');
+        if (!currentUser) return openAuth();
+        document.getElementById('view-landing').classList.remove('active');
+        document.getElementById('view-app').classList.remove('hidden');
+        document.getElementById('view-app').classList.add('active');
         updateDashboard();
-    }
-}
-
-// --- Dashboard & Jobs ---
-async function updateDashboard() {
-    if (!currentUser) return;
-    try {
-        const res = await fetch(`${API_BASE}/my_jobs`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        if (res.ok) {
-            const jobs = await res.json();
-            renderDashboard(jobs);
-        }
-    } catch (e) { console.error(e); }
-}
-
-function renderDashboard(jobs) {
-    const activeContainer = document.getElementById('active-jobs-list');
-    const historyContainer = document.getElementById('history-list');
-
-    if (!activeContainer || !historyContainer) return;
-
-    activeContainer.innerHTML = '';
-    historyContainer.innerHTML = '';
-
-    const reversed = jobs.slice().reverse();
-
-    reversed.forEach(job => {
-        const isProcessing = ['queued', 'processing', 'downloading'].includes(job.status);
-        const el = document.createElement('div');
-        el.className = 'job-card';
-        // Status Badge Color
-        let badgeClass = 'neutral';
-        if (job.status === 'completed') badgeClass = 'success';
-        if (job.status === 'failed') badgeClass = 'error';
-        if (isProcessing) badgeClass = 'warning';
-
-        el.innerHTML = `
-            <div class="jc-icon">
-                <i class="fa-solid fa-music"></i>
-            </div>
-            <div class="jc-info">
-                <h4>${job.filename || 'Untitled Project'}</h4>
-                <div class="jc-meta">
-                    <span class="status-badge ${badgeClass}">${job.status}</span>
-                    <span class="date">${new Date(job.created_at * 1000).toLocaleDateString()}</span>
-                </div>
-            </div>
-            ${isProcessing ? '<div class="loader-spinner small"></div>' : '<i class="fa-solid fa-chevron-right"></i>'}
-        `;
-
-        el.onclick = () => handleJobClick(job);
-
-        if (isProcessing) activeContainer.appendChild(el);
-        else historyContainer.appendChild(el);
-    });
-
-    if (activeContainer.children.length === 0) {
-        activeContainer.innerHTML = '<div class="empty-state">No active projects</div>';
-    }
-}
-
-function handleJobClick(job) {
-    if (job.status === 'completed' && job.outputs) {
-        loadMixer(job.filename, job.outputs);
-    } else if (job.status === 'failed') {
-        showToast(`Job Failed: ${job.error || 'Unknown Error'}`);
     } else {
-        showToast("Project is still processing...");
+        document.getElementById('view-app').classList.remove('active');
+        document.getElementById('view-app').classList.add('hidden');
+        document.getElementById('view-landing').classList.add('active');
     }
 }
 
-// --- File Processing ---
-async function processFile(file) {
-    if (!currentUser) return showToast("Login required");
+function navTo(page) {
+    document.querySelectorAll('.pane').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
 
-    const wsDrop = document.getElementById('ws-drop');
-    const wsLoad = document.getElementById('ws-loading');
+    document.getElementById(`pane-${page}`).classList.remove('hidden');
+    document.getElementById(`pane-${page}`).classList.add('active');
+
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    // rudimentary naming match
+    // ...
+}
+
+function updateUI(user) {
+    document.getElementById('display-username').innerText = user.username;
+    document.getElementById('credit-count').innerText = user.credits;
+}
+
+// --- File Handling ---
+// Drag & Drop
+const dropZone = document.getElementById('drop-zone');
+if (dropZone) {
+    dropZone.ondragover = e => { e.preventDefault(); dropZone.classList.add('drag-over'); };
+    dropZone.ondragleave = () => dropZone.classList.remove('drag-over');
+    dropZone.ondrop = e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]);
+    };
+    dropZone.onclick = () => document.getElementById('file-input').click();
+    document.getElementById('file-input').onchange = e => {
+        if (e.target.files.length) processFile(e.target.files[0]);
+    };
+}
+
+async function processFile(file) {
+    if (!currentUser) { showToast("Please login first"); return; }
 
     wsDrop.classList.add('hidden');
     wsLoad.classList.remove('hidden');
-
     document.getElementById('loading-title').textContent = "Uploading Master...";
+    document.getElementById('upload-progress-container').classList.remove('hidden');
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -217,17 +228,19 @@ async function processFile(file) {
 
     xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
-            const p = Math.round((e.loaded / e.total) * 100);
-            document.getElementById('upload-bar').style.width = p + "%";
-            document.getElementById('upload-percent').textContent = p + "%";
+            const percent = Math.round((e.loaded / e.total) * 100);
+            document.getElementById('upload-bar').style.width = percent + "%";
+            document.getElementById('upload-percent').textContent = percent + "%";
         }
     };
 
     xhr.onload = () => {
         if (xhr.status === 200) {
             const data = JSON.parse(xhr.responseText);
-            localStorage.setItem('active_stem_job', data.job_id);
+            // Job Started
             startJobPolling(data.job_id);
+            localStorage.setItem('active_stem_job', data.job_id);
+            updateDashboard(); // Add to grid
         } else {
             showToast("Upload Failed");
             resetWorkspace();
@@ -239,196 +252,292 @@ async function processFile(file) {
 // --- Polling ---
 let statusInterval = null;
 function startJobPolling(jobId) {
-    document.getElementById('loading-title').textContent = "Neural Processing...";
-    document.getElementById('ws-drop').classList.add('hidden');
-    document.getElementById('ws-loading').classList.remove('hidden');
+    wsDrop.classList.add('hidden');
+    wsLoad.classList.remove('hidden');
+    document.getElementById('upload-progress-container').classList.add('hidden');
+
+    const logEl = document.getElementById('processing-log');
+    const timerEl = document.getElementById('process-timer');
+    let startTime = Date.now();
 
     if (statusInterval) clearInterval(statusInterval);
 
     statusInterval = setInterval(async () => {
         try {
             const res = await fetch(`${API_BASE}/jobs/${jobId}`);
-            if (res.ok) {
-                const job = await res.json();
-                updateStatusLog(job.status);
+            if (!res.ok) return;
+            const job = await res.json();
 
-                if (job.status === 'completed') {
-                    clearInterval(statusInterval);
-                    localStorage.removeItem('active_stem_job');
-                    loadMixer(job.filename, job.outputs);
-                    updateDashboard(); // Refesh list
-                }
-                if (job.status === 'failed') {
-                    clearInterval(statusInterval);
-                    localStorage.removeItem('active_stem_job');
-                    showToast("Processing Failed");
-                    resetWorkspace();
-                }
+            // Update Log
+            if (job.status === 'processing') {
+                document.getElementById('loading-title').textContent = "Separating Stems...";
+                // Update timer
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const s = (elapsed % 60).toString().padStart(2, '0');
+                if (timerEl) timerEl.textContent = `${m}:${s}`;
             }
-        } catch (e) { console.error(e); }
+
+            if (job.status === 'completed') {
+                clearInterval(statusInterval);
+                localStorage.removeItem('active_stem_job');
+                loadMixer(job.filename, job.stems);
+                showToast("Separation Complete!");
+                fetchUser(); // Credits update
+            } else if (job.status === 'failed') {
+                clearInterval(statusInterval);
+                localStorage.removeItem('active_stem_job');
+                showToast("Job Failed");
+                resetWorkspace();
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }, 2000);
 }
 
-function updateStatusLog(status) {
-    const log = document.getElementById('processing-log');
-    if (log) log.innerHTML = `<div>Status: ${status}...</div>`;
-}
-
 function resetWorkspace() {
-    document.getElementById('ws-loading').classList.add('hidden');
-    document.getElementById('ws-mixer').classList.add('hidden');
-    document.getElementById('ws-drop').classList.remove('hidden');
+    wsLoad.classList.add('hidden');
+    wsMixer.classList.add('hidden');
+    wsDrop.classList.remove('hidden');
 }
 
-// --- Mixer Logic (Optimized WaveSurfer) ---
+
+// --- DASHBOARD (Active Projects) ---
+async function updateDashboard() {
+    if (!currentUser) return;
+    const grid = document.getElementById('active-projects-grid');
+    if (!grid) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/my_jobs`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const jobs = await res.json();
+
+        grid.innerHTML = '';
+        if (jobs.length === 0) {
+            grid.innerHTML = '<p style="text-align:center; color:var(--text-sec); grid-column:1/-1;">No recent projects</p>';
+            return;
+        }
+
+        jobs.forEach(job => {
+            const card = document.createElement('div');
+            card.className = 'job-card';
+            if (job.status === 'processing') card.classList.add('active');
+
+            let statusBadge = `<span class="badge ${job.status}">${job.status}</span>`;
+            if (job.status === 'completed') statusBadge = `<span class="badge success">Ready</span>`;
+
+            card.innerHTML = `
+                <div class="job-card-header">
+                    <h4>${job.filename || 'Untitled Project'}</h4>
+                    ${statusBadge}
+                </div>
+                <div class="job-card-meta">
+                    <span>${new Date(job.created_at * 1000).toLocaleDateString()}</span>
+                    <span>${job.model || 'htdemucs'}</span>
+                </div>
+            `;
+
+            // Click to Open
+            card.onclick = () => {
+                if (job.status === 'completed') loadMixer(job.filename, job.stems);
+                if (job.status === 'processing') startJobPolling(job.id);
+            };
+
+            grid.appendChild(card);
+        });
+
+    } catch (e) { console.error(e); }
+}
+
+
+// --- MIXER LOGIC (WaveSurfer) ---
+const STEM_COLORS = {
+    vocals: '#ff9ff3', // Pink
+    drums: '#feca57',  // Orange
+    bass: '#54a0ff',   // Blue
+    other: '#1dd1a1'   // Teal
+};
+
 let stemsWS = {};
 let isPlaying = false;
-let seekerInterval = null;
+let masterWS = null; // Driver
 
-// Helper to adjust hex color opacity/brightness
-function adjustColor(color, amount) {
-    // Simple placeholder, we strictly use hex + opacity string for now
-    return color;
+async function downloadZip(projectId) {
+    window.location.href = `${API_BASE}/download_zip/${projectId}`;
+}
+
+function closeMixer() {
+    Object.values(stemsWS).forEach(ws => ws.destroy());
+    stemsWS = {};
+    isPlaying = false;
+    wsMixer.classList.add('hidden');
+    resetWorkspace(); // Or go back to Dashboard?
+    updateDashboard(); // Refresh
 }
 
 function loadMixer(title, stems) {
     if (!stems) return;
 
-    // Setup UI
-    document.getElementById('ws-loading').classList.add('hidden');
-    document.getElementById('ws-drop').classList.add('hidden');
-    const mixerKey = document.getElementById('ws-mixer');
-    mixerKey.classList.remove('hidden');
-    mixerKey.style.display = 'block';
+    // UI
+    wsLoad.classList.add('hidden');
+    wsDrop.classList.add('hidden');
+    wsMixer.classList.remove('hidden');
+    wsMixer.style.display = 'block';
 
     document.getElementById('project-title').textContent = title;
 
-    // Reset Transport
-    const playBtn = document.getElementById('play-btn');
-    playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-    isPlaying = false;
+    // Buttons
+    const firstStem = Object.values(stems)[0];
+    const projectId = firstStem.split('/')[3];
 
-    // Sort
-    const sortOrder = ['vocals', 'drums', 'bass', 'other'];
-    const sortedKeys = Object.keys(stems).sort((a, b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
+    document.getElementById('btn-zip-download').onclick = () => downloadZip(projectId);
+    document.getElementById('btn-close-mixer').onclick = closeMixer;
 
-    // Clear Container
     const container = document.getElementById('mixer-channels');
     container.innerHTML = '';
 
-    stemsWS = {};
-    const tpl = document.getElementById('channel-template');
-    let masterWS = null; // Driver
-
-    // Global Slider
+    // Transport UI
+    const playBtn = document.getElementById('play-btn');
     const seekSlider = document.getElementById('seek-slider');
-    const timeDisp = document.getElementById('time-display');
-    const durDisp = document.getElementById('duration-display');
+    const timeDisplay = document.getElementById('time-display');
+    const durDisplay = document.getElementById('duration-display');
+
+    playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
     if (seekSlider) { seekSlider.value = 0; seekSlider.disabled = true; }
+    if (timeDisplay) timeDisplay.textContent = "00:00";
+    if (durDisplay) durDisplay.textContent = "00:00";
+
+    stemsWS = {};
+    isPlaying = false;
+    masterWS = null;
+
+    const tpl = document.getElementById('channel-template');
+    const sortOrder = ['vocals', 'drums', 'bass', 'other'];
+    const sortedKeys = Object.keys(stems).sort((a, b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
 
     sortedKeys.forEach((name, index) => {
         const url = stems[name];
         const strip = tpl.content.cloneNode(true);
         const stripDiv = strip.querySelector('.channel-strip');
 
-        let displayName = name.toUpperCase();
-        let baseColor = STEM_COLORS.other;
-        if (name === 'vocals') baseColor = STEM_COLORS.vocals;
-        if (name === 'drums' || name === 'percussion') { displayName = 'DRUMS'; baseColor = STEM_COLORS.drums; }
-        if (name === 'bass') baseColor = STEM_COLORS.bass;
+        let dName = name.toUpperCase();
+        let color = STEM_COLORS.other;
+        if (name === 'vocals') color = STEM_COLORS.vocals;
+        if (name === 'drums' || name === 'percussion') { dName = 'DRUMS'; color = STEM_COLORS.drums; }
+        if (name === 'bass') color = STEM_COLORS.bass;
+        if (name === 'other') { dName = 'INSTRUMENTS'; color = STEM_COLORS.other; }
 
-        // Populate Strip
-        strip.querySelector('.ch-name').textContent = displayName;
-        strip.querySelector('.ch-name').style.color = baseColor;
-        stripDiv.style.borderLeft = `4px solid ${baseColor}`;
+        strip.querySelector('.ch-name').textContent = dName;
+        strip.querySelector('.ch-name').style.color = color;
+        stripDiv.style.borderLeft = `3px solid ${color}`;
 
-        // DL Link
-        const dlBtn = strip.querySelector('.dl');
-        if (dlBtn) dlBtn.href = url;
+        const iconDiv = strip.querySelector('.ch-icon');
+        iconDiv.style.color = color;
+        // Icons... (Use standard FontAwesome)
+        if (name === 'vocals') iconDiv.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+        else if (name === 'bass') iconDiv.innerHTML = '<i class="fa-solid fa-wave-square"></i>';
+        else if (name === 'drums' || name === 'percussion') iconDiv.innerHTML = '<i class="fa-solid fa-drum"></i>';
+        else iconDiv.innerHTML = '<i class="fa-solid fa-music"></i>';
 
-        // WS Container
-        const wsId = `ws-${name}-${Date.now()}`; // Unique ID
-        const visContainer = document.createElement('div');
-        visContainer.id = wsId;
-        visContainer.className = 'ws-waveform-container';
+        // WaveSurfer Container
+        const cvs = strip.querySelector('canvas');
+        const wsId = `ws-${name}-${Math.random().toString(36).substr(2, 9)}`;
+        const wsContainer = document.createElement('div');
+        wsContainer.id = wsId;
+        wsContainer.className = 'ws-waveform-container';
+        if (cvs) cvs.replaceWith(wsContainer);
 
-        const oldVis = strip.querySelector('.ch-vis');
-        if (oldVis) oldVis.replaceWith(visContainer);
+        // Download Button
+        const dlBtn = document.createElement('a');
+        dlBtn.href = url;
+        dlBtn.download = '';
+        dlBtn.className = 'ch-download-btn';
+        dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
+        dlBtn.title = "Download Stem";
+
+        // Grid Layout: Icon/Name | WS | Download | Controls
+        // Current HTML in template has: Icon, Name+Link, Canvas, Fader, Controls
+        // We need to inject DL button at correct spot.
+        // Let's just append it to the strip and rely on Grid order.
+        stripDiv.insertBefore(dlBtn, stripDiv.querySelector('.ch-controls'));
+        const fader = stripDiv.querySelector('.ch-fader-wrap');
+        if (fader) fader.style.display = 'none'; // Hide fader
 
         container.appendChild(stripDiv);
 
-        // Init WaveSurfer
+        // Init WS
         const ws = WaveSurfer.create({
             container: `#${wsId}`,
-            waveColor: baseColor + '55', // Dimmed (Hex Opacity)
-            progressColor: baseColor,    // Bright
+            waveColor: color,
+            progressColor: '#ffffff',
             cursorColor: '#ffffff',
-            cursorWidth: 2,
             barWidth: 3,
-            barGap: 2,
-            barRadius: 2,
-            height: 60,
+            barGap: 3,
+            barRadius: 3,
+            height: 50,
             normalize: true,
-            backend: 'WebAudio',
-            pixelRatio: 1, // High Perf
-            minPxPerSec: 50
+            backend: 'MediaElement', // Instant Play
+            hideScrollbar: true
         });
 
         ws.load(url);
-        ws.setVolume(1);
         stemsWS[name] = { ws, muted: false };
 
-        // Events
-        ws.on('ready', () => {
-            if (index === 0) {
+        if (index === 0) {
+            masterWS = ws;
+            ws.on('ready', () => {
                 const dur = ws.getDuration();
-                if (durDisp) durDisp.textContent = fmtTime(dur);
+                const m = Math.floor(dur / 60);
+                const s = Math.floor(dur % 60).toString().padStart(2, '0');
+                if (durDisplay) durDisplay.textContent = `${m}:${s}`;
                 if (seekSlider) { seekSlider.max = dur; seekSlider.disabled = false; }
-            }
-        });
+            });
+            ws.on('timeupdate', (t) => {
+                if (seekSlider) seekSlider.value = t;
+                const m = Math.floor(t / 60);
+                const s = Math.floor(t % 60).toString().padStart(2, '0');
+                if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
+            });
+            ws.on('finish', () => {
+                isPlaying = false;
+                playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            });
+        }
 
+        // Interaction Sync
         ws.on('interaction', (t) => {
             Object.values(stemsWS).forEach(s => {
                 if (s.ws !== ws) s.ws.setTime(t);
             });
-            if (seekSlider) seekSlider.value = t;
         });
 
-        ws.on('finish', () => {
-            if (index === 0) {
-                isPlaying = false;
-                playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-            }
-        });
-
-        // Controls
-        const muteBtn = stripDiv.querySelector('.mute');
-        muteBtn.onclick = () => {
+        // Mute/Solo UI
+        const mBtn = stripDiv.querySelector('.mute');
+        mBtn.onclick = () => {
             stemsWS[name].muted = !stemsWS[name].muted;
-            muteBtn.classList.toggle('active', stemsWS[name].muted);
+            mBtn.classList.toggle('active', stemsWS[name].muted);
             ws.setVolume(stemsWS[name].muted ? 0 : 1);
         };
-
-        const soloBtn = stripDiv.querySelector('.solo');
-        soloBtn.onclick = () => {
-            // Solo logic
-            const isSolo = soloBtn.classList.contains('active');
+        const sBtn = stripDiv.querySelector('.solo');
+        sBtn.innerHTML = '<i class="fa-solid fa-headphones"></i>';
+        sBtn.onclick = () => {
+            const isSolo = sBtn.classList.contains('active');
             document.querySelectorAll('.solo').forEach(b => b.classList.remove('active'));
             if (isSolo) {
-                // Unsolo all
                 Object.values(stemsWS).forEach(t => t.ws.setVolume(t.muted ? 0 : 1));
             } else {
-                soloBtn.classList.add('active');
+                sBtn.classList.add('active');
                 Object.entries(stemsWS).forEach(([k, t]) => {
                     t.ws.setVolume(k === name ? 1 : 0);
                 });
             }
-        };
-
-        if (index === 0) masterWS = ws;
+        }
     });
 
-    // Transport Buttons
+    // Play Button
     if (playBtn) {
         playBtn.onclick = () => {
             if (isPlaying) {
@@ -440,71 +549,23 @@ function loadMixer(title, stems) {
                 isPlaying = true;
                 playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
             }
-        };
+        }
     }
 
-    // Seek Slider Binding
+    // Slider
     if (seekSlider) {
         seekSlider.oninput = (e) => {
-            const t = parseFloat(e.target.value);
+            const t = e.target.value;
             Object.values(stemsWS).forEach(s => s.ws.setTime(t));
-        };
-        if (masterWS) {
-            masterWS.on('audioprocess', (t) => {
-                seekSlider.value = t;
-                if (timeDisp) timeDisp.textContent = fmtTime(t);
-            });
         }
     }
 }
 
-function fmtTime(s) {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60).toString().padStart(2, '0');
-    return `${m}:${sec}`;
-}
 
-// --- Utils ---
-function showToast(msg) {
-    const c = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.textContent = msg;
-    c.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
-}
-
-function initScrollObs() {
-    // Stub
-}
-function initDemoPlayer() {
-    // Stub
-}
+// --- Hero Visuals (Simple Orb) ---
 function initHeroVisuals() {
-    // Stub
+    // CSS Based - no JS needed
 }
 
-// --- Auth Forms ---
-// (Simplified for brevity, assuming existing HTML handles auth submission via ID hooks, 
-// need to re-add event listeners if they were in script.js)
-const authForm = document.getElementById('auth-form');
-if (authForm) {
-    authForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const user = document.getElementById('auth-user').value;
-        try {
-            const res = await fetch(`${API_BASE}/token`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `username=${encodeURIComponent(user)}`
-            });
-            if (res.ok) {
-                const data = await res.json();
-                localStorage.setItem('aura_token', data.access_token);
-                authToken = data.access_token;
-                fetchUser();
-                closeAuth();
-            }
-        } catch (e) { showToast("Login Error"); }
-    };
-}
+function initScrollObs() { }
+function initDemoPlayer() { }

@@ -3979,3 +3979,84 @@ h3 {
 /* Remove Canvas styles */
 .ch-canvas { display: none; }
 
+
+/* --- ACTIVE PROJECTS FACELIFT --- */
+.job-card {
+    background: linear-gradient(145deg, rgba(20,20,23, 0.9), rgba(10,10,12, 1)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    padding: 16px 20px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+.job-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) !important;
+}
+[data-theme="light"] .job-card {
+    background: #fff !important;
+    border: 1px solid rgba(0,0,0,0.05) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+}
+[data-theme="light"] .job-card:hover {
+    border-color: rgba(0,0,0,0.1) !important;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08) !important;
+}
+
+.job-card h4 {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 6px !important;
+    letter-spacing: -0.01em;
+}
+
+.badge {
+    padding: 4px 10px !important;
+    border-radius: 20px !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* --- MIXER REFINEMENTS --- */
+.mixer-channels {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.channel-strip {
+    /* Grid Update: Name | Waveform | Download | Mute/Solo */
+    grid-template-columns: 100px 1fr 50px 120px !important; 
+    padding: 12px 20px !important;
+    gap: 20px !important;
+    height: 80px !important; /* Slightly more compact */
+}
+
+/* Explicit Download Button Position */
+.ch-download-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    color: var(--text-sec);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+.ch-download-btn:hover {
+    background: var(--text-main);
+    color: var(--bg-body);
+}
+[data-theme="light"] .ch-download-btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+/* WaveSurfer Height */
+.ws-waveform-container {
+    height: 50px !important;
+}
