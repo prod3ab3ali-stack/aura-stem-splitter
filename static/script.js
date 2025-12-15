@@ -1189,13 +1189,15 @@ function loadMixer(title, stems) {
             // If user wants accurate waveform, we can uncomment. 
             // But for now, speed is priority per feedback "taking too much time".
 
-            // Interaction: Click to Seek
-            cvs.onclick = async (e) => {
-                const width = cvs.clientWidth;
-                const x = e.offsetX; // More reliable than clientX - rect.left
-                const per = x / width;
+            // Interaction: Click & Drag to Scrub
+            let isDragging = false;
 
-                // Get duration from THIS stem preferably, or global
+            const handleScrub = (e) => {
+                const rect = cvs.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const width = rect.width;
+                const per = Math.max(0, Math.min(1, x / width));
+
                 let dur = 0;
                 if (stemsAudio[name].audio && stemsAudio[name].audio.duration) dur = stemsAudio[name].audio.duration;
                 if (!dur || isNaN(dur)) dur = globalDuration;
@@ -1203,14 +1205,49 @@ function loadMixer(title, stems) {
                 if (dur > 0) {
                     const target = per * dur;
                     seekTo(target);
-
-                    // If blocked/paused, maybe start?
-                    if (audioContext && audioContext.state === 'suspended') await audioContext.resume();
-
-                    // Optional: If user wants instant play on click
-                    // if(masterState !== 'playing') playBtn.click();
                 }
             };
+
+            cvs.onmousedown = (e) => {
+                isDragging = true;
+                handleScrub(e);
+            };
+
+            window.addEventListener('mousemove', (e) => {
+                if (isDragging && e.target === cvs) handleScrub(e);
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            // Touch support for mobile
+            cvs.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent("mousedown", {
+                    clientX: touch.clientX
+                });
+                cvs.dispatchEvent(mouseEvent);
+            }, { passive: false });
+
+            cvs.addEventListener('touchmove', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    // Re-use logic
+                    const rect = cvs.getBoundingClientRect();
+                    const x = touch.clientX - rect.left;
+                    const width = rect.width;
+                    const per = Math.max(0, Math.min(1, x / width));
+
+                    // Optimization: Don't seek too often on touch? seekTo has lock.
+                    let dur = globalDuration;
+                    if (dur > 0) seekTo(per * dur);
+                }
+            }, { passive: false });
+
+            cvs.addEventListener('touchend', () => isDragging = false);
         }
 
         container.appendChild(stripDiv);
