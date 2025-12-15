@@ -59,13 +59,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const activeJobId = localStorage.getItem('active_stem_job');
     if (activeJobId) {
         console.log("Recovering job:", activeJobId);
+        // Force Switch to App View if not already
+        if (document.getElementById('view-app').classList.contains('hidden')) {
+            switchView('app');
+        }
+
         // Restore UI state
-        wsDrop.classList.add('hidden');
-        wsLoad.classList.remove('hidden');
-        startJobPolling(activeJobId);
+        const wsDrop = document.getElementById('ws-drop');
+        const wsLoad = document.getElementById('ws-loading');
+
+        if (wsDrop && wsLoad) {
+            wsDrop.classList.add('hidden');
+            wsLoad.classList.remove('hidden');
+            startJobPolling(activeJobId);
+        }
     } else {
         // Normal Load
-        loadLibrary();
+        if (currentUser) loadLibrary();
     }
 
     // 3. Parallax Effect
@@ -949,15 +959,7 @@ function loadMixer(title, stems) {
     stemsAudio = {};
     const tpl = document.getElementById('channel-template');
 
-    // Add ORIGINAL Audio Strip
-    // We construct the URL assuming the backend serves it at /inputs/{projectId}.wav
-    // (We will create this mount in main.py next)
-    const originalUrl = `${API_BASE}/inputs/${projectId}.wav`; // simplified
-
-    // Add Original to stems object temporarily for uniform handling, but key it specially
-    const allTracks = { 'ORIGINAL': originalUrl, ...stems };
-
-    Object.entries(allTracks).forEach(([name, url]) => {
+    Object.entries(stems).forEach(([name, url]) => {
         const audio = new Audio(url);
         audio.crossOrigin = 'anonymous';
         audio.loop = true;
@@ -969,74 +971,45 @@ function loadMixer(title, stems) {
 
         src.connect(gain);
         gain.connect(anal);
-        // If it's Original, don't connect to master FX chain by default to avoid double processing if needed, 
-        // but for consistency let's route it through master.
         gain.connect(masterGain);
 
-        // Mute Original by default so user hears Stems first
-        const isOriginal = name === 'ORIGINAL';
-        if (isOriginal) gain.gain.value = 0;
-
-        stemsAudio[name] = { audio, gain, anal, muted: isOriginal };
+        stemsAudio[name] = { audio, gain, anal, muted: false };
 
         // UI
         const strip = tpl.content.cloneNode(true);
 
         let displayName = name.toUpperCase();
         if (name === 'other') displayName = 'SYNTH / FX';
-        if (name === 'drums') displayName = 'PERCUSSION';
-        if (isOriginal) displayName = 'ORIGINAL MIX';
+        if (name === 'drums') displayName = 'PERCUSSION'; // As requested
 
-        const nameEl = strip.querySelector('.ch-name');
-        nameEl.textContent = displayName;
-
-        // Highlight Original
-        if (isOriginal) {
-            nameEl.style.color = '#fff';
-            strip.querySelector('.channel-strip').style.border = '1px solid var(--primary)';
-        } else if (name === 'other') {
-            nameEl.style.color = '#A855F7';
-        }
-
+        strip.querySelector('.ch-name').textContent = displayName;
         strip.querySelector('a').href = url;
 
-        // Mute Logic
-        const mBtn = strip.querySelector('.mute');
-        // Set initial state
-        if (isOriginal) mBtn.classList.add('active');
+        // Special highlighting for Synths
+        if (name === 'other') {
+            strip.querySelector('.ch-name').style.color = '#A855F7'; // Purple
+        }
 
+        // Mute
+        const mBtn = strip.querySelector('.mute');
         mBtn.onclick = () => {
-            // Exclusive Solo Logic for Original? OR just standard mute?
-            // Standard mute allows layering.
             stemsAudio[name].muted = !stemsAudio[name].muted;
             mBtn.classList.toggle('active', stemsAudio[name].muted);
-
-            // Gain ramp for smooth transition
-            const val = stemsAudio[name].muted ? 0 : 1;
-            gain.gain.setTargetAtTime(val, audioContext.currentTime, 0.05);
+            gain.gain.value = stemsAudio[name].muted ? 0 : 1;
         };
 
-        // Solo Logic
+        // Solo
         const sBtn = strip.querySelector('.solo');
         sBtn.onclick = () => {
             const isSolo = sBtn.classList.contains('active');
-            // Clear all solos
             document.querySelectorAll('.solo').forEach(b => b.classList.remove('active'));
 
             if (isSolo) {
-                // Unsolo: Restore previous states? Or just Unmute all?
-                // Simple: Unmute all except Original (if it was default)
-                Object.entries(stemsAudio).forEach(([k, t]) => {
-                    t.gain.gain.setTargetAtTime(k === 'ORIGINAL' ? 0 : 1, audioContext.currentTime, 0.05);
-                    t.muted = k === 'ORIGINAL';
-                    // Update UI buttons
-                    // (This is getting complex, let's keep it simple: Reset to Stems Only)
-                });
+                Object.values(stemsAudio).forEach(t => t.gain.gain.value = 1);
             } else {
-                // Solo this track
                 sBtn.classList.add('active');
                 Object.entries(stemsAudio).forEach(([k, t]) => {
-                    t.gain.gain.setTargetAtTime(k === name ? 1 : 0, audioContext.currentTime, 0.05);
+                    t.gain.gain.value = k === name ? 1 : 0;
                 });
             }
         };
