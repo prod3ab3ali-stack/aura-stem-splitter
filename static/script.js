@@ -279,12 +279,16 @@ function renderDashboard(jobs) {
         div.className = 'job-card-premium';
 
         // Timer Logic
-        let timerStr = '00:00';
-        if (job.start_time) {
+        let timerStr = '';
+        if (job.status === 'completed') {
+            timerStr = '<i class="fa-solid fa-check"></i> Done';
+        } else if (job.status === 'failed') {
+            timerStr = '--:--';
+        } else if (job.start_time) {
             const elapsed = Math.max(0, Math.floor(Date.now() / 1000 - job.start_time));
             const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
             const secs = (elapsed % 60).toString().padStart(2, '0');
-            timerStr = `${mins}:${secs}`;
+            timerStr = `<i class="fa-regular fa-clock"></i> ${mins}:${secs}`;
         }
 
         // Icon Logic
@@ -309,7 +313,7 @@ function renderDashboard(jobs) {
             
             <div class="job-meta-right">
                 <div class="job-percent">${Math.round(job.progress || 0)}%</div>
-                <div class="job-timer"><i class="fa-regular fa-clock"></i> ${timerStr}</div>
+                <div class="job-timer">${timerStr}</div>
             </div>
         `;
 
