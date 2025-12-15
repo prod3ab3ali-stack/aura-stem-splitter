@@ -31,8 +31,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # 4. Copy Application Code
 COPY --chown=1000 . .
 
-# 5. Create necessary directories
-RUN mkdir -p input output && chmod 777 input output
+# 5. Create necessary directories and set permissions
+# CRITICAL: "chmod 777" ensures the app can write files even if user ID shifts
+RUN mkdir -p input output && chmod -R 777 input output
 
 # 6. Expose Port 7860 (Standard for Hugging Face Spaces)
 EXPOSE 7860
