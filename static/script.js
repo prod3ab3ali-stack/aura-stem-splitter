@@ -202,7 +202,12 @@ function startJobPolling(job_id) {
             if (progContainer) {
                 progContainer.classList.remove('hidden');
                 progBar.style.width = (job.progress || 0) + "%";
-                progText.textContent = Math.round(job.progress || 0) + "%";
+
+                let stage = "Processing";
+                if (job.status === 'downloading') stage = "Downloading";
+                if (job.status === 'queued') stage = "Queued";
+
+                progText.textContent = `${stage}: ${Math.round(job.progress || 0)}%`;
             }
 
         } catch (e) { console.error("Poll Error", e); }
@@ -264,31 +269,37 @@ function renderDashboard(jobs) {
     container.classList.remove('hidden');
     list.innerHTML = '';
 
-    // Show recent jobs (Active + Last completed)
-    // We don't strictly filter 'active' because user wants to see what happened active or not.
-    // Just take the top 3
-    const showJobs = jobs.slice(0, 3);
+    // Show All Jobs (Sorted: Active First, then Date)
+    const sortedJobs = jobs.sort((a, b) => {
+        const aActive = ['processing', 'queued', 'downloading'].includes(a.status);
+        const bActive = ['processing', 'queued', 'downloading'].includes(b.status);
+        if (aActive && !bActive) return -1;
+        if (!aActive && bActive) return 1;
+        return b.start_time - a.start_time; // Newest first
+    });
 
-    if (showJobs.length === 0) {
+    if (sortedJobs.length === 0) {
         container.classList.add('hidden');
         return;
     }
 
-    showJobs.forEach(job => {
+    sortedJobs.forEach(job => {
         const div = document.createElement('div');
         div.className = 'job-card-premium';
 
         // Timer Logic
         let timerStr = '';
-        if (job.status === 'completed') {
-            timerStr = '<i class="fa-solid fa-check"></i> Done';
-        } else if (job.status === 'failed') {
-            timerStr = '--:--';
-        } else if (job.start_time) {
+        if (job.start_time) {
             const elapsed = Math.max(0, Math.floor(Date.now() / 1000 - job.start_time));
-            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
-            const secs = (elapsed % 60).toString().padStart(2, '0');
-            timerStr = `<i class="fa-regular fa-clock"></i> ${mins}:${secs}`;
+            // For completed jobs, maybe show duration? 
+            // For now just show active timer or date for completed
+            if (['processing', 'queued', 'downloading'].includes(job.status)) {
+                const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const secs = (elapsed % 60).toString().padStart(2, '0');
+                timerStr = `${mins}:${secs}`;
+            } else {
+                timerStr = new Date(job.start_time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
         }
 
         // Icon Logic
@@ -313,7 +324,7 @@ function renderDashboard(jobs) {
             
             <div class="job-meta-right">
                 <div class="job-percent">${Math.round(job.progress || 0)}%</div>
-                <div class="job-timer">${timerStr}</div>
+                <div class="job-timer"><i class="fa-regular fa-clock"></i> ${timerStr}</div>
             </div>
         `;
 
@@ -426,8 +437,8 @@ async function processFile(file) {
     xhr.onload = () => {
         if (xhr.status === 200) {
             const data = JSON.parse(xhr.responseText);
-            // Switch to Job Polling (Keep bar visible but maybe reset or indeterminate?)
-            document.getElementById('loading-title').textContent = "Initializing Engine...";
+            // Switch to Job Polling
+            document.getElementById('upload-progress-container').classList.add('hidden');
             startJobPolling(data.job_id);
         } else {
             showToast("Upload Failed");
@@ -1155,13 +1166,7 @@ function loadMixer(title, stems) {
             stemsAudio[name].canvas = cvs;
             stemsAudio[name].color = color;
 
-            // 1. Instant Mock Waveform (Visual Feedback)
-            // Ensure canvas has dimensions
-            cvs.width = cvs.clientWidth || 800;
-            cvs.height = cvs.clientHeight || 100;
-            drawMockWaveform(cvs.getContext('2d'), cvs.width, cvs.height, color, name);
-
-            // 2. Trigger Background Load for Accurate Static Waveform
+            // Trigger Background Load for Static Waveform
             loadAndDecode(url).then(buffer => {
                 if (!buffer) return;
                 // Pre-render
@@ -1210,79 +1215,56 @@ function loadMixer(title, stems) {
     // Start Seeker Loop
     if (seekerInterval) cancelAnimationFrame(seekerInterval);
 
-    // --- SYNC LOOP ---
     function updateSeekerLoop() {
-        if (!wsMixer || wsMixer.classList.contains('hidden')) return;
+        if (!wsMixer || wsMixer.classList.contains('hidden')) return; // Stop if closed
 
-        // 1. Sync Logic (Anti-Drift)
         if (masterState === 'playing' && stemsAudio) {
-            const stems = Object.values(stemsAudio);
-            if (stems.length > 0) {
-                const master = stems[0].audio; // Use first stem as timing master
-                const masterTime = master.currentTime;
-                const masterDur = master.duration || globalDuration;
+            const first = Object.values(stemsAudio)[0];
+            if (first && !first.audio.paused) {
+                const t = first.audio.currentTime;
+                const d = first.audio.duration || globalDuration;
 
-                // Sync others to master if drift > 0.05s
-                for (let i = 1; i < stems.length; i++) {
-                    const s = stems[i].audio;
-                    if (Math.abs(s.currentTime - masterTime) > 0.05) {
-                        s.currentTime = masterTime;
-                    }
+                // Update Slider if NOT dragging (checking valid state)
+                // We assume user drag stops the update via 'input' event listener logic if we had one
+                // But for now, just update
+                if (seekSlider && document.activeElement !== seekSlider) {
+                    seekSlider.value = t;
                 }
 
-                // Update UI
-                if (timeDisplay) {
-                    const m = Math.floor(masterTime / 60);
-                    const s = Math.floor(masterTime % 60).toString().padStart(2, '0');
-                    timeDisplay.textContent = `${m}:${s}`;
-                }
-                if (seekSlider && !seekSlider.disabled) {
-                    seekSlider.value = masterTime;
-                    if (masterDur && masterDur !== Infinity) {
-                        seekSlider.max = masterDur;
-                        if (durDisplay) {
-                            const dm = Math.floor(masterDur / 60);
-                            const ds = Math.floor(masterDur % 60).toString().padStart(2, '0');
-                            durDisplay.textContent = `${dm}:${ds}`;
-                        }
-                    }
-                }
+                const m = Math.floor(t / 60);
+                const s = Math.floor(t % 60).toString().padStart(2, '0');
+                if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
+
+                // Draw Visualizers
+                Object.entries(stemsAudio).forEach(([name, stemData]) => {
+                    const strip = document.querySelectorAll('.channel-strip'); // Inefficient selector
+                    // Better: find canvas in loop
+                    // Let's assume drawChanVis handles finding canvas? No, it takes CVS arg.
+                    // We need to store canvas ref in stemsAudio
+                });
             }
         }
 
-        // 2. Visual Loop
-        if (stemsAudio) {
-            Object.entries(stemsAudio).forEach(([name, stem]) => {
+        // Draw Loop separate from Time Loop? 
+        // We need to redraw Playhead every frame.
+        Object.entries(stemsAudio).forEach(([name, stem]) => {
+            if (stem.canvas) {
                 const t = stem.audio.currentTime;
                 const d = stem.audio.duration || globalDuration;
-                let color = stem.color || '#fff';
-
-                // Force draw immediately (Mock or Real)
-                if (stem.canvas) {
-                    drawChanVis(stem.canvas, stem, color, t, d);
-                }
-            });
-        }
+                let color = '#fff';
+                if (STEM_COLORS[name]) color = STEM_COLORS[name];
+                // Vocals etc are not direct keys usually, need mapping
+                // Actually we passed color to drawChanVis...
+                // Let's rely on the fact that stemsAudio has everything?
+                // We need to store color in stemsAudio
+                drawChanVis(stem.canvas, stem, stem.color || '#fff', t, d);
+            }
+        });
 
         seekerInterval = requestAnimationFrame(updateSeekerLoop);
     }
 
-    // Fixed Seek Handler
-    function seekTo(time) {
-        if (!stemsAudio) return;
-        if (!Number.isFinite(time)) return; // Protection
-
-        // Clamp
-        if (time < 0) time = 0;
-
-        Object.values(stemsAudio).forEach(s => {
-            s.audio.currentTime = time;
-        });
-
-        // Update Slider UI immediately
-        const slide = document.getElementById('seek-slider');
-        if (slide) slide.value = time;
-    }
+    seekerInterval = requestAnimationFrame(updateSeekerLoop);
 }
 
 // Ensure stemsAudio items have canvas refs
@@ -1447,24 +1429,62 @@ function drawMockWaveform(ctx, w, h, color, type) {
     ctx.globalAlpha = 1.0;
 }
 
-function seekTo(time) {
-    if (!stemsAudio) return;
-    Object.values(stemsAudio).forEach(s => {
-        if (Number.isFinite(time)) s.audio.currentTime = time;
+// --- SYNC ENGINE ---
+let isSeeking = false;
+
+async function seekTo(time) {
+    if (!stemsAudio || isSeeking) return;
+    isSeeking = true;
+
+    const wasPlaying = masterState === 'playing';
+
+    // 1. Pause All First
+    Object.values(stemsAudio).forEach(s => s.audio.pause());
+
+    // 2. Seek All (Promise.all to wait for browser)
+    const seekPromises = Object.values(stemsAudio).map(s => {
+        return new Promise(resolve => {
+            // Define one-time listener
+            const onSeeked = () => {
+                s.audio.removeEventListener('seeked', onSeeked);
+                resolve();
+            };
+            s.audio.addEventListener('seeked', onSeeked);
+            s.audio.currentTime = time;
+        });
     });
-    // Update Slider
+
+    // Timeout fallback (if browser gets stuck)
+    const timeout = new Promise(resolve => setTimeout(resolve, 500));
+
+    await Promise.race([Promise.all(seekPromises), timeout]);
+
+    // 3. Update Slider
     const slide = document.getElementById('seek-slider');
     if (slide) slide.value = time;
+
+    // 4. Resume if needed
+    if (wasPlaying) {
+        // Force re-sync play
+        const playPromises = Object.values(stemsAudio).map(s => s.audio.play());
+        await Promise.allSettled(playPromises);
+        masterState = 'playing';
+    }
+
+    isSeeking = false;
 }
+
+// Ensure Seeking doesn't trigger "End" events prematurely
+// (Browser specific behavior handling)
 
 // --- Library & Admin ---
 
 
 async function createTestProject() {
     try {
-        const res = await fetch(`${API_BASE}/debug/test_project`, {
+        const res = await fetch(`${API_BASE} /debug/test_project`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${authToken}` }
+            headers: { 'Authorization': `Bearer ${authToken} ` }
         });
         if (res.ok) {
             showToast("Test Project Created");
@@ -1482,9 +1502,9 @@ async function deleteProject(e, pid) {
     e.stopPropagation();
 
     try {
-        const res = await fetch(`${API_BASE}/projects/${pid}`, {
+        const res = await fetch(`${API_BASE} /projects/${pid} `, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${authToken}` }
+            headers: { 'Authorization': `Bearer ${authToken} ` }
         });
         if (res.ok) {
             showToast("Project Deleted");
@@ -1499,9 +1519,9 @@ async function loadAdmin() {
     const table = document.getElementById('admin-list');
     if (!table) return;
     try {
-        const res = await fetch(`${API_BASE}/admin/users`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const res = await fetch(`${API_BASE} /admin/users`, { headers: { 'Authorization': `Bearer ${authToken} ` } });
         const data = await res.json();
-        table.innerHTML = data.users.map(u => `<tr><td>${u.username}</td><td>${u.credits}</td><td>${u.plan}</td></tr>`).join('');
+        table.innerHTML = data.users.map(u => `< tr ><td>${u.username}</td><td>${u.credits}</td><td>${u.plan}</td></tr > `).join('');
     } catch (e) { table.innerHTML = 'Access Denied'; }
 }
 
@@ -1594,7 +1614,11 @@ function updateUI(user) {
 
 async function subscribe(p) {
     try {
-        await fetch(`${API_BASE}/subscribe?plan=${p}`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
+        await fetch(`${API_BASE}/subscribe?plan=${p}`, {
+            method: 'POST', headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
         // Refresh User
         await fetchUser();
     } catch (e) { showToast("Error"); }
