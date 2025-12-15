@@ -40,7 +40,6 @@ function createToastContainer() {
 // --- Init ---
 document.addEventListener('DOMContentLoaded', async () => {
     applyTheme(currentTheme);
-    initCursor();
     initHeroVisuals();
     initScrollObs();
     initDemoPlayer();
@@ -427,16 +426,6 @@ function applyTheme(theme) {
     localStorage.setItem('aura_theme', theme);
     const btn = document.getElementById('theme-btn');
     if (btn) btn.innerHTML = theme === 'light' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
-}
-
-// --- Cursor Follower ---
-function initCursor() {
-    const cur = document.getElementById('cursor-follower');
-    if (!cur) return;
-    document.addEventListener('mousemove', e => {
-        // Use requestAnimationFrame for smoother following if needed, but simple transform is fine
-        cur.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
-    });
 }
 
 // --- Hero Visuals (Canvas) ---

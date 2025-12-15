@@ -331,10 +331,17 @@ h3,
 }
 
 .hero-title {
-    font-size: 5rem;
-    line-height: 1.1;
+    font-size: 5.5rem;
+    line-height: 1.05;
     margin-bottom: 30px;
-    letter-spacing: -2px;
+    letter-spacing: -2.5px;
+    font-weight: 700;
+    /* Gradient Text */
+    background: linear-gradient(135deg, var(--text-main) 30%, var(--text-sec));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
 }
 
 .hero-sub {
@@ -766,26 +773,45 @@ h3,
     transition: 0.3s;
 }
 
+/* --- REDESIGNED AUTH MODAL --- */
 .auth-sidebar {
     position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 400px;
-    background: var(--bg-surface);
-    border-left: 1px solid var(--border);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    width: 90%;
+    max-width: 480px;
+    background: rgba(255, 255, 255, 0.85);
+    /* Light Glass */
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 32px;
     z-index: 9999;
-    padding: 60px 40px;
-    box-shadow: -10px 0 50px rgba(0, 0, 0, 0.5);
-    transform: translateX(100%);
-    transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    padding: 60px;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
     display: flex;
     flex-direction: column;
 }
 
-.auth-sidebar.open {
-    transform: translateX(0);
+[data-theme="dark"] .auth-sidebar {
+    background: rgba(20, 20, 20, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
 }
+
+.auth-sidebar.open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Remove old open state if present below, technically I'm replacing it if block contained it */
+
+
 
 .auth-close {
     position: absolute;
@@ -825,19 +851,20 @@ h3,
 
 .input-float input {
     width: 100%;
-    padding: 16px;
+    padding: 18px 20px;
     background: var(--bg-body);
-    border: 1px solid var(--border);
+    border: 2px solid transparent;
     border-radius: 12px;
-    color: var(--text-main);
     font-size: 1rem;
-    outline: none;
     transition: 0.2s;
+    color: var(--text-main);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .input-float input:focus {
+    background: var(--bg-surface);
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
 }
 
 .input-float label {
@@ -3069,6 +3096,7 @@ h3 {
     opacity: 1;
     transform: translateY(0);
 }
+
 /* --- JOB DASHBOARD --- */
 .job-dashboard {
     width: 100%;
@@ -3138,11 +3166,29 @@ h3 {
     font-weight: 600;
 }
 
-.job-status.queued { color: var(--text-sec); }
-.job-status.processing { color: #f39c12; background: rgba(243, 156, 18, 0.1); }
-.job-status.downloading { color: #3498db; background: rgba(52, 152, 219, 0.1); }
-.job-status.completed { color: #27ae60; background: rgba(39, 174, 96, 0.1); }
-.job-status.failed { color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+.job-status.queued {
+    color: var(--text-sec);
+}
+
+.job-status.processing {
+    color: #f39c12;
+    background: rgba(243, 156, 18, 0.1);
+}
+
+.job-status.downloading {
+    color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.job-status.completed {
+    color: #27ae60;
+    background: rgba(39, 174, 96, 0.1);
+}
+
+.job-status.failed {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+}
 
 .job-meta {
     font-size: 0.8rem;
@@ -3170,7 +3216,15 @@ h3 {
 }
 
 @keyframes progressPulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
 }
