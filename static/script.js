@@ -75,7 +75,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } else {
         // Normal Load
-        if (currentUser) loadLibrary();
+        if (currentUser) {
+            loadLibrary();
+            updateDashboard();
+        }
     }
 
     // 3. Parallax Effect
@@ -731,6 +734,10 @@ function switchView(name) {
         viewApp.style.display = 'block';
 
         setTimeout(() => viewApp.classList.add('active'), 10);
+
+        // Load Data
+        updateDashboard();
+
         navTo('workspace'); // Default tab
     }
 }
