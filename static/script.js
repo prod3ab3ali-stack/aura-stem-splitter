@@ -1189,132 +1189,104 @@ function loadMixer(title, stems) {
             // If user wants accurate waveform, we can uncomment. 
             // But for now, speed is priority per feedback "taking too much time".
 
-            // Interaction: Click & Drag to Scrub
-            let isDragging = false;
+            // Interaction: Click to Seek & Play (Sync)
+            cvs.style.cursor = 'crosshair';
+            cvs.onclick = async (e) => {
+                const width = cvs.clientWidth;
+                const x = e.offsetX;
+                const per = x / width;
 
-            const handleScrub = (e) => {
-                const rect = cvs.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const width = rect.width;
-                const per = Math.max(0, Math.min(1, x / width));
-
-                let dur = 0;
-                if (stemsAudio[name].audio && stemsAudio[name].audio.duration) dur = stemsAudio[name].audio.duration;
-                if (!dur || isNaN(dur)) dur = globalDuration;
+                let dur = globalDuration;
+                // Fallback to individual stem duration if global is missing
+                if (!dur && stemsAudio[name].audio) dur = stemsAudio[name].audio.duration;
 
                 if (dur > 0) {
                     const target = per * dur;
-                    seekTo(target);
+
+                    // 1. Force Seek
+                    await seekTo(target);
+
+                    // 2. Force Play (Seamless skipping)
+                    if (audioContext && audioContext.state === 'suspended') await audioContext.resume();
+
+                    // If not playing, start playing now to allow "Skipping through"
+                    if (masterState !== 'playing') {
+                        const playPromises = Object.values(stemsAudio).map(s => s.audio.play());
+                        await Promise.allSettled(playPromises);
+                        masterState = 'playing';
+                        const pBtn = document.getElementById('play-btn');
+                        if (pBtn) pBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                    }
                 }
-            };
-
-            cvs.onmousedown = (e) => {
-                isDragging = true;
-                handleScrub(e);
-            };
-
-            window.addEventListener('mousemove', (e) => {
-                if (isDragging && e.target === cvs) handleScrub(e);
-            });
-
-            window.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
-
-            // Touch support for mobile
-            cvs.addEventListener('touchstart', (e) => {
-                isDragging = true;
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent("mousedown", {
-                    clientX: touch.clientX
-                });
-                cvs.dispatchEvent(mouseEvent);
-            }, { passive: false });
-
-            cvs.addEventListener('touchmove', (e) => {
-                if (isDragging) {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    // Re-use logic
-                    const rect = cvs.getBoundingClientRect();
-                    const x = touch.clientX - rect.left;
-                    const width = rect.width;
-                    const per = Math.max(0, Math.min(1, x / width));
-
-                    // Optimization: Don't seek too often on touch? seekTo has lock.
-                    let dur = globalDuration;
-                    if (dur > 0) seekTo(per * dur);
-                }
-            }, { passive: false });
-
-            cvs.addEventListener('touchend', () => isDragging = false);
-        }
-
-        container.appendChild(stripDiv);
-    });
-
-    // Master Volume Bind
-    const mVol = document.getElementById('master-vol');
-    if (mVol && masterGain) {
-        mVol.value = masterGain.gain.value; // sync
-        mVol.oninput = (e) => {
-            masterGain.gain.value = e.target.value;
+            }
         };
     }
 
-    // Start Seeker Loop
-    if (seekerInterval) cancelAnimationFrame(seekerInterval);
+        container.appendChild(stripDiv);
+});
 
-    function updateSeekerLoop() {
-        if (!wsMixer || wsMixer.classList.contains('hidden')) return; // Stop if closed
+// Master Volume Bind
+const mVol = document.getElementById('master-vol');
+if (mVol && masterGain) {
+    mVol.value = masterGain.gain.value; // sync
+    mVol.oninput = (e) => {
+        masterGain.gain.value = e.target.value;
+    };
+}
 
-        if (masterState === 'playing' && stemsAudio) {
-            const first = Object.values(stemsAudio)[0];
-            if (first && !first.audio.paused) {
-                const t = first.audio.currentTime;
-                const d = first.audio.duration || globalDuration;
+// Start Seeker Loop
+if (seekerInterval) cancelAnimationFrame(seekerInterval);
 
-                // Update Slider if NOT dragging (checking valid state)
-                // We assume user drag stops the update via 'input' event listener logic if we had one
-                // But for now, just update
-                if (seekSlider && document.activeElement !== seekSlider) {
-                    seekSlider.value = t;
-                }
+function updateSeekerLoop() {
+    if (!wsMixer || wsMixer.classList.contains('hidden')) return; // Stop if closed
 
-                const m = Math.floor(t / 60);
-                const s = Math.floor(t % 60).toString().padStart(2, '0');
-                if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
+    if (masterState === 'playing' && stemsAudio) {
+        const first = Object.values(stemsAudio)[0];
+        if (first && !first.audio.paused) {
+            const t = first.audio.currentTime;
+            const d = first.audio.duration || globalDuration;
 
-                // Draw Visualizers
-                Object.entries(stemsAudio).forEach(([name, stemData]) => {
-                    const strip = document.querySelectorAll('.channel-strip'); // Inefficient selector
-                    // Better: find canvas in loop
-                    // Let's assume drawChanVis handles finding canvas? No, it takes CVS arg.
-                    // We need to store canvas ref in stemsAudio
-                });
+            // Update Slider if NOT dragging (checking valid state)
+            // We assume user drag stops the update via 'input' event listener logic if we had one
+            // But for now, just update
+            if (seekSlider && document.activeElement !== seekSlider) {
+                seekSlider.value = t;
             }
+
+            const m = Math.floor(t / 60);
+            const s = Math.floor(t % 60).toString().padStart(2, '0');
+            if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
+
+            // Draw Visualizers
+            Object.entries(stemsAudio).forEach(([name, stemData]) => {
+                const strip = document.querySelectorAll('.channel-strip'); // Inefficient selector
+                // Better: find canvas in loop
+                // Let's assume drawChanVis handles finding canvas? No, it takes CVS arg.
+                // We need to store canvas ref in stemsAudio
+            });
         }
-
-        // Draw Loop separate from Time Loop? 
-        // We need to redraw Playhead every frame.
-        Object.entries(stemsAudio).forEach(([name, stem]) => {
-            if (stem.canvas) {
-                const t = stem.audio.currentTime;
-                const d = stem.audio.duration || globalDuration;
-                let color = '#fff';
-                if (STEM_COLORS[name]) color = STEM_COLORS[name];
-                // Vocals etc are not direct keys usually, need mapping
-                // Actually we passed color to drawChanVis...
-                // Let's rely on the fact that stemsAudio has everything?
-                // We need to store color in stemsAudio
-                drawChanVis(stem.canvas, stem, stem.color || '#fff', t, d);
-            }
-        });
-
-        seekerInterval = requestAnimationFrame(updateSeekerLoop);
     }
 
+    // Draw Loop separate from Time Loop? 
+    // We need to redraw Playhead every frame.
+    Object.entries(stemsAudio).forEach(([name, stem]) => {
+        if (stem.canvas) {
+            const t = stem.audio.currentTime;
+            const d = stem.audio.duration || globalDuration;
+            let color = '#fff';
+            if (STEM_COLORS[name]) color = STEM_COLORS[name];
+            // Vocals etc are not direct keys usually, need mapping
+            // Actually we passed color to drawChanVis...
+            // Let's rely on the fact that stemsAudio has everything?
+            // We need to store color in stemsAudio
+            drawChanVis(stem.canvas, stem, stem.color || '#fff', t, d);
+        }
+    });
+
     seekerInterval = requestAnimationFrame(updateSeekerLoop);
+}
+
+seekerInterval = requestAnimationFrame(updateSeekerLoop);
 }
 
 // Ensure stemsAudio items have canvas refs
