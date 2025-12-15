@@ -421,6 +421,12 @@ def core_process_track(input_path: Path, original_name: str, user: dict):
         "project": {"id": internal_id, "name": safe_human_name}
     }
 
+@app.on_event("startup")
+async def startup_event():
+    print("MATCHBOX AUDIO ENGINE V4.2 - DNS PATCHED")
+    # Initialize DB (already done globally but good for hooks)
+    pass
+
 @app.post("/api/process")
 async def process_audio(
     file: UploadFile = File(...),
