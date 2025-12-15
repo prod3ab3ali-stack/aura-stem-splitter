@@ -801,6 +801,8 @@ def admin_users(user: dict = Depends(get_current_user)):
 
 # --- Static Mounts ---
 app.mount("/stems", StaticFiles(directory=OUTPUT_DIR), name="stems")
+app.mount("/stems", StaticFiles(directory=OUTPUT_DIR), name="stems")
+app.mount("/api/inputs", StaticFiles(directory=INPUT_DIR), name="inputs")
 app.mount("/", StaticFiles(directory=BASE_DIR / "static", html=True), name="static")
 
 if __name__ == "__main__":
