@@ -19,14 +19,15 @@
 
 [data-theme="dark"] {
     --bg-body: #050505;
-    --bg-surface: #0f0f0f;
-    --bg-card: #141414;
-    --text-main: #ffffff;
-    --text-sec: #888888;
-    --border: #262626;
-    --accent: #d8b4fe;
+    --bg-surface: #0a0a0a;
+    --bg-card: #111;
+    --text-main: #fff;
+    --text-sec: #888;
+    --border: #333;
+    --accent: #a855f7;
     /* Pastel Purple for neon */
-    --accent-glow: rgba(216, 180, 254, 0.4);
+    --accent-glow: rgba(168, 85, 247, 0.5);
+    --grid-line: rgba(255, 255, 255, 0.03);
     --accent-fg: #000000;
     --gradient: radial-gradient(circle at 50% -20%, #1a103c, #050505 60%);
     --shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
@@ -39,18 +40,37 @@
     outline: none;
 }
 
+/* Cyber-Grid Background */
 body {
-    background: var(--bg-body);
-    /* Premium Depth Background */
+    background-color: var(--bg-body);
     background-image:
-        radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.08), transparent 25%),
-        radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.05), transparent 25%);
-    background-attachment: fixed;
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+        radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.15), transparent 60%);
+    /* Top glow */
+    background-size: 50px 50px, 50px 50px, 100% 100%;
+    background-position: center top;
     color: var(--text-main);
     font-family: var(--font-body);
-    transition: background 0.3s, color 0.3s;
-    overflow-x: hidden;
     min-height: 100vh;
+    animation: grid-slide 100s linear infinite;
+    /* Subtle movement */
+    overflow-x: hidden;
+}
+
+@keyframes grid-slide {
+    0% {
+        background-position: 0 0, 0 0, center top;
+    }
+
+    100% {
+        background-position: 50px 50px, 50px 50px, center top;
+    }
+}
+
+[data-theme="light"] body {
+    background-image: radial-gradient(circle at 50% 0%, rgba(0, 0, 0, 0.05), transparent 50%);
+    animation: none;
 }
 
 /* --- NEW PREMIUM UTILS --- */
@@ -120,16 +140,32 @@ h3,
     position: fixed;
     top: 0;
     left: 0;
-    width: 24px;
-    height: 24px;
-    border: 1px solid var(--text-main);
+    width: 20px;
+    height: 20px;
+    background: var(--accent);
     border-radius: 50%;
     pointer-events: none;
     z-index: 9999;
     transform: translate(-50%, -50%);
-    transition: transform 0.1s;
-    display: none;
-    /* Only show if JS enables and device has mouse */
+    transition: width 0.2s, height 0.2s;
+    mix-blend-mode: screen;
+    filter: blur(10px);
+    opacity: 0.6;
+    display: block !important;
+    /* Force Enable */
+}
+
+body:hover #cursor-follower {
+    opacity: 0.8;
+}
+
+/* Hover States for Interactive Elements */
+a:hover~#cursor-follower,
+button:hover~#cursor-follower {
+    width: 60px;
+    height: 60px;
+    background: #fff;
+    mix-blend-mode: overlay;
 }
 
 @media (hover: hover) {

@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initHeroVisuals();
     initScrollObs();
     initDemoPlayer();
+    initCursorFollower();
 
     // Simulate initial loading
     setTimeout(() => {
@@ -547,6 +548,31 @@ function initGlassParallax() {
             glassStack.style.transform = `rotateX(${tiltX}deg) rotateZ(${tiltZ}deg) rotateY(10deg)`;
         });
     }
+}
+
+function initCursorFollower() {
+    const follower = document.getElementById('cursor-follower');
+    if (!follower) return;
+
+    let posX = 0, posY = 0;
+    let mouseX = 0, mouseY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        // Immediate update for better responsiveness, or use loop for smooth
+        // follower.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+    });
+
+    // Smooth lerp loop
+    function loop() {
+        posX += (mouseX - posX) * 0.2;
+        posY += (mouseY - posY) * 0.2;
+
+        follower.style.transform = `translate(${posX}px, ${posY}px) translate(-50%, -50%)`;
+        requestAnimationFrame(loop);
+    }
+    loop();
 }
 
 // --- Interactive Demo (Landing) ---
