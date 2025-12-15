@@ -235,22 +235,37 @@ def logout(authorization: Optional[str] = Header(None)):
 import yt_dlp
 
 # --- GLOBAL SSL & DNS PATCH (The "Nuclear" Solution) ---
-# 1. SSL Fix: Force certifi and disable verification if needed
+# --- GLOBAL SSL & DNS PATCH (The "Nuclear" Solution) ---
 import os
 import ssl
 import certifi
+import requests.api
+import requests.sessions
 
-# Force Python to use Certifi's bundles
+# 1. SSL Fix: Force certifi path (Fallback)
 os.environ['SSL_CERT_FILE'] = certifi.where()
 os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
 
-# BYPASS SSL VERIFICATION COMPLETELY (Fixes "unable to get local issuer certificate")
-# This overrides the default SSL context creation to skip verification.
+# 2. MONKEY PATCH REQUESTS TO DISABLE VERIFICATION
+# This ensures that even if a library asks for verification, we say NO.
+# Needed because our DNS patch forces IP connections which fail hostname checks.
+original_request = requests.sessions.Session.request
+
+def patched_request(self, method, url, *args, **kwargs):
+    kwargs['verify'] = False # FORCE DISABLE SSL VERIFY
+    return original_request(self, method, url, *args, **kwargs)
+
+requests.sessions.Session.request = patched_request
+# Also patch the top-level API just in case
+requests.api.request = patched_request
+
+# 3. Patch SSL Context default (Double Tap)
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# 2. DNS Fix: Replace broken container resolver with dnspython
+# 4. DNS Fix: Replace broken container resolver with dnspython
 try:
     import dns.resolver
+    # ... (Rest of DNS Logic) ...
     import socket
 
     # Configure Google DNS
