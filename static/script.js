@@ -68,7 +68,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 // --- Auth & User ---
 async function fetchUser() {
     try {
-        const res = await fetch(`${API_BASE}/users/me`, {
+        const res = await fetch(`${API_BASE}/me`, {
+            method: 'GET',
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
         if (res.ok) {
