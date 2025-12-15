@@ -1201,6 +1201,29 @@ function loadMixer(title, stems) {
 // Ensure stemsAudio items have canvas refs
 // I need to update the object creation in loadMixer to store canvas and color.
 
+const playBtn = document.getElementById('play-btn');
+if (playBtn) playBtn.onclick = async () => {
+    // Resume Context (Autoplay Policy)
+    if (audioContext && audioContext.state === 'suspended') {
+        await audioContext.resume();
+    }
+
+    if (masterState === 'playing') {
+        Object.values(stemsAudio).forEach(s => s.audio.pause());
+        masterState = 'paused';
+        playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+    } else {
+        // Play
+        Object.values(stemsAudio).forEach(s => {
+            // Ensure loop is false or handled?
+            // s.audio.play() might fail if not ready, but usually HTML5 audio buffers enough.
+            s.audio.play().catch(e => console.warn("Play error:", e));
+        });
+        masterState = 'playing';
+        playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+    }
+};
+
 const stopBtn = document.getElementById('stop-btn');
 if (stopBtn) stopBtn.onclick = stopPlayback;
 
