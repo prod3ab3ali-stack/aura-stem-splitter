@@ -686,24 +686,25 @@
     <div class="auth-sidebar" id="auth-sidebar">
         <button class="auth-close" onclick="closeAuth()">&times;</button>
         <div class="auth-container">
-            <h2 id="auth-title">Welcome</h2>
+            <h2 id="auth-title" style="text-align:center;">Welcome</h2>
             <form id="auth-form">
-                <div class="input-float">
-                    <input type="text" id="auth-user" placeholder=" " required>
-                    <label>Username</label>
+                <div class="input-group input-with-icon">
+                    <input type="text" id="auth-user" class="std-input" placeholder="Username" required>
+                    <i class="fa-solid fa-user"></i>
                 </div>
-                <div class="input-float" id="auth-email-group" style="display:none">
-                    <input type="email" id="auth-email" placeholder=" ">
-                    <label>Email Address</label>
+                <div class="input-group input-with-icon" id="auth-email-group" style="display:none">
+                    <input type="email" id="auth-email" class="std-input" placeholder="Email Address">
+                    <i class="fa-solid fa-envelope"></i>
                 </div>
-                <div class="input-float">
-                    <input type="password" id="auth-pass" placeholder=" " required>
-                    <label>Password</label>
+                <div class="input-group input-with-icon">
+                    <input type="password" id="auth-pass" class="std-input" placeholder="Password" required>
+                    <i class="fa-solid fa-key"></i>
                 </div>
                 <button type="submit" class="btn-block filled" id="auth-submit">Continue</button>
             </form>
-            <div class="auth-footer">
-                <span id="auth-msg">New?</span> <a href="#" onclick="toggleAuthMode()" id="auth-tog">Create Account</a>
+            <div class="auth-footer" style="margin-top: 25px; text-align: center;">
+                <span id="auth-msg">New?</span> <a href="#" onclick="toggleAuthMode()" id="auth-tog"
+                    style="color:var(--accent); font-weight:700;">Create Account</a>
             </div>
         </div>
     </div>

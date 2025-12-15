@@ -894,6 +894,31 @@ h3,
     border-color: var(--accent);
 }
 
+/* --- Auth Inputs --- */
+.input-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.auth-footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--text-sec);
+}
+
+.auth-footer a {
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+    filter: brightness(1.2);
+}
+
 .btn-auth {
     margin-top: 10px;
     background: linear-gradient(90deg, var(--accent), #7e22ce);
