@@ -1197,7 +1197,7 @@ function loadMixer(title, stems) {
 
     seekerInterval = requestAnimationFrame(updateSeekerLoop);
 }
-}
+
 // Ensure stemsAudio items have canvas refs
 // I need to update the object creation in loadMixer to store canvas and color.
 
@@ -1309,90 +1309,7 @@ function drawChanVis(cvs, stemData, color, currentTime, duration) {
 }
 
 // --- Library & Admin ---
-async function loadLibrary() {
-    const box = document.getElementById('library-list');
-    if (!box) return;
-    box.style.display = 'grid'; // Restore grid
-    box.style.border = 'none';
-    box.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:var(--text-sec); padding: 40px;">Syncing Library...</p>';
 
-    setTimeout(async () => {
-        try {
-            // Auto-sync
-            await fetch(`${API_BASE}/sync`, { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` } });
-
-            // Cache bust
-            const t = new Date().getTime();
-            const res = await fetch(`${API_BASE}/history?t=${t}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
-            if (res.status === 401) { logout(); return; }
-
-            const data = await res.json();
-            const projectCount = data.projects ? data.projects.length : 0;
-
-            // --- VISUAL DEBUG START ---
-            // Remove this block after confirming it works
-            // console.log("Library Data:", data);
-            // --- VISUAL DEBUG END ---
-
-            box.innerHTML = '';
-
-            if (projectCount === 0) {
-                box.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; border: 2px dashed var(--border); border-radius: 20px;">
-                <i class="fa-solid fa-cloud-upload" style="font-size: 2rem; margin-bottom: 20px; color: var(--text-sec)"></i>
-                <p>No projects found.</p>
-                <small style="color:var(--text-sec); display:block; margin-top:10px;">ID: ${currentUser?.id}</small>
-                <button onclick="createTestProject()" style="margin-top:20px; background:var(--bg-surface); border:1px solid var(--border); padding:8px 16px; border-radius:8px; cursor:pointer;">
-                    <i class="fa-solid fa-bug"></i> Generate Test Project
-                </button>
-            </div>`;
-                return;
-            }
-
-            data.projects.forEach(p => {
-                // Safe Date Parsing
-                let dateStr = "Unknown Date";
-                try {
-                    // Fix SQL date format for JS (replace space with T)
-                    const safeDate = p.date.replace(" ", "T");
-                    dateStr = new Date(safeDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-                } catch (e) { }
-
-                const stemsCount = p.stems ? Object.keys(p.stems).length : 0;
-                const isValid = stemsCount > 0;
-
-                const div = document.createElement('div');
-                div.className = 'lib-item';
-                if (!isValid) div.style.opacity = '0.6';
-
-                div.innerHTML = `
-                <div class="lib-cover">
-                    <i class="fa-solid fa-record-vinyl"></i>
-                </div>
-                <div class="delete-btn" title="Delete Project" onclick="deleteProject(event, '${p.id}')">
-                    <i class="fa-solid fa-trash"></i>
-                </div>
-                <div class="lib-meta">
-                    <div class="lib-title">${p.name}</div>
-                    <span class="lib-date">${dateStr}</span>
-                    <div class="lib-tags">
-                        <span class="tag">${stemsCount} STEMS</span>
-                        <span class="tag">${isValid ? 'READY' : 'ERROR'}</span>
-                    </div>
-                </div>
-             `;
-                div.onclick = (e) => {
-                    if (!e.target.closest('.delete-btn') && isValid) {
-                        navTo('workspace'); loadMixer(p.name, p.stems);
-                    }
-                };
-                box.appendChild(div);
-            });
-        } catch (e) {
-            console.error(e);
-            box.innerHTML = '<p style="text-align:center; color:red">Error loading library. Please refresh.</p>';
-        }
-    }, 100); // Small delay to let initial render happen
-}
 
 async function createTestProject() {
     try {
