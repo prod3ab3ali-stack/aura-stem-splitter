@@ -72,53 +72,58 @@
         <!-- Interactive Hero -->
         <header class="hero">
             <div class="hero-bg-anim">
-                <!-- Canvas for abstract fluid animation -->
                 <canvas id="hero-canvas"></canvas>
             </div>
 
-            <div class="hero-content">
-                <div class="hero-badge fade-in">V4.0 NEURAL ENGINE</div>
-                <h1 class="hero-title fade-in delay-1">
-                    Uncover the <span class="serif-italic">Soul</span><br>
-                    Hidden in the <span class="highlight-text">Noise.</span>
-                </h1>
-                <p class="hero-sub fade-in delay-2">
-                    Professional grade source separation. Isolate Vocals, Drums, Bass, and Instruments with preservation
-                    of transient details.
-                </p>
-                <div class="hero-buttons fade-in delay-3">
-                    <button class="btn-large primary" onclick="toggleAuth('signup')">
-                        Upload Track <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                    <button class="btn-large secondary" onclick="scrollToDemo()">
-                        <i class="fa-solid fa-play"></i> Live Demo
-                    </button>
-                </div>
-            </div>
+            <div class="hero-container">
+                <div class="hero-grid-layout">
+                    <!-- Text Column -->
+                    <div class="hero-col-text">
+                        <div class="hero-badge fade-in">V4.0 NEURAL ENGINE</div>
+                        <h1 class="hero-title fade-in delay-1">
+                            <span class="block-reveal">Uncover the</span>
+                            <span class="block-reveal serif-italic accent-text">Soul</span>
+                            <span class="block-reveal">within the</span>
+                            <span class="block-reveal highlight-text">Noise.</span>
+                        </h1>
+                        <p class="hero-sub fade-in delay-2">
+                            Isolate Vocals, Drums, and Instruments with surgical precision.
+                            The next generation of source separation is here.
+                        </p>
+                        <div class="hero-buttons fade-in delay-3">
+                            <button class="btn-xl primary-glow" onclick="toggleAuth('signup')">
+                                Start Separating
+                            </button>
+                            <button class="btn-xl text-only" onclick="scrollToDemo()">
+                                <i class="fa-solid fa-play"></i> Listen to Samples
+                            </button>
+                        </div>
+                    </div>
 
-            <!-- "Floating" Stem Layers (Visual Metaphor) -->
-            <div class="hero-layers fade-in delay-4">
-                <div class="layer-card l-vocals">
-                    <div class="icon"><i class="fa-solid fa-microphone-lines"></i></div>
-                    <span>VOCALS</span>
-                    <div class="mini-wave"></div>
+                    <!-- Visual Column -->
+                    <div class="hero-col-visual fade-in delay-4">
+                        <div class="visual-stack">
+                            <div class="stack-card card-vocal">
+                                <i class="fa-solid fa-microphone-lines"></i>
+                                <div class="wave-line"></div>
+                                <span>Vocals</span>
+                            </div>
+                            <div class="stack-card card-drum">
+                                <i class="fa-solid fa-drum"></i>
+                                <div class="wave-line"></div>
+                                <span>Drums</span>
+                            </div>
+                            <div class="stack-card card-bass">
+                                <i class="fa-solid fa-wave-square"></i>
+                                <div class="wave-line"></div>
+                                <span>Bass</span>
+                            </div>
+                            <!-- Floating decorative elements -->
+                            <div class="float-orb orb-1"></div>
+                            <div class="float-orb orb-2"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="layer-card l-drums">
-                    <div class="icon"><i class="fa-solid fa-drum"></i></div>
-                    <span>DRUMS</span>
-                    <div class="mini-wave"></div>
-                </div>
-                <div class="layer-card l-bass">
-                    <div class="icon"><i class="fa-solid fa-wave-square"></i></div>
-                    <span>BASS</span>
-                    <div class="mini-wave"></div>
-                </div>
-                <div class="layer-card l-other">
-                    <div class="icon"><i class="fa-solid fa-guitar"></i></div>
-                    <span>INST</span>
-                    <div class="mini-wave"></div>
-                </div>
-            </div>
             </div>
         </header>
 
