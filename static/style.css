@@ -894,10 +894,63 @@ h3,
     border-color: var(--accent);
 }
 
-/* --- Auth Inputs --- */
+/* --- Auth Inputs (Specific) --- */
 .input-group {
     margin-bottom: 20px;
     position: relative;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 16px 20px 16px 50px;
+    /* Space for icon */
+    background: rgba(255, 255, 255, 0.5);
+    /* Glassy Light */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    color: #333;
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: 0.3s;
+    backdrop-filter: blur(5px);
+}
+
+[data-theme="dark"] .auth-input {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.auth-input::placeholder {
+    color: #888;
+    opacity: 0.8;
+}
+
+.auth-input:focus {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+}
+
+[data-theme="dark"] .auth-input:focus {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+/* Icon Positioning for Auth */
+.input-group i {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-sec);
+    pointer-events: none;
+    z-index: 5;
+    transition: 0.3s;
+}
+
+.input-group:focus-within i {
+    color: var(--accent);
 }
 
 .auth-footer {
@@ -906,6 +959,7 @@ h3,
     font-size: 0.95rem;
     color: var(--text-sec);
 }
+
 
 .auth-footer a {
     color: var(--accent);
