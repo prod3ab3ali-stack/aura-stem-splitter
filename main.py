@@ -417,7 +417,8 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
         p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True, env=current_env)
         
         if p.returncode != 0:
-            raise Exception(f"Demucs Failed (Code {p.returncode}): {p.stderr[:200]}")
+            print(f"DEMUCS STDERR: {p.stderr}") # PRINT FULL ERROR TO LOGS
+            raise Exception(f"Demucs Failed (Code {p.returncode})")
             
         update_job(job_id, "Polishing Audio (Normalization)...", 80)
         
@@ -433,6 +434,8 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
              time.sleep(1)
              
         if not created_folder.exists():
+             # List output dir to debug where it went
+             print(f"DEBUG: Contents of {OUTPUT_DIR}: {list(OUTPUT_DIR.glob('*'))}")
              raise Exception(f"Output folder not found: {created_folder}")
 
         # 3. Smart Analysis & DB
