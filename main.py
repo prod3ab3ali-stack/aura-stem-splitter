@@ -36,12 +36,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-import asyncio
-
 # --- Database Setup ---
-# Limit Concurrency to 1 job at a time to prevent RAM OOM on Free Tiers
-JOB_SEMAPHORE = asyncio.Semaphore(1) 
-
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     # OPTIMIZATION for "Thousands of Users": Write-Ahead Logging
@@ -246,14 +241,19 @@ def core_process_track(input_path: Path, original_name: str, user: dict):
     static_ffmpeg.add_paths()
     current_env = os.environ.copy()
 
+    # OPTIMIZATION: Limit threads to avoid freezing the CPU
+    current_env["OMP_NUM_THREADS"] = "1"
+    current_env["MKL_NUM_THREADS"] = "1"
+
     cmd = [
         sys.executable,
         "-m", "demucs.separate",
-        "-n", "htdemucs_6s",
-        "--shifts", "4",
-        "--overlap", "0.5",
+        "-n", "htdemucs", # Lighter model than htdemucs_6s
+        "--shifts", "0",  # Fastest
+        "--overlap", "0.1", # Minimum overlap
         "--float32",
         "-o", str(OUTPUT_DIR),
+        "-j", "1", # Single job
         str(input_path)
     ]
     
@@ -381,11 +381,6 @@ def update_job(jid, status, progress=0):
         JOBS[jid]["progress"] = progress
 
 # SHARED PIPELINE: Runs inside a background thread
-async def run_separation_pipeline_wrapper(job_id: str, input_path: Path, meta_title: str, user: dict):
-    # Wait for slot
-    async with JOB_SEMAPHORE:
-        run_separation_pipeline(job_id, input_path, meta_title, user)
-
 def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user: dict):
     try:
         update_job(job_id, "Initializing Neural Engine...", 10)
@@ -395,15 +390,20 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
         static_ffmpeg.add_paths()
         current_env = os.environ.copy()
         
-        # PERFORMANCE FIX: "shifts=1" is 4x faster than "shifts=4". 
-        # Quality is still excellent with htdemucs_6s.
+        # OPTIMIZATION: Limit threads to avoid freezing the CPU
+        current_env["OMP_NUM_THREADS"] = "1"
+        current_env["MKL_NUM_THREADS"] = "1"
+        
+        # PERFORMANCE FIX: "shifts=0" is fastest. 
+        # Using "htdemucs" (Hybrid Transformer) - standard version.
         cmd = [
             sys.executable, "-m", "demucs.separate",
-            "-n", "htdemucs_6s",
-            "--shifts", "1",  # SPEED OPTIMIZATION
-            "--overlap", "0.25", # BALANCED
+            "-n", "htdemucs",  # Lighter model
+            "--shifts", "0",   # FASTEST MODE
+            "--overlap", "0.1",# MINIMUM OVERLAP
             "--float32",
             "-o", str(OUTPUT_DIR),
+            "-j", "1",         # Force single thread
             str(input_path)
         ]
         
@@ -421,7 +421,8 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
         
         # 2. Verify Output
         internal_id = input_path.stem
-        base_out = OUTPUT_DIR / "htdemucs_6s"
+        # Note: Model name change affects folder structure
+        base_out = OUTPUT_DIR / "htdemucs" 
         created_folder = base_out / internal_id
         
         # Retry logic
@@ -451,9 +452,9 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
                 if is_silent:
                      f.unlink()
                 else:
-                     final_stems[f.stem] = f"/stems/htdemucs_6s/{created_folder.name}/{f.name}"
+                     final_stems[f.stem] = f"/stems/htdemucs/{created_folder.name}/{f.name}"
             except:
-                final_stems[f.stem] = f"/stems/htdemucs_6s/{created_folder.name}/{f.name}"
+                final_stems[f.stem] = f"/stems/htdemucs/{created_folder.name}/{f.name}"
 
         # 4. Save DB
         conn = sqlite3.connect(DB_PATH)
@@ -503,14 +504,13 @@ async def process_file_async(
     job_id = str(uuid.uuid4())
     JOBS[job_id] = {"status": "queued", "progress": 0, "result": None, "start_time": datetime.datetime.now().timestamp()}
     
-    # Use Wrapper for Semaphore
-    background_tasks.add_task(run_separation_pipeline_wrapper, job_id, input_path, file.filename, user)
+    background_tasks.add_task(run_separation_pipeline, job_id, input_path, file.filename, user)
     return {"job_id": job_id}
 
 @app.get("/api/download_zip/{project_id}")
 def download_zip(project_id: str):
     # Security: Ensure project exists
-    project_path = OUTPUT_DIR / "htdemucs_6s" / project_id
+    project_path = OUTPUT_DIR / "htdemucs" / project_id
     if not project_path.exists():
         raise HTTPException(status_code=404, detail="Project not found")
 
@@ -604,7 +604,7 @@ def start_youtube_job(
             # Post-Process: Copy Thumbnail if exists (yt-dlp usually names it same as input)
             # Input was input_path (no extension). Thumbnail is likely input_path.jpg or .webp
             # We need to find it and move it to the OUTPUT project folder.
-            base_out = OUTPUT_DIR / "htdemucs_6s" / final_path.stem
+            base_out = OUTPUT_DIR / "htdemucs" / final_path.stem
             
             # Find any image starting with internal_id in INPUT_DIR
             for img in INPUT_DIR.glob(f"{internal_id}.*"):
@@ -683,7 +683,7 @@ def delete_project(project_id: str, user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Not authorized")
         
     folder_name = row[0]
-    folder_path = OUTPUT_DIR / "htdemucs_6s" / folder_name
+    folder_path = OUTPUT_DIR / "htdemucs" / folder_name
     
     c.execute("DELETE FROM projects WHERE id = ?", (project_id,))
     conn.commit()
