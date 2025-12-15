@@ -932,16 +932,23 @@ function toggleFX(type) {
 // --- Mix Logic ---
 // --- MIXER LOGIC & GRAPH ---
 
-const STEM_COLORS = {
-    vocals: '#D291BC', // Pink/Purple
-    drums: '#CFA567',  // Gold/Brown (Percussion)
-    bass: '#5D8AA8',   // Blue/Grey
-    other: '#48C9B0'   // Teal (Instruments)
-};
 
 // Global Transport State
 let globalDuration = 0;
 let seekerInterval = null;
+
+// --- MIXER LOGIC & GRAPH (WaveSurfer Edition) ---
+
+const STEM_COLORS = {
+    vocals: '#D291BC', // Pink/Purple
+    drums: '#e67e22',  // Orange (Darker for visibility)
+    bass: '#3498db',   // Blue
+    other: '#1abc9c'   // Teal
+};
+
+// Global State
+let stemsWS = {}; // WaveSurfer instances
+let isPlaying = false;
 
 async function downloadZip(projectId) {
     if (!projectId) return showToast("Project ID missing");
@@ -949,9 +956,10 @@ async function downloadZip(projectId) {
 }
 
 function closeMixer() {
-    // Stop Audio
-    if (audioContext) audioContext.suspend();
-    Object.values(stemsAudio || {}).forEach(s => s.audio.pause());
+    // Destroy all WS instances
+    Object.values(stemsWS).forEach(ws => ws.destroy());
+    stemsWS = {};
+    isPlaying = false;
 
     // Stop Seeker
     if (seekerInterval) clearInterval(seekerInterval);
@@ -989,80 +997,29 @@ function loadMixer(title, stems) {
     const container = document.getElementById('mixer-channels');
     container.innerHTML = '';
 
-    // Audio Context
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        masterGain = audioContext.createGain();
-        initMasterFX(audioContext);
-    } else {
-        masterGain.disconnect();
-        if (FX.spatial) masterGain.connect(FX.spatial.node);
-        else masterGain.connect(audioContext.destination);
-    }
-    if (audioContext.state === 'suspended') audioContext.resume();
-
-    stemsAudio = {};
-    const tpl = document.getElementById('channel-template');
-
-    // Determine Order: Vocals, Drums, Bass, Instruments
-    const sortOrder = ['vocals', 'drums', 'bass', 'other'];
-    const sortedKeys = Object.keys(stems).sort((a, b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
-
-    // Global Duration Sync
-    globalDuration = 0;
-    const seekSlider = document.getElementById('seek-slider');
+    // Reset Transport
+    const playBtn = document.getElementById('play-btn');
+    playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+    isPlaying = false;
     const timeDisplay = document.getElementById('time-display');
     const durDisplay = document.getElementById('duration-display');
-
-    // Reset inputs
+    const seekSlider = document.getElementById('seek-slider');
     if (seekSlider) { seekSlider.value = 0; seekSlider.disabled = true; }
     if (timeDisplay) timeDisplay.textContent = "00:00";
     if (durDisplay) durDisplay.textContent = "00:00";
 
+    stemsWS = {};
+    const tpl = document.getElementById('channel-template');
+
+    // Sort Order
+    const sortOrder = ['vocals', 'drums', 'bass', 'other'];
+    const sortedKeys = Object.keys(stems).sort((a, b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
+
+    // We need a "Master" instance to drive events (usually the first one)
+    let masterWS = null;
+
     sortedKeys.forEach((name, index) => {
         const url = stems[name];
-        const audio = new Audio(url);
-        audio.crossOrigin = 'anonymous';
-        audio.loop = false; // We handle loop or end manually? Let's just stop at end.
-
-        const src = audioContext.createMediaElementSource(audio);
-        const gain = audioContext.createGain();
-        const anal = audioContext.createAnalyser();
-        anal.fftSize = 2048; // Higher res for waveform
-        anal.smoothingTimeConstant = 0.8;
-
-        src.connect(gain);
-        gain.connect(anal);
-        gain.connect(masterGain);
-
-        stemsAudio[name] = { audio, gain, anal, muted: false };
-
-        // Duration Logic (Use first stem as master)
-        if (index === 0) {
-            audio.addEventListener('loadedmetadata', () => {
-                globalDuration = audio.duration;
-                if (seekSlider) {
-                    seekSlider.max = globalDuration;
-                    seekSlider.disabled = false;
-                }
-                const m = Math.floor(globalDuration / 60);
-                const s = Math.floor(globalDuration % 60).toString().padStart(2, '0');
-                if (durDisplay) durDisplay.textContent = `${m}:${s}`;
-            });
-
-            // Seeking Listener ONLY on Master Transport
-            if (seekSlider) {
-                seekSlider.oninput = (e) => {
-                    const time = parseFloat(e.target.value);
-                    Object.values(stemsAudio).forEach(s => {
-                        s.audio.currentTime = time;
-                    });
-                    const m = Math.floor(time / 60);
-                    const s = Math.floor(time % 60).toString().padStart(2, '0');
-                    if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
-                };
-            }
-        }
 
         // UI Strip
         const strip = tpl.content.cloneNode(true);
@@ -1071,13 +1028,13 @@ function loadMixer(title, stems) {
 
         if (name === 'vocals') { color = STEM_COLORS.vocals; }
         if (name === 'drums') { displayName = 'DRUMS'; color = STEM_COLORS.drums; }
-        if (name === 'percussion') { displayName = 'DRUMS'; color = STEM_COLORS.drums; } // Handle both names
+        if (name === 'percussion') { displayName = 'DRUMS'; color = STEM_COLORS.drums; }
         if (name === 'bass') { color = STEM_COLORS.bass; }
         if (name === 'other') { displayName = 'INSTRUMENTS'; color = STEM_COLORS.other; }
 
         strip.querySelector('.ch-name').textContent = displayName;
         strip.querySelector('.ch-name').style.color = color;
-        strip.querySelector('a').href = url; // Hidden link usually
+        strip.querySelector('a').href = url;
 
         // Icon
         const iconDiv = strip.querySelector('.ch-icon');
@@ -1087,151 +1044,149 @@ function loadMixer(title, stems) {
         if (name === 'bass') iconDiv.innerHTML = '<i class="fa-solid fa-wave-square"></i>';
         if (name === 'other') iconDiv.innerHTML = '<i class="fa-solid fa-guitar"></i>';
 
-        // Styling the Strip Border to match Stem
+        // Border
         const stripDiv = strip.querySelector('.channel-strip');
         stripDiv.style.borderLeft = `4px solid ${color}`;
 
-        // Mute/Solo Logic
-        const mBtn = strip.querySelector('.mute');
+        // Replace Canvas with Div for WaveSurfer
+        const canvas = strip.querySelector('canvas');
+        const visualizerContainer = document.createElement('div');
+        visualizerContainer.className = 'ws-waveform-container';
+        visualizerContainer.id = `ws-${name}`;
+        if (canvas) canvas.replaceWith(visualizerContainer);
+
+        container.appendChild(stripDiv);
+
+        // Init WaveSurfer
+        const ws = WaveSurfer.create({
+            container: `#ws-${name}`,
+            waveColor: color,
+            progressColor: '#ffffff', // White line cursor
+            cursorColor: '#ffffff', // Cursor also white
+            cursorWidth: 2,
+            barWidth: 3, // Bar style like SoundCloud/LANDR
+            barGap: 2,
+            barRadius: 2,
+            height: 60,
+            normalize: true,
+            backend: 'WebAudio', // Necessary for Gain control
+        });
+
+        ws.load(url);
+
+        // Volume/Mute Logic (Internal WebAudio)
+        ws.setVolume(1); // Default
+
+        // Store
+        stemsWS[name] = { ws, muted: false, strip: stripDiv };
+
+        // Event: Ready (Set Duration)
+        ws.on('ready', () => {
+            if (index === 0) {
+                const dur = ws.getDuration();
+                const m = Math.floor(dur / 60);
+                const s = Math.floor(dur % 60).toString().padStart(2, '0');
+                if (durDisplay) durDisplay.textContent = `${m}:${s}`;
+                if (seekSlider) {
+                    seekSlider.max = dur;
+                    seekSlider.disabled = false;
+                }
+            }
+        });
+
+        // Event: Interaction (Sync Selection)
+        // If user clicks this waveform, sync others
+        ws.on('interaction', (newTime) => {
+            Object.values(stemsWS).forEach(s => {
+                if (s.ws !== ws) s.ws.setTime(newTime);
+            });
+            // Update slider
+            if (seekSlider) seekSlider.value = newTime;
+        });
+
+        // Event: Finish
+        ws.on('finish', () => {
+            if (index === 0) {
+                isPlaying = false;
+                playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            }
+        });
+
+        // Interaction Controls
+        // Mute
+        const mBtn = stripDiv.querySelector('.mute');
         mBtn.onclick = () => {
-            stemsAudio[name].muted = !stemsAudio[name].muted;
-            mBtn.classList.toggle('active', stemsAudio[name].muted);
-            gain.gain.value = stemsAudio[name].muted ? 0 : 1;
+            stemsWS[name].muted = !stemsWS[name].muted;
+            mBtn.classList.toggle('active', stemsWS[name].muted);
+            ws.setVolume(stemsWS[name].muted ? 0 : 1);
         };
-        const sBtn = strip.querySelector('.solo');
-        sBtn.innerHTML = '<i class="fa-solid fa-headphones"></i>'; // Headphone Icon like Image 2
+
+        // Solo
+        const sBtn = stripDiv.querySelector('.solo');
+        sBtn.innerHTML = '<i class="fa-solid fa-headphones"></i>';
         sBtn.onclick = () => {
             const isSolo = sBtn.classList.contains('active');
-            // Clear all solo
             document.querySelectorAll('.solo').forEach(b => b.classList.remove('active'));
 
             if (isSolo) {
-                // Un-solo -> All Unmuted (unless manually muted) are 1
-                // Simplification: Reset all to Unmuted state logic
-                Object.values(stemsAudio).forEach(t => t.gain.gain.value = 1);
+                // Unsolo
+                Object.values(stemsWS).forEach(t => t.ws.setVolume(t.muted ? 0 : 1));
             } else {
-                // Solo this
+                // Solo
                 sBtn.classList.add('active');
-                Object.entries(stemsAudio).forEach(([k, t]) => {
-                    t.gain.gain.value = k === name ? 1 : 0;
+                Object.entries(stemsWS).forEach(([k, t]) => {
+                    if (k === name) t.ws.setVolume(1);
+                    else t.ws.setVolume(0);
                 });
             }
         };
 
         const fader = strip.querySelector('.ch-fader');
         if (fader) fader.oninput = e => {
-            if (!stemsAudio[name].muted) gain.gain.value = e.target.value;
+            // WaveSurfer handles volume internally, so we can set it directly
+            if (!stemsWS[name].muted) ws.setVolume(e.target.value);
         };
 
-        // Canvas Visualizer
-        const cvs = strip.querySelector('canvas');
-        if (cvs) drawChanVis(cvs, anal, color);
-
-        container.appendChild(stripDiv);
+        if (index === 0) masterWS = ws;
     });
 
-    // Start Seeker Loop
-    if (seekerInterval) clearInterval(seekerInterval);
-    seekerInterval = setInterval(() => {
-        if (masterState === 'playing' && stemsAudio) {
-            // Get time from first stem
-            const first = Object.values(stemsAudio)[0];
-            if (first && !first.audio.paused) {
-                const t = first.audio.currentTime;
-                if (seekSlider) seekSlider.value = t;
+    // Transport Logic (Global)
+    if (playBtn) {
+        playBtn.onclick = () => {
+            if (isPlaying) {
+                Object.values(stemsWS).forEach(s => s.ws.pause());
+                isPlaying = false;
+                playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            } else {
+                Object.values(stemsWS).forEach(s => s.ws.play());
+                isPlaying = true;
+                playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            }
+        };
+    }
+
+    // Global Slider Input
+    if (seekSlider) {
+        seekSlider.oninput = (e) => {
+            const t = parseFloat(e.target.value);
+            Object.values(stemsWS).forEach(s => s.ws.setTime(t));
+        };
+        // Also update on 'audioprocess' from Master
+        if (masterWS) {
+            masterWS.on('audioprocess', (t) => {
+                seekSlider.value = t;
                 const m = Math.floor(t / 60);
                 const s = Math.floor(t % 60).toString().padStart(2, '0');
                 if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
-            }
+            });
         }
-    }, 200);
-}
-
-function drawChanVis(cvs, anal, color) {
-    const ctx = cvs.getContext('2d');
-
-    function draw() {
-        if (wsMixer.style.display === 'none') {
-            requestAnimationFrame(draw);
-            return;
-        }
-        requestAnimationFrame(draw);
-
-        const w = cvs.width = cvs.clientWidth;
-        const h = cvs.height = cvs.clientHeight;
-        const data = new Uint8Array(anal.frequencyBinCount);
-        anal.getByteTimeDomainData(data);
-
-        ctx.clearRect(0, 0, w, h);
-
-        // Create Gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, h);
-        gradient.addColorStop(0, color + '00'); // Transparent top
-        gradient.addColorStop(0.5, color);      // Solid middle
-        gradient.addColorStop(1, color + '00'); // Transparent bottom
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-
-        const sliceWidth = w * 1.0 / data.length;
-        let x = 0;
-
-        // Draw top half
-        ctx.moveTo(0, h / 2);
-
-        // We need to construct a closed shape for filling
-        // 1. Trace the waveform
-        for (let i = 0; i < data.length; i++) {
-            const v = data[i] / 128.0;
-            const amp = (v - 1) * 2.0; // Amplify
-            const y = (h / 2) + (amp * (h * 0.4));
-            ctx.lineTo(x, y);
-            x += sliceWidth;
-        }
-
-        // 2. Close pattern
-        ctx.lineTo(w, h / 2);
-        ctx.lineTo(0, h / 2);
-
-        ctx.fill();
-
-        // Add a Center Line for "Zero Crossing" reference styling
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-        ctx.beginPath();
-        ctx.moveTo(0, h / 2);
-        ctx.lineTo(w, h / 2);
-        ctx.stroke();
     }
-    draw();
 }
+// Removed drawChanVis as we use WaveSurfer now
+
 
 // Transport
-const playBtn = document.getElementById('play-btn');
-if (playBtn) playBtn.onclick = () => {
-    if (masterState === 'playing') {
-        Object.values(stemsAudio).forEach(s => s.audio.pause());
-        masterState = 'paused';
-        playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-    } else {
-        Object.values(stemsAudio).forEach(s => s.audio.play());
-        masterState = 'playing';
-        playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-    }
-};
 
-
-const stopBtn = document.getElementById('stop-btn');
-if (stopBtn) stopBtn.onclick = stopPlayback;
-
-function stopPlayback() {
-    if (Object.keys(stemsAudio).length === 0) return;
-    Object.values(stemsAudio).forEach(s => {
-        s.audio.pause();
-        s.audio.currentTime = 0;
-    });
-    masterState = 'stopped';
-    if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-}
 
 // --- Library & Admin ---
 async function loadLibrary() {
