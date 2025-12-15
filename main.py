@@ -580,22 +580,28 @@ def start_youtube_job(
                     {'key': 'FFmpegExtractAudio', 'preferredcodec': 'wav', 'preferredquality': '192'},
                     # Removed EmbedThumbnail due to container incompatibility with WAV
                 ],
-                'force_ipv4': True,
-                # AGGRESSIVE NETWORK FIX
-                'socket_timeout': 15,
                 'nocheckcertificate': True,
+                # NETWORK FIX: Remove force_ipv4 which can break dual-stack execution on some nodes
+                # 'force_ipv4': True, 
+                'socket_timeout': 30,
                 'http_headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},
-                'extractor_args': {'youtube': {'player_client': ['android', 'ios']}},
-                'quiet': True, 'no_warnings': True, 'progress_hooks': [ph]
+                'extractor_args': {'youtube': {'player_client': ['android', 'web']}}, # Use robust clients
+                'quiet': False, 'no_warnings': False, 'progress_hooks': [ph], # Enable logs to see why it fails
+                'verbose': True
             }
             
             meta_title = "Youtube Download"
             thumb_url = None
             
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(u, download=True)
-                meta_title = info.get('title', meta_title)
-                thumb_url = info.get('thumbnail', None)
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(u, download=True)
+                    meta_title = info.get('title', meta_title)
+                    thumb_url = info.get('thumbnail', None)
+            except Exception as e:
+                # Log the specific DNS/Network error
+                print(f"YT-DLP ERROR: {e}")
+                raise e
             
             final_path = INPUT_DIR / f"{internal_id}.wav"
             if not final_path.exists(): raise Exception("Download failed")
