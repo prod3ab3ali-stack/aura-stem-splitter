@@ -576,10 +576,51 @@ async def process_file_async(
         
     # Start Job
     job_id = str(uuid.uuid4())
-    JOBS[job_id] = {"status": "queued", "progress": 0, "result": None, "start_time": datetime.datetime.now().timestamp()}
+    JOBS[job_id] = {
+        "status": "queued", 
+        "progress": 0, 
+        "result": None, 
+        "start_time": datetime.datetime.now().timestamp(),
+        "owner": user["username"],
+        "name": file.filename
+    }
     
-    background_tasks.add_task(run_separation_pipeline, job_id, input_path, file.filename, user)
+    def file_wrapper(jid, path, fname, usr):
+        try:
+            update_job(jid, "Processing Audio...", 10)
+            res = core_process_track(path, fname, usr)
+            JOBS[jid]["result"] = res
+            update_job(jid, "completed", 100)
+        except Exception as e:
+            JOBS[jid]["status"] = "failed"
+            JOBS[jid]["error"] = str(e)
+            
+    background_tasks.add_task(file_wrapper, job_id, input_path, file.filename, user)
     return {"job_id": job_id}
+
+@app.get("/api/my_jobs")
+def get_my_jobs(user: dict = Depends(get_current_user)):
+    # Return active/recent jobs for this user
+    # Sort by time desc
+    my_list = []
+    for jid, info in JOBS.items():
+        if info.get("owner") == user["username"]:
+            # Sanitize (remove sensitive internal paths if any, though result is safe)
+            item = {
+                "job_id": jid,
+                "status": info["status"],
+                "progress": info["progress"],
+                "name": info.get("name", "Untitled"),
+                "start_time": info["start_time"],
+                "error": info.get("error")
+            }
+            if info["status"] == "completed":
+                item["result"] = info["result"]
+            my_list.append(item)
+    
+    # Sort: Newest first
+    my_list.sort(key=lambda x: x["start_time"], reverse=True)
+    return my_list
 
 @app.get("/api/download_zip/{project_id}")
 def download_zip(project_id: str):
@@ -593,9 +634,7 @@ def download_zip(project_id: str):
     import zipfile
     
     zip_buffer = io.BytesIO()
-    # OPTIMIZATION: Use ZIP_STORED. WAV files do not compress well. 
-    # Attempting to compress them burns CPU and delays the download for 0% gain.
-    # ZIP_STORED is effectively a "copy", making it instant.
+    # OPTIMIZATION: Use ZIP_STORED. WAV files do not compress well.
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_STORED) as zip_file:
         for file in project_path.glob("*"):
             if file.is_file() and file.suffix != '.zip':
@@ -619,7 +658,14 @@ def start_youtube_job(
         raise HTTPException(status_code=402, detail="Insufficient credits")
         
     job_id = str(uuid.uuid4())
-    JOBS[job_id] = {"status": "queued", "progress": 0, "result": None, "start_time": datetime.datetime.now().timestamp()}
+    JOBS[job_id] = {
+        "status": "queued",
+        "progress": 0, 
+        "result": None, 
+        "start_time": datetime.datetime.now().timestamp(),
+        "owner": user["username"],
+        "name": url # Will update to title later
+    }
     
     # Determine the pipeline
     def youtube_wrapper(jid, u, usr):

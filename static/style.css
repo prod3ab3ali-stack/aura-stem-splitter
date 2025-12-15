@@ -3069,3 +3069,108 @@ h3 {
     opacity: 1;
     transform: translateY(0);
 }
+/* --- JOB DASHBOARD --- */
+.job-dashboard {
+    width: 100%;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+    animation: fadeIn 0.5s ease;
+}
+
+.dash-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.job-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.job-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+}
+
+.job-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+}
+
+.job-card.active {
+    border-color: var(--accent);
+}
+
+.job-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.job-title {
+    font-weight: 700;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70%;
+}
+
+.job-status {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--bg-body);
+    font-weight: 600;
+}
+
+.job-status.queued { color: var(--text-sec); }
+.job-status.processing { color: #f39c12; background: rgba(243, 156, 18, 0.1); }
+.job-status.downloading { color: #3498db; background: rgba(52, 152, 219, 0.1); }
+.job-status.completed { color: #27ae60; background: rgba(39, 174, 96, 0.1); }
+.job-status.failed { color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+
+.job-meta {
+    font-size: 0.8rem;
+    color: var(--text-sec);
+    margin-bottom: 15px;
+}
+
+.job-progress-mini {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.job-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.job-card.active .job-progress-fill {
+    animation: progressPulse 2s infinite;
+}
+
+@keyframes progressPulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
