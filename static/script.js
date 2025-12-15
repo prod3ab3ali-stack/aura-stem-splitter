@@ -1022,6 +1022,7 @@ function loadMixer(title, stems) {
     sortedKeys.forEach((name, index) => {
         const url = stems[name];
         const audio = new Audio(url);
+        audio.preload = 'auto';
         audio.crossOrigin = 'anonymous';
         audio.loop = false; // We handle loop or end manually? Let's just stop at end.
 
@@ -1306,13 +1307,9 @@ function drawChanVis(cvs, stemData, color, currentTime, duration) {
     if (stemData.bgCanvas) {
         ctx.drawImage(stemData.bgCanvas, 0, 0, w, h);
     } else {
-        // Loading State
-        ctx.fillStyle = 'rgba(128,128,128,0.1)';
-        ctx.fillRect(0, 0, w, h);
-        ctx.font = '10px monospace';
-        ctx.fillStyle = 'rgba(128,128,128,0.5)';
-        ctx.fillText("LOADING...", 10, h / 2 + 3);
-        return;
+        // --- INSTANT MOCK WAVEFORM (Placeholder while loading) ---
+        // Instead of "LOADING...", we draw a procedural pattern
+        drawMockWaveform(ctx, w, h, color, stemData.name || 'other');
     }
 
     // 2. Draw Playhead
@@ -1329,6 +1326,36 @@ function drawChanVis(cvs, stemData, color, currentTime, duration) {
         ctx.stroke();
         ctx.shadowBlur = 0;
     }
+}
+
+// Procedural Waveform Generator (Visual Trick)
+function drawMockWaveform(ctx, w, h, color, type) {
+    const seed = w; // Static seed based on width
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.3; // Dimmer than real
+
+    ctx.beginPath();
+    ctx.moveTo(0, h / 2);
+
+    const steps = 50;
+    const stepW = w / steps;
+
+    for (let i = 0; i <= steps; i++) {
+        const x = i * stepW;
+        // Pseudo-random deterministic noise
+        const r = Math.sin(i * 0.5) * Math.cos(i * 0.2) * Math.sin(i * 1.5);
+        let amp = r * (h * 0.4);
+
+        // Characteristic shaping
+        if (type === 'drums') amp *= (Math.random() > 0.7 ? 1.5 : 0.2); // Spiky
+        if (type === 'bass') amp = Math.sin(i * 0.2) * (h * 0.3); // Smooth
+
+        ctx.lineTo(x, (h / 2) + amp);
+    }
+
+    ctx.lineTo(w, h / 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
 }
 
 // --- Library & Admin ---
