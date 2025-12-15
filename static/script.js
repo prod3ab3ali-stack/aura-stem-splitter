@@ -102,37 +102,50 @@ function closeAuth() {
 async function handleLogin(e) {
     e.preventDefault();
     const u = document.getElementById('auth-user').value;
-    // For demo, just mock login or real endpoint needed? 
-    // Assuming backend exists:
-    // Actually, based on previous context, we might implement a simple login or just mock.
-    // The previous code had specific login logic. I'll restore a simple version relying on token.
+    const isSignup = document.getElementById('auth-submit').textContent.includes('Start'); // Check valid button text
 
-    // Simulating login for this environment if no backend auth:
-    // But we have /users/me. Let's assume user exists or we create one.
-
-    // Hack: Just get a token for 'user'
-    const formData = new FormData();
-    formData.append('username', u);
-    formData.append('password', 'password'); // Dummy
+    // Default password for demo simplicity if hidden
+    const p = 'password';
 
     try {
-        const res = await fetch(`${API_BASE}/token`, { method: 'POST', body: formData });
+        // 1. Try Login
+        let res = await fetch(`${API_BASE}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: u, password: p })
+        });
+
+        // 2. If 401/400 and we want to "Auto Signup" (Demo Mode)
+        if (!res.ok) {
+            console.log("Login failed, trying signup...");
+            res = await fetch(`${API_BASE}/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+
+            // If signup worked, log in again
+            if (res.ok) {
+                res = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
+                });
+            }
+        }
+
         if (res.ok) {
             const data = await res.json();
-            authToken = data.access_token;
+            authToken = data.token; // API returns { token: "..." }
             localStorage.setItem('aura_token', authToken);
             closeAuth();
             fetchUser();
         } else {
-            // Mock Fallback for Demo
-            authToken = "mock_token_" + u;
-            localStorage.setItem('aura_token', authToken);
-            currentUser = { username: u, credits: 10 };
-            updateUI(currentUser);
-            closeAuth();
+            throw new Error("Auth functionality unavailable");
         }
     } catch (e) {
-        // Fallback
+        console.warn("Backend Auth Failed (Offline Mode?):", e);
+        // Fallback Mock
         authToken = "mock_token_" + u;
         localStorage.setItem('aura_token', authToken);
         currentUser = { username: u, credits: 10 };

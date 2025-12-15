@@ -4225,3 +4225,28 @@ h3 {
     /* Ensure no weird filters */
 }
 
+
+/* --- HERO VISIBILITY FIX --- */
+/* Ensure Hero elements animate via CSS, independent of JS */
+@keyframes fadeInUpRaw {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-title-split,
+.hero-sub-split,
+.hero-actions,
+.hero-stats {
+    animation: fadeInUpRaw 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.hero-title-split { animation-delay: 0.1s; }
+.hero-sub-split { animation-delay: 0.3s; }
+.hero-actions { animation-delay: 0.5s; }
+.hero-stats { animation-delay: 0.7s; }
+
+/* Override the .fade-in opacity:0 rule for these specific elements if they have it */
+.hero-split .fade-in {
+    opacity: 1 !important; /* Fallback */
+    transform: none !important;
+}
