@@ -578,8 +578,11 @@ def start_youtube_job(
                     {'key': 'FFmpegExtractAudio', 'preferredcodec': 'wav', 'preferredquality': '192'},
                     # Removed EmbedThumbnail due to container incompatibility with WAV
                 ],
-                'noplaylist': True, 'nocheckcertificate': True,
-                'force_ipv4': True,  # FORCE IPV4: Fixes DNS resolution errors on HF Spaces
+                'force_ipv4': True,
+                # AGGRESSIVE NETWORK FIX
+                'socket_timeout': 15,
+                'nocheckcertificate': True,
+                'http_headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},
                 'extractor_args': {'youtube': {'player_client': ['android', 'ios']}},
                 'quiet': True, 'no_warnings': True, 'progress_hooks': [ph]
             }
