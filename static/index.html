@@ -19,12 +19,11 @@
 
 </head>
 
-<body data-theme="dark">
-    <div id="cursor-follower"></div>
+<body>
 
     <!-- Loading Curtain -->
-    <div class="loader-curtain" id="loader-curtain">
-        <div class="loader-spinner"></div>
+    <div id="loader-curtain">
+        <div class="loader-logo">AURA</div>
         <div class="loader-bar">
             <div class="bar-fill"></div>
         </div>
@@ -181,19 +180,36 @@
             </div>
         </section>
 
-        <!-- 3. Spectral Compare (Abstract) -->
-        <section class="section centered scroll-hidden" style="padding-top:0;">
-            <h2 class="display-text" style="font-size: 2rem; opacity: 0.8;">Audio <span
-                    class="text-gradient">Reality</span></h2>
+        <!-- Background Canvas -->
+        <canvas id="bg-canvas"
+            style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-2; pointer-events:none;"></canvas>
 
-            <div class="spectral-visual">
-                <div class="spec-line" style="--d:1s; height: 40px;"></div>
-                <div class="spec-line" style="--d:0.5s; height: 80px;"></div>
-                <div class="spec-line" style="--d:1.2s; height: 60px;"></div>
-                <div class="spec-line" style="--d:0.2s; height: 100px;"></div>
-                <div class="spec-line" style="--d:0.8s; height: 50px;"></div>
-                <div class="spec-line" style="--d:1.5s; height: 90px;"></div>
-                <div class="spec-text">AURA ENGINE ACTIVE</div>
+        <!-- 3. Developer Terminal (Replaces Abstract Visual) -->
+        <section class="section centered scroll-hidden" style="padding-top:0;">
+            <h2 class="display-text" style="font-size: 2rem; opacity: 0.8; margin-bottom:30px;">Engine <span
+                    class="text-gradient">Logic</span></h2>
+
+            <div class="terminal-window neon-border">
+                <div class="term-header">
+                    <div class="term-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="term-title">aura_engine.py</div>
+                </div>
+                <div class="term-body">
+                    <pre><code><span class="k">class</span> <span class="c">NeuralSplitter</span>:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="s">self</span>):
+        <span class="s">self</span>.model = <span class="v">Model</span>.load(<span class="str">"v4.0_hifi"</span>)
+        <span class="s">self</span>.stems = [<span class="str">"vox"</span>, <span class="str">"drums"</span>, <span class="str">"bass"</span>, <span class="str">"other"</span>]
+
+    <span class="k">async def</span> <span class="f">process</span>(<span class="s">self</span>, <span class="v">audio_tensor</span>):
+        <span class="c"># Tensor acceleration enabled</span>
+        <span class="k">return</span> <span class="s">self</span>.model.forward(<span class="v">audio_tensor</span>)
+        
+<span class="c"># Initializing GPU Cluster...</span>
+<span class="c"># Ready.</span></code></pre>
+                    <div class="cursor-blink">_</div>
+                </div>
             </div>
         </section>
 

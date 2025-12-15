@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initHeroVisuals();
     initScrollObs();
     initDemoPlayer();
-    initCursorFollower();
+    initBackgroundCanvas(); // New creative background
 
     // Simulate initial loading
     setTimeout(() => {
@@ -548,31 +548,6 @@ function initGlassParallax() {
             glassStack.style.transform = `rotateX(${tiltX}deg) rotateZ(${tiltZ}deg) rotateY(10deg)`;
         });
     }
-}
-
-function initCursorFollower() {
-    const follower = document.getElementById('cursor-follower');
-    if (!follower) return;
-
-    let posX = 0, posY = 0;
-    let mouseX = 0, mouseY = 0;
-
-    document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        // Immediate update for better responsiveness, or use loop for smooth
-        // follower.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
-    });
-
-    // Smooth lerp loop
-    function loop() {
-        posX += (mouseX - posX) * 0.2;
-        posY += (mouseY - posY) * 0.2;
-
-        follower.style.transform = `translate(${posX}px, ${posY}px) translate(-50%, -50%)`;
-        requestAnimationFrame(loop);
-    }
-    loop();
 }
 
 // --- Interactive Demo (Landing) ---
@@ -2224,3 +2199,113 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 });
+
+// --- Creative Background Canvas (Starfield/Network) ---
+function initBackgroundCanvas() {
+    const cvs = document.getElementById('bg-canvas');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+
+    let w, h;
+    const particles = [];
+    const mouse = { x: null, y: null };
+
+    const PROPS = {
+        count: 100,
+        speed: 0.3,
+        dist: 180,
+        lineAlpha: 0.15
+    };
+
+    function resize() {
+        w = cvs.width = window.innerWidth;
+        h = cvs.height = window.innerHeight;
+        initParticles();
+    }
+
+    window.addEventListener('resize', resize);
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+            this.vx = (Math.random() - 0.5) * PROPS.speed;
+            this.vy = (Math.random() - 0.5) * PROPS.speed;
+            this.size = Math.random() * 2 + 0.5;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+
+            if (this.x < 0 || this.x > w) this.vx *= -1;
+            if (this.y < 0 || this.y > h) this.vy *= -1;
+
+            // Mouse Repel
+            if (mouse.x != null) {
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 250) {
+                    const force = (250 - dist) / 250;
+                    this.vx -= dx * force * 0.001;
+                    this.vy -= dy * force * 0.001;
+                }
+            }
+        }
+        draw() {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function initParticles() {
+        particles.length = 0;
+        const cnt = (w * h) / 12000; // Density
+        for (let i = 0; i < cnt; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, w, h);
+
+        particles.forEach((p, index) => {
+            p.update();
+            p.draw();
+
+            // Draw connections
+            for (let j = index + 1; j < particles.length; j++) {
+                const p2 = particles[j];
+                const dx = p.x - p2.x;
+                const dy = p.y - p2.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < PROPS.dist) {
+                    ctx.beginPath();
+                    // Subtle blue/purple connections
+                    ctx.strokeStyle = `rgba(180, 180, 255, ${PROPS.lineAlpha * (1 - dist / PROPS.dist)})`;
+                    ctx.lineWidth = 1;
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    document.addEventListener('mousemove', e => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+    document.addEventListener('mouseleave', () => {
+        mouse.x = null;
+        mouse.y = null;
+    });
+
+    resize();
+    animate();
+}

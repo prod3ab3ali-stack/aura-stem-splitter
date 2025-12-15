@@ -19,15 +19,14 @@
 
 [data-theme="dark"] {
     --bg-body: #050505;
-    --bg-surface: #0a0a0a;
-    --bg-card: #111;
-    --text-main: #fff;
-    --text-sec: #888;
-    --border: #333;
-    --accent: #a855f7;
+    --bg-surface: #0f0f0f;
+    --bg-card: #141414;
+    --text-main: #ffffff;
+    --text-sec: #888888;
+    --border: #262626;
+    --accent: #d8b4fe;
     /* Pastel Purple for neon */
-    --accent-glow: rgba(168, 85, 247, 0.5);
-    --grid-line: rgba(255, 255, 255, 0.03);
+    --accent-glow: rgba(216, 180, 254, 0.4);
     --accent-fg: #000000;
     --gradient: radial-gradient(circle at 50% -20%, #1a103c, #050505 60%);
     --shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
@@ -40,38 +39,17 @@
     outline: none;
 }
 
-/* Cyber-Grid Background */
 body {
-    background-color: var(--bg-body);
-    background-image:
-        linear-gradient(var(--grid-line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
-        radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.15), transparent 60%);
-    /* Top glow */
-    background-size: 50px 50px, 50px 50px, 100% 100%;
-    background-position: center top;
+    background: #020205;
+    /* Deepest Void for Canvas */
     color: var(--text-main);
     font-family: var(--font-body);
-    min-height: 100vh;
-    animation: grid-slide 100s linear infinite;
-    /* Subtle movement */
+    transition: background 0.3s, color 0.3s;
     overflow-x: hidden;
+    min-height: 100vh;
 }
 
-@keyframes grid-slide {
-    0% {
-        background-position: 0 0, 0 0, center top;
-    }
-
-    100% {
-        background-position: 50px 50px, 50px 50px, center top;
-    }
-}
-
-[data-theme="light"] body {
-    background-image: radial-gradient(circle at 50% 0%, rgba(0, 0, 0, 0.05), transparent 50%);
-    animation: none;
-}
+/* Note: background-image gradient removed to let Canvas shine */
 
 /* --- NEW PREMIUM UTILS --- */
 .glass-panel {
@@ -140,32 +118,16 @@ h3,
     position: fixed;
     top: 0;
     left: 0;
-    width: 20px;
-    height: 20px;
-    background: var(--accent);
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--text-main);
     border-radius: 50%;
     pointer-events: none;
     z-index: 9999;
     transform: translate(-50%, -50%);
-    transition: width 0.2s, height 0.2s;
-    mix-blend-mode: screen;
-    filter: blur(10px);
-    opacity: 0.6;
-    display: block !important;
-    /* Force Enable */
-}
-
-body:hover #cursor-follower {
-    opacity: 0.8;
-}
-
-/* Hover States for Interactive Elements */
-a:hover~#cursor-follower,
-button:hover~#cursor-follower {
-    width: 60px;
-    height: 60px;
-    background: #fff;
-    mix-blend-mode: overlay;
+    transition: transform 0.1s;
+    display: none;
+    /* Only show if JS enables and device has mouse */
 }
 
 @media (hover: hover) {
@@ -5038,6 +5000,138 @@ h3 {
     background: transparent;
     color: var(--accent);
 }
+
+.access-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-size: 0.7rem;
+    padding: 2px 10px;
+    border-radius: 2px;
+    font-weight: 700;
+}
+
+/* 5. Terminal Window (Dev Feature) */
+.terminal-window {
+    background: rgba(10, 10, 15, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    margin-top: 40px;
+}
+
+.term-header {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.term-dots {
+    display: flex;
+    gap: 6px;
+}
+
+.term-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #333;
+}
+
+.term-dots span:nth-child(1) {
+    background: #ff5f56;
+}
+
+.term-dots span:nth-child(2) {
+    background: #ffbd2e;
+}
+
+.term-dots span:nth-child(3) {
+    background: #27c93f;
+}
+
+.term-title {
+    flex: 1;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-sec);
+    opacity: 0.7;
+}
+
+.term-body {
+    padding: 20px;
+    color: #d4d4d4;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    text-align: left;
+}
+
+.term-body pre {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+/* Syntax Highlighting */
+.k {
+    color: #c678dd;
+}
+
+/* keyword */
+.f {
+    color: #61afef;
+}
+
+/* function */
+.s {
+    color: #e06c75;
+}
+
+/* self */
+.str {
+    color: #98c379;
+}
+
+/* string */
+.c {
+    color: #5c6370;
+    font-style: italic;
+}
+
+/* comment */
+.v {
+    color: #e5c07b;
+}
+
+/* var/class */
+
+.cursor-blink {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: var(--accent);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 5px;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+
 
 .access-badge {
     position: absolute;
