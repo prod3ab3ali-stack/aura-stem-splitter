@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initHeroVisuals();
     initScrollObs();
     initDemoPlayer();
-    initBackgroundCanvas(); // New creative background
 
     // Simulate initial loading
     setTimeout(() => {
@@ -81,15 +80,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 3. Parallax Effect
+    // 3. Parallax & Shader Interaction
+    let lastX = 0;
+    let lastY = 0;
+    let speed = 0;
+
     document.addEventListener('mousemove', (e) => {
+        // Parallax existing
         const x = (window.innerWidth - e.pageX * 2) / 100;
         const y = (window.innerHeight - e.pageY * 2) / 100;
-
-        // Move Background Elements
         const bg = document.querySelector('.workspace-center');
         if (bg) {
             bg.style.backgroundPosition = `${x}px ${y} px, ${x * 0.5 + 15}px ${y * 0.5 + 15} px`;
+        }
+
+        // Fluid Text Shader Interaction
+        // Calculate mouse speed for turbulence
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        speed = Math.sqrt(dx * dx + dy * dy);
+        lastX = e.clientX;
+        lastY = e.clientY;
+
+        // Update SVG Filter 'baseFrequency' based on speed logic
+        // We use requestAnimationFrame loops usually, but direct update for simplicity here
+        const turb = document.querySelector('#liquid-distort feTurbulence');
+        const disp = document.querySelector('#liquid-distort feDisplacementMap');
+
+        if (turb && disp && speed > 5) {
+            // Subtle change in frequency
+            const freq = 0.01 + (speed * 0.0001);
+            // Clamp
+            const safeFreq = Math.min(Math.max(freq, 0.01), 0.05);
+            turb.setAttribute('baseFrequency', `0.01 ${safeFreq}`);
+            disp.setAttribute('scale', Math.min(speed, 100));
+        } else if (turb && disp) {
+            // Return to calm
+            turb.setAttribute('baseFrequency', '0.01 0.005');
+            disp.setAttribute('scale', '30');
         }
     });
 
@@ -2199,113 +2227,3 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 });
-
-// --- Creative Background Canvas (Starfield/Network) ---
-function initBackgroundCanvas() {
-    const cvs = document.getElementById('bg-canvas');
-    if (!cvs) return;
-    const ctx = cvs.getContext('2d');
-
-    let w, h;
-    const particles = [];
-    const mouse = { x: null, y: null };
-
-    const PROPS = {
-        count: 100,
-        speed: 0.3,
-        dist: 180,
-        lineAlpha: 0.15
-    };
-
-    function resize() {
-        w = cvs.width = window.innerWidth;
-        h = cvs.height = window.innerHeight;
-        initParticles();
-    }
-
-    window.addEventListener('resize', resize);
-
-    class Particle {
-        constructor() {
-            this.x = Math.random() * w;
-            this.y = Math.random() * h;
-            this.vx = (Math.random() - 0.5) * PROPS.speed;
-            this.vy = (Math.random() - 0.5) * PROPS.speed;
-            this.size = Math.random() * 2 + 0.5;
-        }
-        update() {
-            this.x += this.vx;
-            this.y += this.vy;
-
-            if (this.x < 0 || this.x > w) this.vx *= -1;
-            if (this.y < 0 || this.y > h) this.vy *= -1;
-
-            // Mouse Repel
-            if (mouse.x != null) {
-                const dx = mouse.x - this.x;
-                const dy = mouse.y - this.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 250) {
-                    const force = (250 - dist) / 250;
-                    this.vx -= dx * force * 0.001;
-                    this.vy -= dy * force * 0.001;
-                }
-            }
-        }
-        draw() {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
-    function initParticles() {
-        particles.length = 0;
-        const cnt = (w * h) / 12000; // Density
-        for (let i = 0; i < cnt; i++) {
-            particles.push(new Particle());
-        }
-    }
-
-    function animate() {
-        ctx.clearRect(0, 0, w, h);
-
-        particles.forEach((p, index) => {
-            p.update();
-            p.draw();
-
-            // Draw connections
-            for (let j = index + 1; j < particles.length; j++) {
-                const p2 = particles[j];
-                const dx = p.x - p2.x;
-                const dy = p.y - p2.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < PROPS.dist) {
-                    ctx.beginPath();
-                    // Subtle blue/purple connections
-                    ctx.strokeStyle = `rgba(180, 180, 255, ${PROPS.lineAlpha * (1 - dist / PROPS.dist)})`;
-                    ctx.lineWidth = 1;
-                    ctx.moveTo(p.x, p.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.stroke();
-                }
-            }
-        });
-
-        requestAnimationFrame(animate);
-    }
-
-    document.addEventListener('mousemove', e => {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
-    });
-    document.addEventListener('mouseleave', () => {
-        mouse.x = null;
-        mouse.y = null;
-    });
-
-    resize();
-    animate();
-}
