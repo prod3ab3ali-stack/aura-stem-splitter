@@ -246,29 +246,39 @@ def patched_getaddrinfo(host, *args, **kwargs):
         return _original_getaddrinfo('142.250.72.78', *args, **kwargs)
     return _original_getaddrinfo(host, *args, **kwargs)
 
-# Ideally we only use this if normal resolution fails, but for now let's force it 
-# only if we catch the specific exception in a wrapper, OR just apply it globally for that domain.
-# Let's try a safer approach: Only apply if standard one fails? 
-# Use a custom resolver function in yt-dlp is better but hard to inject.
-# Let's inject this into main scope for now.
-# socket.getaddrinfo = patched_getaddrinfo 
-# ^ CAREFUL: This breaks SSL verification because the IP doesn't match the Cert Hostname without SNI.
-# BETTER APPROACH: Use `dnspython` to resolve it manually and pass the IP? No, SNI issues.
+# --- Core Logic Refactored ---
+def core_process_track(input_path: Path, original_name: str, user: dict):
+    # 1. Run Demucs (High Quality V4.1)
+    import static_ffmpeg
+    static_ffmpeg.add_paths()
+    ffmpeg_path = shutil.which("ffmpeg")
+    current_env = os.environ.copy()
 
-# NEW PLAN: Force system to use Google DNS via /etc/resolv.conf is root only.
-# Let's try `yt-dlp`'s built-in 'socket_timeout' and 'retries' again? We did.
+    # OPTIMIZATION: Limit threads to avoid freezing the CPU
+    current_env["OMP_NUM_THREADS"] = "1"
+    current_env["MKL_NUM_THREADS"] = "1"
 
-# FINAL ATTEMPT AT DNS:
-# Use 'ipv4' source address binding? 
-pass
-
+    cmd = [
+        sys.executable,
+        "-m", "demucs.separate",
+        "-n", "htdemucs", # Lighter model than htdemucs_6s
+        "--shifts", "0",  # Fastest
+        "--overlap", "0.1", # Minimum overlap
+        "--float32",
+        "-o", str(OUTPUT_DIR),
+        "-j", "1", # Single job
+        str(input_path)
+    ]
+    
+    p = subprocess.run(cmd, capture_output=True, text=True, env=current_env)
+    
     if p.returncode != 0:
-        print(p.stderr)
+        print(f"CORE DEMUCS STDERR: {p.stderr}")
         raise HTTPException(status_code=500, detail="Core Processing Failed")
 
     # 2. Verify Output
     internal_id = input_path.stem
-    base_out = OUTPUT_DIR / "htdemucs" # Fixed: was htdemucs_6s
+    base_out = OUTPUT_DIR / "htdemucs" # Checking correct folder
     created_folder = base_out / internal_id
     
     if not created_folder.exists():
@@ -276,47 +286,35 @@ pass
         raise HTTPException(status_code=500, detail="Processing Output Missing")
 
     # 3. Audio Polish & Smart Analysis (V5.0)
-    # We will iterate files, CLEAN them, and remove silent ones.
     final_stems = {}
     
-    # Path to ffmpeg (reused from above)
-    ffmpeg_exe = str(ffmpeg_path / "ffmpeg") if ffmpeg_path.exists() else "ffmpeg"
+    # Path to ffmpeg
+    ffmpeg_exe = str(ffmpeg_path) if ffmpeg_path else "ffmpeg"
 
     for f in created_folder.glob("*.wav"):
         try:
-            # A. Smart Polish: Normalize & Clean
-            # Create a localized temp file for processing
+            # A. Smart Polish: Simple Normalize
             polished_path = f.with_suffix(".polished.wav")
             
-            # Audio Filters:
-            # 1. silenceremove: removes absolute silence from start
-            # 2. loudnorm: standardizes perceived loudness (optional, maybe too aggressive? let's simple peak normalize)
-            # Let's use simple peak normalization to -1dB to avoid clipping but maximize volume.
-            # Also apply a slight high-pass to non-bass elements to clean mud.
-            
-            filter_chain = "norm=0" # Default: maximize volume
-            
+            filter_chain = "norm=0" 
             if "bass" not in f.name and "drums" not in f.name:
-                # Cut very low mud from vocals/other
                 filter_chain += ",highpass=f=50"
             
             cmd_polish = [
                 ffmpeg_exe, "-y",
                 "-i", str(f),
                 "-af", filter_chain,
-                "-ar", "44100", # Standardization
+                "-ar", "44100", 
                 str(polished_path)
             ]
             
-            # Run Polish
             subprocess.run(cmd_polish, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             
-            # Replace original with polished if successful
             if polished_path.exists() and polished_path.stat().st_size > 0:
                 f.unlink()
                 polished_path.rename(f)
             
-            # B. Silence Detection (Previous Logic)
+            # B. Silence Detection
             is_silent = True
             with wave.open(str(f), 'rb') as wav_file:
                 if wav_file.getnframes() > 0:
@@ -325,17 +323,15 @@ pass
                     import numpy as np
                     samples = np.frombuffer(data, dtype=np.int16)
                     max_amp = np.max(np.abs(samples)) if len(samples) > 0 else 0
-                    if max_amp > 150:
-                        is_silent = False
+                    if max_amp > 150: is_silent = False
             
             if is_silent:
                  f.unlink()
             else:
-                 final_stems[f.stem] = f"/stems/htdemucs_6s/{created_folder.name}/{f.name}"
+                 final_stems[f.stem] = f"/stems/htdemucs/{created_folder.name}/{f.name}"
         except Exception as e:
             print(f"Error analyzing/polishing {f}: {e}")
-            # Fallback: keep it
-            final_stems[f.stem] = f"/stems/htdemucs_6s/{created_folder.name}/{f.name}"
+            final_stems[f.stem] = f"/stems/htdemucs/{created_folder.name}/{f.name}"
 
     # 4. Save to DB
     conn = sqlite3.connect(DB_PATH)
