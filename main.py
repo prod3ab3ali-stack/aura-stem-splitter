@@ -262,13 +262,9 @@ def patched_getaddrinfo(host, *args, **kwargs):
 # Use 'ipv4' source address binding? 
 pass
 
-# --- Constants & Config ---
-BASE_DIR = Path(__file__).resolve().parent
-INPUT_DIR = BASE_DIR / "input"
-OUTPUT_DIR = BASE_DIR / "output"
-DB_PATH = BASE_DIR / "data.db"
-    
-# ... (rest of code) ...
+    if p.returncode != 0:
+        print(p.stderr)
+        raise HTTPException(status_code=500, detail="Core Processing Failed")
 
     # 2. Verify Output
     internal_id = input_path.stem
