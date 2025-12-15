@@ -1,7 +1,8 @@
 {
     "name": "Aura Stem Splitter",
-    "build": {
-        "dockerfile": "../Dockerfile"
+    "image": "mcr.microsoft.com/devcontainers/python:3.9",
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
     },
     "customizations": {
         "vscode": {
