@@ -66,6 +66,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // --- Auth & User ---
+// --- View Navigation ---
+function enterApp() {
+    const landing = document.getElementById('view-landing');
+    const app = document.getElementById('view-app');
+    if (landing) landing.classList.add('hidden');
+    if (app) app.classList.remove('hidden');
+    // Ensure dashboard loads
+    updateDashboard();
+}
+
+function exitApp() {
+    const landing = document.getElementById('view-landing');
+    const app = document.getElementById('view-app');
+    if (landing) landing.classList.remove('hidden');
+    if (app) app.classList.add('hidden');
+}
+
+
+// --- Auth & User ---
 async function fetchUser() {
     try {
         const res = await fetch(`${API_BASE}/me`, {
@@ -75,10 +94,12 @@ async function fetchUser() {
         if (res.ok) {
             currentUser = await res.json();
             updateUI(currentUser);
+            enterApp(); // REVEAL APP
         } else {
             authToken = null;
             localStorage.removeItem('aura_token');
-            showAuth();
+            // Do not showAuth() here automatically, let user click "Login"
+            // showAuth(); 
         }
     } catch (e) { console.error(e); }
 }
@@ -118,7 +139,7 @@ async function handleLogin(e) {
 
         // 2. If 401/400 and we want to "Auto Signup" (Demo Mode)
         if (!res.ok) {
-            console.log("Login failed, trying signup...");
+            // console.log("Login failed, trying signup...");
             res = await fetch(`${API_BASE}/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -140,7 +161,7 @@ async function handleLogin(e) {
             authToken = data.token; // API returns { token: "..." }
             localStorage.setItem('aura_token', authToken);
             closeAuth();
-            fetchUser();
+            fetchUser(); // This now calls enterApp()
         } else {
             throw new Error("Auth functionality unavailable");
         }
@@ -152,6 +173,7 @@ async function handleLogin(e) {
         currentUser = { username: u, credits: 10 };
         updateUI(currentUser);
         closeAuth();
+        enterApp(); // Fallback enter
     }
 }
 
@@ -550,21 +572,31 @@ function toggleAuth(mode) {
     const btn = document.getElementById('auth-submit');
     const switchBtn = document.getElementById('auth-switch-btn');
     const emailGroup = document.getElementById('auth-email-group');
-    
+
     showAuth();
 
     if (mode === 'signup') {
-        if(title) title.textContent = 'Create Account';
-        if(btn) btn.textContent = 'Start Splitting'; // Matches check in handleLogin
-        if(switchBtn) switchBtn.textContent = 'Login';
-        if(emailGroup) emailGroup.style.display = 'block';
-        if(switchBtn) switchBtn.onclick = () => toggleAuth('login');
+        if (title) title.textContent = 'Create Account';
+        if (btn) btn.textContent = 'Start Splitting'; // Matches check in handleLogin
+        if (switchBtn) switchBtn.textContent = 'Login';
+        if (emailGroup) emailGroup.style.display = 'block';
+        if (switchBtn) switchBtn.onclick = () => toggleAuth('login');
     } else {
-        if(title) title.textContent = 'Welcome Back';
-        if(btn) btn.textContent = 'Login';
-        if(switchBtn) switchBtn.textContent = 'Create Account';
-        if(emailGroup) emailGroup.style.display = 'none';
-        if(switchBtn) switchBtn.onclick = () => toggleAuth('signup');
+        if (title) title.textContent = 'Welcome Back';
+        if (btn) btn.textContent = 'Login';
+        if (switchBtn) switchBtn.textContent = 'Create Account';
+        if (emailGroup) emailGroup.style.display = 'none';
+        if (switchBtn) switchBtn.onclick = () => toggleAuth('signup');
     }
 }
 window.toggleAuth = toggleAuth; // Ensure global scope
+
+// Restore Logout
+async function logout() {
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem('aura_token');
+    try { await fetch(API_BASE + '/logout', { method: 'POST' }); } catch(e){}
+    exitApp();
+}
+window.logout = logout;
