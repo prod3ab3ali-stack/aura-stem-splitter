@@ -1197,7 +1197,7 @@ function loadMixer(title, stems) {
 
     seekerInterval = requestAnimationFrame(updateSeekerLoop);
 }
-
+}
 // Ensure stemsAudio items have canvas refs
 // I need to update the object creation in loadMixer to store canvas and color.
 
