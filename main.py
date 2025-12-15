@@ -8,6 +8,9 @@ import math
 import wave
 from pathlib import Path
 from typing import Optional, List
+# --- EARLY BOOT LOG ---
+print("BOOT: Starting Matchbox Audio Engine...")
+
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends, Header, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
