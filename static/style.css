@@ -4060,3 +4060,81 @@ h3 {
 .ws-waveform-container {
     height: 50px !important;
 }
+
+/* --- SPEED & DESIGN PATCHES --- */
+
+/* 1. Active Project Card Glow Up */
+.job-card.active-project {
+    background: linear-gradient(145deg, #18181b, #09090b);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.1);
+    padding: 20px;
+}
+.job-card.active-project h3 {
+    font-size: 1.2rem;
+    background: linear-gradient(to right, #fff, #a1a1aa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* 2. Download Button Fix (Move to Right) */
+.ch-download-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #71717a;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.ch-download-btn:hover {
+    color: #fff;
+    border-color: #fff;
+    background: rgba(255,255,255,0.05);
+}
+
+/* 3. Transport Dock Cleanups */
+.transport-dock {
+    height: 70px; /* Fixed height */
+    padding: 0 40px;
+    gap: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Fix Duration Fonts */
+.transport-time, .transport-duration {
+    font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    min-width: 60px;
+    text-align: center;
+}
+
+/* Bigger Play Button */
+.t-btn.main-play {
+    width: 56px;
+    height: 56px;
+    font-size: 1.4rem;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+/* Hide the old download button if it was loose */
+.ch-waveform-overlay-dl { display: none !important; }
+
+/* Grid Columns Update for Download Button */
+.channel-strip {
+    /* Name | Waveform | Controls (Mute/Solo/DL) */
+    grid-template-columns: 120px 1fr 200px !important; 
+}
+.ch-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
