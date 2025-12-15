@@ -833,63 +833,7 @@ function resetWorkspace() {
     }
 }
 
-function processFile(file) {
-    if (!currentUser) { showToast("Please login first"); return; }
 
-    // Reset UI
-    wsDrop.classList.add('hidden');
-    wsLoad.classList.remove('hidden');
-    document.getElementById('loading-title').textContent = "Uploading Master...";
-    document.getElementById('upload-progress-container').classList.remove('hidden');
-
-    // Use XHR for Upload Progress
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${API_BASE}/process`, true);
-    xhr.setRequestHeader("Authorization", `Bearer ${authToken}`);
-
-    xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-            const percent = Math.round((e.loaded / e.total) * 100);
-            document.getElementById('upload-bar').style.width = percent + "%";
-            document.getElementById('upload-percent').textContent = percent + "%";
-        }
-    };
-
-    xhr.onload = () => {
-        if (xhr.status === 200) {
-            clearInterval(statusInterval);
-            const data = JSON.parse(xhr.responseText);
-            updateUI({ ...currentUser, credits: data.credits_left }); // Update credits in UI
-            showToast("Success!");
-            loadMixer(data.project.name, data.stems);
-            loadLibrary(); // Sync library instantly
-        } else {
-            clearInterval(statusInterval);
-            showToast("Processing Failed");
-            resetWorkspace();
-        }
-    };
-
-    xhr.onerror = () => {
-        clearInterval(statusInterval);
-        showToast("Network Error");
-        resetWorkspace();
-    };
-
-    // Start Simulation of processing while backend runs
-    xhr.upload.onloadend = () => {
-        // Upload done, now processing
-        document.getElementById('loading-title').textContent = "Processing Audio...";
-        document.getElementById('upload-progress-container').classList.add('hidden');
-        updateStatus("Initializing Neural Engine...");
-        startProcessingLoop();
-    };
-
-    xhr.send(formData);
-}
 
 // --- MIXER AUDIO GRAPH ---
 const FX = {
