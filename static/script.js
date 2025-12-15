@@ -733,13 +733,19 @@ const wsMixer = document.getElementById('ws-mixer');
 
 function resetWorkspace() {
     stopPlayback();
-    if (wsDrop) wsDrop.classList.remove('hidden');
-    if (wsLoad) wsLoad.classList.add('hidden');
-    if (wsMixer) wsMixer.classList.add('hidden');
-
-    if (wsDrop) wsDrop.style.display = 'flex';
-    if (wsLoad) wsLoad.style.display = 'none';
-    if (wsMixer) wsMixer.style.display = 'none';
+    // Reset visibility driven by classes
+    if (wsDrop) {
+        wsDrop.classList.remove('hidden');
+        wsDrop.style.display = '';
+    }
+    if (wsLoad) {
+        wsLoad.classList.add('hidden');
+        wsLoad.style.display = '';
+    }
+    if (wsMixer) {
+        wsMixer.classList.add('hidden');
+        wsMixer.style.display = '';
+    }
 }
 
 function processFile(file) {
