@@ -1,0 +1,18 @@
+{
+    "name": "Aura Stem Splitter",
+    "build": {
+        "dockerfile": "../Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {},
+            "extensions": [
+                "ms-python.python"
+            ]
+        }
+    },
+    "forwardPorts": [
+        7860
+    ],
+    "postCreateCommand": "pip install -r requirements.txt"
+}
