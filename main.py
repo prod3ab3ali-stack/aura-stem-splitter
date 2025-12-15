@@ -310,9 +310,12 @@ def core_process_track(input_path: Path, original_name: str, user: dict):
             
             subprocess.run(cmd_polish, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             
-            if polished_path.exists() and polished_path.stat().st_size > 0:
-                f.unlink()
-                polished_path.rename(f)
+            # Clean replace logic
+            if polished_path.exists() and polished_path.stat().st_size > 1000: # Ensure not empty
+                f.unlink() # Delete original
+                polished_path.rename(f) # Move polished to original name
+            elif polished_path.exists():
+                polished_path.unlink() # Delete failed/empty polished file
             
             # B. Silence Detection
             is_silent = True
@@ -366,7 +369,9 @@ async def process_audio(
     with open(input_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         
-    return core_process_track(input_path, file.filename, user)
+    # Create a wrapper to run the sync processing in a thread
+    from starlette.concurrency import run_in_threadpool
+    return await run_in_threadpool(core_process_track, input_path, file.filename, user)
 
 from fastapi import BackgroundTasks
 import threading
