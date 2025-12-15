@@ -1,10 +1,16 @@
-FROM python:3.9-slim
+FROM python:3.9
 
-# 1. Install System Dependencies (FFmpeg is critical)
+# 1. Install System Dependencies (FFmpeg + Certs for Network Fix)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     git \
+    ca-certificates \
+    dnsutils \
+    iputils-ping \
     && rm -rf /var/lib/apt/lists/*
+    
+# Update Certs
+RUN update-ca-certificates
 
 # 2. Setup Working Directory & Permissions
 # Hugging Face Spaces runs as user 1000. We must ensure they own the folder.
