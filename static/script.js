@@ -1449,42 +1449,48 @@ async function seekTo(time) {
     if (!stemsAudio || isSeeking) return;
     isSeeking = true;
 
-    const wasPlaying = masterState === 'playing';
+    try {
+        const wasPlaying = masterState === 'playing';
 
-    // 1. Pause All First
-    Object.values(stemsAudio).forEach(s => s.audio.pause());
+        // 1. Pause All First
+        Object.values(stemsAudio).forEach(s => s.audio.pause());
 
-    // 2. Seek All (Promise.all to wait for browser)
-    const seekPromises = Object.values(stemsAudio).map(s => {
-        return new Promise(resolve => {
-            // Define one-time listener
-            const onSeeked = () => {
-                s.audio.removeEventListener('seeked', onSeeked);
-                resolve();
-            };
-            s.audio.addEventListener('seeked', onSeeked);
-            s.audio.currentTime = time;
+        // 2. Seek All (Promise.all to wait for browser)
+        const seekPromises = Object.values(stemsAudio).map(s => {
+            return new Promise(resolve => {
+                const onSeeked = () => {
+                    s.audio.removeEventListener('seeked', onSeeked);
+                    resolve();
+                };
+                s.audio.addEventListener('seeked', onSeeked);
+                s.audio.currentTime = time;
+
+                // Fallback inside each promise just in case
+                setTimeout(onSeeked, 200);
+            });
         });
-    });
 
-    // Timeout fallback (if browser gets stuck)
-    const timeout = new Promise(resolve => setTimeout(resolve, 500));
+        // Global Timeout fallback (if browser gets stuck)
+        const timeout = new Promise(resolve => setTimeout(resolve, 250)); // Fast timeout
 
-    await Promise.race([Promise.all(seekPromises), timeout]);
+        await Promise.race([Promise.all(seekPromises), timeout]);
 
-    // 3. Update Slider
-    const slide = document.getElementById('seek-slider');
-    if (slide) slide.value = time;
+        // 3. Update Slider
+        const slide = document.getElementById('seek-slider');
+        if (slide) slide.value = time;
 
-    // 4. Resume if needed
-    if (wasPlaying) {
-        // Force re-sync play
-        const playPromises = Object.values(stemsAudio).map(s => s.audio.play());
-        await Promise.allSettled(playPromises);
-        masterState = 'playing';
+        // 4. Resume if needed
+        if (wasPlaying) {
+            // Force re-sync play
+            const playPromises = Object.values(stemsAudio).map(s => s.audio.play());
+            await Promise.allSettled(playPromises);
+            masterState = 'playing';
+        }
+    } catch (e) {
+        console.error("Seek Error", e);
+    } finally {
+        isSeeking = false;
     }
-
-    isSeeking = false;
 }
 
 // Ensure Seeking doesn't trigger "End" events prematurely
