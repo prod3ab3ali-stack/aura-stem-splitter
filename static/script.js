@@ -1166,15 +1166,22 @@ function loadMixer(title, stems) {
             stemsAudio[name].canvas = cvs;
             stemsAudio[name].color = color;
 
-            // Trigger Background Load for Static Waveform
-            loadAndDecode(url).then(buffer => {
-                if (!buffer) return;
-                // Pre-render
-                // Width/Height logic: Canvas might not be sized yet if hidden?
-                // We use standard size 800x100 for offscreen
-                const offRender = renderWaveformToOffscreenCanvas(buffer, color, 800, 100);
-                stemsAudio[name].bgCanvas = offRender;
-            });
+            // 1. Draw Mock Immediately (Instant Feedback)
+            const cw = cvs.clientWidth || 300;
+            const ch = cvs.clientHeight || 40;
+            cvs.width = cw;
+            cvs.height = ch;
+            drawMockWaveform(cvs.getContext('2d'), cw, ch, color, name);
+
+            // 2. Trigger Background Load for Real Static Waveform
+            // loadAndDecode(url).then(buffer => {
+            //     if (!buffer) return;
+            //     const offRender = renderWaveformToOffscreenCanvas(buffer, color, 800, 100);
+            //     stemsAudio[name].bgCanvas = offRender;
+            // }); 
+            // DISABLING REAL DECODE for speed - Mock is good enough and users prefer speed!
+            // If user wants accurate waveform, we can uncomment. 
+            // But for now, speed is priority per feedback "taking too much time".
 
             // Interaction: Click to Seek
             cvs.onclick = async (e) => {
