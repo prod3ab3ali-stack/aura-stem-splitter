@@ -4422,3 +4422,143 @@ h3 {
     /* Fallback */
     transform: none !important;
 }
+/* --- FINAL LAYOUT REPAIRS --- */
+
+/* 1. Mixer Grid Fix */
+.channel-strip {
+    /* Update Grid to fit new consolidated actions */
+    grid-template-columns: 140px 1fr 200px !important;
+    gap: 15px;
+    height: auto;
+    min-height: 110px;
+    align-items: center;
+}
+
+.ch-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    align-items: flex-end;
+}
+
+.ch-btns-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.ch-vol-row {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ch-fader {
+    width: 120px;
+    height: 4px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+}
+
+[data-theme="light"] .ch-fader { background: rgba(0,0,0,0.1); }
+
+.ch-fader::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    border: 2px solid var(--bg-panel);
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+[data-theme="light"] .ch-fader::-webkit-slider-thumb {
+    background: #fff;
+    border-color: #ddd;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* 2. Visualizer Fix */
+.ch-vis {
+    width: 100%;
+    height: 80px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+[data-theme="light"] .ch-vis { background: rgba(0,0,0,0.03); }
+
+.ch-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 3. Transport Dock Centers */
+.transport-dock {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 15px 30px;
+}
+
+.transport-seeker {
+    flex: 1; /* Expand to fill space */
+    display: flex;
+    align-items: center;
+    margin: 0 15px;
+}
+
+.transport-time, .transport-duration {
+    min-width: 50px;
+    text-align: center;
+}
+
+/* 4. Active Project Card Fix */
+#active-job-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+[data-theme="dark"] #active-job-card {
+    background: linear-gradient(135deg, #18181b, #09090b);
+     border: 1px solid rgba(255,255,255,0.05);
+}
+
+.job-info h3 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.job-meta {
+    display: flex;
+    gap: 15px;
+    color: var(--text-sec);
+    font-size: 0.9rem;
+}
+
+.job-status.completed {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}
+
