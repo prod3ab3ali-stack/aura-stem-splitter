@@ -581,3 +581,17 @@ function showToast(msg) {
         setTimeout(() => t.remove(), 300);
     }, 3000);
 }
+
+// --- FIX: Missing Auth Toggle ---
+function toggleAuth(mode) {
+    openAuth();
+    // Default is usually Login. If mode is 'signup', switch to it.
+    const title = document.getElementById('auth-title');
+    const isLogin = title.textContent === 'Welcome Back';
+    
+    if (mode === 'signup' && isLogin) {
+        toggleAuthMode();
+    } else if (mode === 'login' && !isLogin) {
+        toggleAuthMode();
+    }
+}
