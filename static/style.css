@@ -4270,6 +4270,134 @@ h3 {
     justify-content: flex-end;
 }
 
+/* --- Premium Active Project Card --- */
+.dashboard-jobs {
+    width: 100%;
+    margin-top: 40px;
+}
+
+.dashboard-jobs h3 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-sec);
+    margin-bottom: 15px;
+    margin-left: 5px;
+}
+
+.job-card-premium {
+    position: relative;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.job-card-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress Background Fill */
+.job-progress-bg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, var(--accent-dim), transparent);
+    width: 0%;
+    transition: width 0.5s ease-out;
+    opacity: 0.1;
+    z-index: 0;
+}
+
+.job-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--bg-body);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 1.2rem;
+    z-index: 1;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.job-info {
+    flex: 1;
+    z-index: 1;
+}
+
+.job-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.job-status {
+    font-size: 0.85rem;
+    color: var(--text-sec);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.job-meta-right {
+    text-align: right;
+    z-index: 1;
+}
+
+.job-percent {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.job-timer {
+    font-size: 0.8rem;
+    color: var(--text-sec);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Status Dot Pulse */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
+    animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(124, 58, 237, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+    }
+}
+
 /* --- FINAL POLISH v4 (Instant Play & Layout) --- */
 
 /* Job Card (Active Projects) Dark Style */
@@ -4578,41 +4706,46 @@ h3 {
     font-size: 0.75rem;
     text-transform: uppercase;
 }
+
 /* --- FINAL FIXES FOR USER FEEDBACK --- */
 
 /* 1. Transport Dock Fixes */
 .transport-dock {
-    width: 100%; 
-    max-width: 900px; /* Make it wider */
+    width: 100%;
+    max-width: 900px;
+    /* Make it wider */
     justify-content: space-between;
 }
 
 /* Force icons to be white in the dock, even in Light Mode, since background is dark/glassy */
-.transport-dock i, .transport-dock span, .transport-dock button {
+.transport-dock i,
+.transport-dock span,
+.transport-dock button {
     color: #ffffff !important;
 }
 
 /* Fix Slider Width */
 .transport-seeker {
-    flex: 1; /* Grow to fill space */
+    flex: 1;
+    /* Grow to fill space */
     width: auto;
     min-width: 200px;
 }
 
 /* 2. Light Mode Waveform Background */
 [data-theme="light"] .ch-vis {
-    background: rgba(0,0,0,0.05) !important;
-    border: 1px solid rgba(0,0,0,0.1);
+    background: rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* 3. Waveform Canvas Pointer Events */
 .ch-canvas {
-    cursor: crosshair; /* Indicate clickable */
+    cursor: crosshair;
+    /* Indicate clickable */
     pointer-events: auto;
 }
 
 /* 4. Fix floating Vol Slider in Light Mode */
 [data-theme="light"] .ch-fader {
-    background: rgba(0,0,0,0.2) !important;
+    background: rgba(0, 0, 0, 0.2) !important;
 }
-

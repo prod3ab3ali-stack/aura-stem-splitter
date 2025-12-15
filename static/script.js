@@ -138,100 +138,72 @@ function startJobPolling(job_id) {
     // 1. Persist ID
     localStorage.setItem('active_stem_job', job_id);
 
-    const startTime = Date.now();
-    const timerEl = document.getElementById('process-timer');
-
-    // Timer Loop
-    const timerInterval = setInterval(() => {
-        const elapsed = Math.round((Date.now() - startTime) / 1000);
-        const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
-        const secs = (elapsed % 60).toString().padStart(2, '0');
-        if (timerEl) timerEl.textContent = `${mins}:${secs} `;
-    }, 1000);
-
     // Status Poll Loop
     const poll = setInterval(async () => {
         try {
-            // Refresh Dashboard if visible
             const dash = document.getElementById('dashboard-jobs');
             if (dash && !dash.classList.contains('hidden')) {
                 updateDashboard();
             }
 
-            const statusRes = await fetch(`${API_BASE}/jobs/${job_id}`);
-
-            if (statusRes.status === 404) {
+            const res = await fetch(`${API_BASE}/jobs/${job_id}`);
+            if (!res.ok) {
+                // Job might be gone?
                 clearInterval(poll);
-                clearInterval(timerInterval);
                 localStorage.removeItem('active_stem_job');
-                showToast("Job lost (Server Restarted)");
-                resetWorkspace();
+                // showToast("Job Check Failed"); // Optional
                 return;
             }
+            const job = await res.json();
 
-            const job = await statusRes.json();
-
-            // Update Dashboard Progress immediately if card exists
-            const cardBar = document.getElementById(`job-bar-${job_id}`);
-            if (cardBar) cardBar.style.width = job.progress + "%";
-
-            if (job.status === 'failed') {
+            // 1. Success Condition
+            if (job.status === 'completed' && job.result) {
                 clearInterval(poll);
-                clearInterval(timerInterval);
-                localStorage.removeItem('active_stem_job');
-                showToast("Job Failed: " + job.error);
-                resetWorkspace();
-                return;
-            }
-
-            if (job.status === 'completed') {
-                clearInterval(poll);
-                clearInterval(timerInterval);
-                localStorage.removeItem('active_stem_job');
-
-                const data = job.result;
-                updateCredits(data.credits_left);
+                updateCredits(job.result.credits_left);
 
                 const titleEl = document.getElementById('loading-title');
                 if (titleEl) {
                     titleEl.textContent = "Production Ready!";
                     titleEl.style.color = "var(--success)";
                 }
-                const borderEl = document.querySelector('.workspace-center');
-                if (borderEl) borderEl.classList.add('success');
 
                 finishProcessing(job.result);
                 return;
             }
 
-            // 3. Fail Condition
+            // 2. Fail Condition
             if (job.status === 'failed') {
-                clearInterval(poll); // Clear poll interval
-                clearInterval(timerInterval);
-                localStorage.removeItem('active_stem_job'); // Clear persisted job
+                clearInterval(poll);
+                localStorage.removeItem('active_stem_job');
                 showToast("Treatment Failed: " + (job.error || "Unknown"));
                 resetWorkspace();
                 return;
             }
 
-            // 4. Update UI Status (REAL SERVER SYNC)
+            // 3. Update UI Status (REAL SERVER SYNC)
             if (job.message) updateStatus(job.message);
             const titleEl = document.getElementById('loading-title');
             if (titleEl) titleEl.textContent = job.message || job.status.split('...')[0];
 
+            // 4. Sync Timer (Server Side Time)
+            if (job.start_time) {
+                const elapsed = Math.max(0, Math.floor(Date.now() / 1000 - job.start_time));
+                const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const secs = (elapsed % 60).toString().padStart(2, '0');
+                const timerEl = document.getElementById('process-timer');
+                if (timerEl) timerEl.textContent = `${mins}:${secs}`;
+            }
 
             // 5. Update Progress Bar
             const progContainer = document.getElementById('upload-progress-container');
             const progBar = document.getElementById('upload-bar');
             const progText = document.getElementById('upload-percent');
 
-            // Show progress for both Separation AND Downloading
-            progContainer.classList.remove('hidden');
-            progBar.style.width = job.progress + "%";
-            progText.textContent = Math.round(job.progress) + "%";
-
-            // If we are in "Uploading" phase (client side), this might conflict?
-            // Usually startJobPolling is called AFTER upload.
+            if (progContainer) {
+                progContainer.classList.remove('hidden');
+                progBar.style.width = (job.progress || 0) + "%";
+                progText.textContent = Math.round(job.progress || 0) + "%";
+            }
 
         } catch (e) { console.error("Poll Error", e); }
     }, 1000);
@@ -284,8 +256,6 @@ function renderDashboard(jobs) {
     const container = document.getElementById('dashboard-jobs');
     if (!list || !container) return;
 
-    // Sort logic handled by backend
-
     if (jobs.length === 0) {
         container.classList.add('hidden');
         return;
@@ -294,35 +264,56 @@ function renderDashboard(jobs) {
     container.classList.remove('hidden');
     list.innerHTML = '';
 
-    jobs.forEach(job => {
+    // Only show active jobs (processing/queued/downloading)
+    const activeJobs = jobs.filter(j => ['processing', 'queued', 'downloading'].includes(j.status));
+
+    // If no active jobs, maybe hide? Or show history? 
+    // The user said "Active Projects", let's assume this list is strictly for active.
+    if (activeJobs.length === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+
+    activeJobs.forEach(job => {
         const div = document.createElement('div');
-        div.className = `job-card ${job.status === 'processing' || job.status === 'downloading' || job.status === 'queued' ? 'active' : ''}`;
-        div.onclick = () => handleJobClick(job);
+        div.className = 'job-card-premium';
 
-        // Date
-        const date = new Date(job.start_time * 1000).toLocaleString(undefined, {
-            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
+        // Timer Logic
+        let timerStr = '00:00';
+        if (job.start_time) {
+            const elapsed = Math.max(0, Math.floor(Date.now() / 1000 - job.start_time));
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+            timerStr = `${mins}:${secs}`;
+        }
 
-        // Status Class
-        let statusClass = job.status.toLowerCase();
-        if (statusClass.includes('download')) statusClass = 'downloading';
+        // Icon Logic
+        let iconHtml = '<i class="fa-solid fa-compact-disc fa-spin"></i>';
+        if (job.status === 'queued') iconHtml = '<i class="fa-solid fa-hourglass-start"></i>';
+        if (job.status === 'failed') iconHtml = '<i class="fa-solid fa-triangle-exclamation" style="color:red"></i>';
 
         div.innerHTML = `
-            <div class="job-card-header">
-                <div class="job-title" title="${job.name}">${job.name}</div>
-                <div class="job-status ${statusClass}">${job.status}</div>
+            <div class="job-progress-bg" style="width: ${job.progress || 0}%"></div>
+            
+            <div class="job-icon">
+                ${iconHtml}
             </div>
-            <div class="job-meta">
-                <i class="fa-regular fa-clock"></i> ${date}
+            
+            <div class="job-info">
+                <div class="job-title">${job.name || 'Untitled Project'}</div>
+                <div class="job-status">
+                    <div class="status-dot" style="background:${job.status === 'failed' ? 'red' : 'var(--accent)'}"></div>
+                    ${job.status === 'processing' ? 'SEPARATING STEMS...' : job.status.toUpperCase()}
+                </div>
             </div>
-            ${(job.status !== 'completed' && job.status !== 'failed') ? `
-            <div class="job-progress-mini">
-                <div id="job-bar-${job.job_id}" class="job-progress-fill" style="width: ${job.progress}%"></div>
+            
+            <div class="job-meta-right">
+                <div class="job-percent">${Math.round(job.progress || 0)}%</div>
+                <div class="job-timer"><i class="fa-regular fa-clock"></i> ${timerStr}</div>
             </div>
-            ` : ''}
-            ${job.status === 'failed' ? `<div style="color:var(--text-sec); font-size:0.8rem; margin-top:5px;">${job.error || 'Unknown Error'}</div>` : ''}
         `;
+
+        div.onclick = () => handleJobClick(job);
         list.appendChild(div);
     });
 }
