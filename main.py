@@ -158,18 +158,27 @@ def signup(auth: UserAuth):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
-    try:
-        user_id = str(uuid.uuid4())
-        email = auth.email if auth.email else ""
-        # Give 3 free credits
-        c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                  (user_id, auth.username, auth.password, 0, 3, 'free', str(datetime.datetime.now()), email))
+    # Check existence
+    c.execute("SELECT * FROM users WHERE username = ?", (auth.username,))
+    existing = c.fetchone()
+    
+    if existing:
+        # UPSERT MODE: Update password to match current request (Reset)
+        c.execute("UPDATE users SET password = ? WHERE username = ?", (auth.password, auth.username))
         conn.commit()
-        return {"message": "User created", "username": auth.username}
-    except sqlite3.IntegrityError:
-        raise HTTPException(status_code=400, detail="Username already exists")
-    finally:
-        conn.close()
+    else:
+        # Create new
+        try:
+            user_id = str(uuid.uuid4()) # Generate ID for new user
+            c.execute("INSERT INTO users (id, username, password, is_admin, credits, plan, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                      (user_id, auth.username, auth.password, 0, 10, "free", str(datetime.datetime.now())))
+            conn.commit()
+        except sqlite3.IntegrityError:
+             conn.close()
+             raise HTTPException(status_code=400, detail="Username invalid")
+    
+    conn.close()
+    return {"message": "User created/updated"}
 
 @app.post("/api/login")
 def login(auth: UserAuth):
