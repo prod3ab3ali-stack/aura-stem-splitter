@@ -578,27 +578,34 @@ def start_youtube_job(
             ffmpeg_path = shutil.which("ffmpeg")
             
             # Add writethumbnail
+            # Add writethumbnail
             ydl_opts = {
                 'format': 'bestaudio/best',
                 'ffmpeg_location': str(ffmpeg_path),
                 'outtmpl': str(input_path),
-                'writethumbnail': True, # Get Thumbnail sidecar
+                'writethumbnail': True, 
                 'postprocessors': [
                     {'key': 'FFmpegExtractAudio', 'preferredcodec': 'wav', 'preferredquality': '192'},
-                    # Removed EmbedThumbnail due to container incompatibility with WAV
                 ],
                 'nocheckcertificate': True,
-                # NETWORK FIX: Remove force_ipv4 which can break dual-stack execution on some nodes
-                # 'force_ipv4': True, 
-                'socket_timeout': 30,
-                'http_headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},
-                'extractor_args': {'youtube': {'player_client': ['android', 'web']}}, # Use robust clients
-                'quiet': False, 'no_warnings': False, 'progress_hooks': [ph], # Enable logs to see why it fails
-                'verbose': True,
-                # EXTERNAL DOWNLOADER FIX (aria2)
-                # Bypasses Python DNS/Socket issues
-                'external_downloader': 'aria2c',
-                'external_downloader_args': ['-x', '16', '-k', '1M']
+                'ignoreerrors': True,
+                'no_warnings': True,
+                'quiet': True,
+                # NETWORK HEALING
+                'socket_timeout': 60,
+                'retries': 30,
+                'fragment_retries': 30,
+                'extractor_retries': 30,
+                # Force IPv4 might actually HELP if IPv6 is broken (common in containers)
+                'force_ipv4': True, 
+                # Use Android client which is less prone to "Sign in" walls and DNS blocks?
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android', 'web'],
+                        'skip': ['hls', 'dash', 'translated_subs']
+                    }
+                },
+                'progress_hooks': [ph]
             }
             
             meta_title = "Youtube Download"
@@ -801,8 +808,6 @@ def admin_users(user: dict = Depends(get_current_user)):
 
 # --- Static Mounts ---
 app.mount("/stems", StaticFiles(directory=OUTPUT_DIR), name="stems")
-app.mount("/stems", StaticFiles(directory=OUTPUT_DIR), name="stems")
-app.mount("/api/inputs", StaticFiles(directory=INPUT_DIR), name="inputs")
 app.mount("/", StaticFiles(directory=BASE_DIR / "static", html=True), name="static")
 
 if __name__ == "__main__":
