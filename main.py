@@ -579,6 +579,7 @@ def start_youtube_job(
                     # Removed EmbedThumbnail due to container incompatibility with WAV
                 ],
                 'noplaylist': True, 'nocheckcertificate': True,
+                'force_ipv4': True,  # FORCE IPV4: Fixes DNS resolution errors on HF Spaces
                 'extractor_args': {'youtube': {'player_client': ['android', 'ios']}},
                 'quiet': True, 'no_warnings': True, 'progress_hooks': [ph]
             }
