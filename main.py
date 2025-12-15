@@ -158,27 +158,18 @@ def signup(auth: UserAuth):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
-    # Check existence
-    c.execute("SELECT * FROM users WHERE username = ?", (auth.username,))
-    existing = c.fetchone()
-    
-    if existing:
-        # UPSERT MODE: Update password to match current request (Reset)
-        c.execute("UPDATE users SET password = ? WHERE username = ?", (auth.password, auth.username))
+    try:
+        user_id = str(uuid.uuid4())
+        email = auth.email if auth.email else ""
+        # Give 3 free credits
+        c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                  (user_id, auth.username, auth.password, 0, 3, 'free', str(datetime.datetime.now()), email))
         conn.commit()
-    else:
-        # Create new
-        try:
-            user_id = str(uuid.uuid4()) # Generate ID for new user
-            c.execute("INSERT INTO users (id, username, password, is_admin, credits, plan, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                      (user_id, auth.username, auth.password, 0, 10, "free", str(datetime.datetime.now())))
-            conn.commit()
-        except sqlite3.IntegrityError:
-             conn.close()
-             raise HTTPException(status_code=400, detail="Username invalid")
-    
-    conn.close()
-    return {"message": "User created/updated"}
+        return {"message": "User created", "username": auth.username}
+    except sqlite3.IntegrityError:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    finally:
+        conn.close()
 
 @app.post("/api/login")
 def login(auth: UserAuth):
@@ -487,18 +478,49 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
             str(input_path)
         ]
         
-        update_job(job_id, "Separating Stems (Fast Mode)...", 20)
+        update_job(job_id, "Initializing Engine...", 0)
         
-        # Deadlock Prevention: Don't use capture_output=True for long running processes
-        # Redirect to DEVNULL for safety, or a temp file if debugging needed.
-        # We rely on exit code.
-        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True, env=current_env)
+        # STREAMING EXECUTION
+        # buffer_size=1 (line buffered), universal_newlines=True (text mode)
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE,
+            text=True,
+            env=current_env,
+            bufsize=1,
+            universal_newlines=True
+        )
         
-        if p.returncode != 0:
-            print(f"DEMUCS STDERR: {p.stderr}") # PRINT FULL ERROR TO LOGS
-            raise Exception(f"Demucs Failed (Code {p.returncode})")
+        # Read stderr for progress (Demucs uses TQDM on stderr)
+        import re
+        
+        # We need to read continuously. strict line reading might block on \r
+        # But let's try reading line by line.
+        while True:
+            line = process.stderr.readline()
+            if not line and process.poll() is not None:
+                break
             
-        update_job(job_id, "Polishing Audio (Normalization)...", 80)
+            if line:
+                # print(f"DEMUCS RAW: {line.strip()}") # Debug
+                
+                # Regex for TQDM percentage: " 42%|"
+                match = re.search(r"(\d+)%\|", line)
+                if match:
+                    p = int(match.group(1))
+                    # Map 0-100 of separation to 20-90 of total job
+                    # Separation is the bulk of work.
+                    # 20 + (p * 0.7)
+                    scaled = 20 + int(p * 0.7)
+                    update_job(job_id, f"Separating Stems ({p}%)", scaled)
+        
+        if process.returncode != 0:
+            err = process.stderr.read()
+            print(f"DEMUCS FINAL STDERR: {err}")
+            raise Exception(f"Demucs Failed (Code {process.returncode})")
+            
+        update_job(job_id, "Polishing Audio (Normalization)...", 95)
         
         # 2. Verify Output
         internal_id = input_path.stem

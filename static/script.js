@@ -200,37 +200,67 @@ function startJobPolling(job_id) {
                 const borderEl = document.querySelector('.workspace-center');
                 if (borderEl) borderEl.classList.add('success');
 
-                setTimeout(() => {
-                    try {
-                        loadMixer(data.project.name, data.stems);
-                        loadLibrary();
-                    } catch (e) {
-                        console.error("Redirect Error", e);
-                        showToast("Error: " + e.message);
-                        wsLoad.classList.add('hidden');
-                        if (typeof wsMixer !== 'undefined') wsMixer.classList.remove('hidden');
-                    }
-                }, 1000);
+                finishProcessing(job.result);
                 return;
             }
 
-            // Update Logs
-            updateStatus(job.status);
-            const titleEl = document.getElementById('loading-title');
-            if (titleEl) titleEl.textContent = job.status.split('...')[0];
-
-            // Update Progress Bar
-            if (job.status.includes('Downloading')) {
-                document.getElementById('upload-progress-container').classList.remove('hidden');
-                document.getElementById('upload-bar').style.width = job.progress + "%";
-                document.getElementById('upload-percent').textContent = Math.round(job.progress) + "%";
-            } else {
-                document.getElementById('upload-progress-container').classList.add('hidden');
+            // 3. Fail Condition
+            if (job.status === 'failed') {
+                clearInterval(poll); // Clear poll interval
+                clearInterval(timerInterval);
+                localStorage.removeItem('active_stem_job'); // Clear persisted job
+                showToast("Treatment Failed: " + (job.error || "Unknown"));
+                resetWorkspace();
+                return;
             }
+
+            // 4. Update UI Status (REAL SERVER SYNC)
+            if (job.message) updateStatus(job.message);
+            const titleEl = document.getElementById('loading-title');
+            if (titleEl) titleEl.textContent = job.message || job.status.split('...')[0];
+
+
+            // 5. Update Progress Bar
+            const progContainer = document.getElementById('upload-progress-container');
+            const progBar = document.getElementById('upload-bar');
+            const progText = document.getElementById('upload-percent');
+
+            // Show progress for both Separation AND Downloading
+            progContainer.classList.remove('hidden');
+            progBar.style.width = job.progress + "%";
+            progText.textContent = Math.round(job.progress) + "%";
+
+            // If we are in "Uploading" phase (client side), this might conflict?
+            // Usually startJobPolling is called AFTER upload.
 
         } catch (e) { console.error("Poll Error", e); }
     }, 1000);
 }
+
+// --------------------------------------------------------
+// --- HELPER: Finish Processing ---
+function finishProcessing(result) {
+    const wsLoad = document.getElementById('ws-loading');
+    localStorage.removeItem('active_stem_job');
+
+    // Animation
+    const borderEl = document.querySelector('.workspace-center');
+    if (borderEl) borderEl.classList.add('success');
+
+    setTimeout(() => {
+        try {
+            loadMixer(result.project.name, result.stems);
+            loadLibrary();
+        } catch (e) {
+            console.error(e);
+            wsLoad.classList.add('hidden');
+        }
+    }, 1000);
+}
+
+
+// Remove Fake Loop (Nullify)
+function startProcessingLoop() { }
 
 // --------------------------------------------------------
 // --- DASHBOARD LOGIC (New) ---
