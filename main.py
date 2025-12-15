@@ -599,13 +599,14 @@ def start_youtube_job(
                 ],
                 'nocheckcertificate': True,
                 'ignoreerrors': True,
-                'no_warnings': True,
-                'quiet': True,
+                'no_warnings': False, # DEBUG: Show warnings
+                'quiet': False,       # DEBUG: Show logs
+                'verbose': True,      # DEBUG: Show debug info
                 # NETWORK HEALING
-                'socket_timeout': 60,
-                'retries': 30,
-                'fragment_retries': 30,
-                'extractor_retries': 30,
+                'socket_timeout': 10, # Fail fast
+                'retries': 10,
+                'fragment_retries': 10,
+                'extractor_retries': 10,
                 # Force IPv4 might actually HELP if IPv6 is broken (common in containers)
                 'force_ipv4': True, 
                 # Use Android client which is less prone to "Sign in" walls and DNS blocks?
