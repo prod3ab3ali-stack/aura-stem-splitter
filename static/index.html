@@ -512,17 +512,28 @@
                         <!-- Floating Transport Dock -->
                         <!-- Floating Transport & Seek Dock -->
                         <div class="transport-dock-container">
+                            <!-- Transport Dock -->
                             <div class="transport-dock">
-                                <button class="t-btn main-play" id="play-btn"><i class="fa-solid fa-play"></i></button>
+                                <button id="play-btn" class="btn-circle play-large"><i
+                                        class="fa-solid fa-play"></i></button>
 
-                                <div class="transport-time" id="time-display">00:00</div>
+                                <span id="time-display" class="transport-time">00:00</span>
 
                                 <div class="transport-seeker">
-                                    <input type="range" id="seek-slider" min="0" value="0" step="0.1">
+                                    <input type="range" id="seek-slider" min="0" value="0" step="0.1"
+                                        style="width:100%;">
                                 </div>
 
-                                <div class="transport-duration" id="duration-display">00:00</div>
+                                <span id="duration-display" class="transport-duration">00:00</span>
 
+                                <!-- Master Volume -->
+                                <div class="master-vol-wrap"
+                                    style="display:flex; align-items:center; gap:8px; margin-left:15px;">
+                                    <i class="fa-solid fa-volume-high"
+                                        style="color:var(--text-sec); font-size:0.9rem;"></i>
+                                    <input type="range" id="master-vol" min="0" max="1" step="0.01" value="1"
+                                        style="width:80px;" title="Master Volume">
+                                </div>
                                 <div class="transport-sep"></div>
 
                                 <button class="fx-btn" id="btn-spatial" onclick="toggleFX('spatial')"

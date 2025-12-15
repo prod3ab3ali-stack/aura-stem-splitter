@@ -1139,10 +1139,31 @@ function loadMixer(title, stems) {
                 const offRender = renderWaveformToOffscreenCanvas(buffer, color, 800, 100);
                 stemsAudio[name].bgCanvas = offRender;
             });
+
+            // Interaction: Click to Seek
+            cvs.onclick = (e) => {
+                const rect = cvs.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const per = x / rect.width;
+                // Get duration from THIS stem preferably, or global
+                const dur = stemsAudio[name].audio.duration || globalDuration;
+                if (dur > 0) {
+                    seekTo(per * dur);
+                }
+            };
         }
 
         container.appendChild(stripDiv);
     });
+
+    // Master Volume Bind
+    const mVol = document.getElementById('master-vol');
+    if (mVol && masterGain) {
+        mVol.value = masterGain.gain.value; // sync
+        mVol.oninput = (e) => {
+            masterGain.gain.value = e.target.value;
+        };
+    }
 
     // Start Seeker Loop
     if (seekerInterval) cancelAnimationFrame(seekerInterval);
@@ -1356,6 +1377,16 @@ function drawMockWaveform(ctx, w, h, color, type) {
     ctx.lineTo(w, h / 2);
     ctx.fill();
     ctx.globalAlpha = 1.0;
+}
+
+function seekTo(time) {
+    if (!stemsAudio) return;
+    Object.values(stemsAudio).forEach(s => {
+        if (Number.isFinite(time)) s.audio.currentTime = time;
+    });
+    // Update Slider
+    const slide = document.getElementById('seek-slider');
+    if (slide) slide.value = time;
 }
 
 // --- Library & Admin ---
