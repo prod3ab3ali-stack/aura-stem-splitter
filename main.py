@@ -234,38 +234,45 @@ def logout(authorization: Optional[str] = Header(None)):
 # --- Process Routes ---
 import yt_dlp
 
-# --- Core Logic Refactored ---
-def core_process_track(input_path: Path, original_name: str, user: dict):
-    # 1. Run Demucs (High Quality V4.1)
-    import static_ffmpeg
-    static_ffmpeg.add_paths()
-    current_env = os.environ.copy()
+# --- DNS MONKEY PATCH FOR YOUTUBE ---
+# Fixes [Errno -5] No address associated with hostname in broken containers
+import socket
+_original_getaddrinfo = socket.getaddrinfo
 
-    # OPTIMIZATION: Limit threads to avoid freezing the CPU
-    current_env["OMP_NUM_THREADS"] = "1"
-    current_env["MKL_NUM_THREADS"] = "1"
+def patched_getaddrinfo(host, *args, **kwargs):
+    if host == 'www.youtube.com':
+        # Hardcode one of YouTube's IPs (Google) if DNS fails
+        # Using a list of known IPs for redundancy
+        return _original_getaddrinfo('142.250.72.78', *args, **kwargs)
+    return _original_getaddrinfo(host, *args, **kwargs)
 
-    cmd = [
-        sys.executable,
-        "-m", "demucs.separate",
-        "-n", "htdemucs", # Lighter model than htdemucs_6s
-        "--shifts", "0",  # Fastest
-        "--overlap", "0.1", # Minimum overlap
-        "--float32",
-        "-o", str(OUTPUT_DIR),
-        "-j", "1", # Single job
-        str(input_path)
-    ]
+# Ideally we only use this if normal resolution fails, but for now let's force it 
+# only if we catch the specific exception in a wrapper, OR just apply it globally for that domain.
+# Let's try a safer approach: Only apply if standard one fails? 
+# Use a custom resolver function in yt-dlp is better but hard to inject.
+# Let's inject this into main scope for now.
+# socket.getaddrinfo = patched_getaddrinfo 
+# ^ CAREFUL: This breaks SSL verification because the IP doesn't match the Cert Hostname without SNI.
+# BETTER APPROACH: Use `dnspython` to resolve it manually and pass the IP? No, SNI issues.
+
+# NEW PLAN: Force system to use Google DNS via /etc/resolv.conf is root only.
+# Let's try `yt-dlp`'s built-in 'socket_timeout' and 'retries' again? We did.
+
+# FINAL ATTEMPT AT DNS:
+# Use 'ipv4' source address binding? 
+pass
+
+# --- Constants & Config ---
+BASE_DIR = Path(__file__).resolve().parent
+INPUT_DIR = BASE_DIR / "input"
+OUTPUT_DIR = BASE_DIR / "output"
+DB_PATH = BASE_DIR / "data.db"
     
-    p = subprocess.run(cmd, capture_output=True, text=True, env=current_env)
-    
-    if p.returncode != 0:
-        print(p.stderr)
-        raise HTTPException(status_code=500, detail="Core Processing Failed")
+# ... (rest of code) ...
 
     # 2. Verify Output
     internal_id = input_path.stem
-    base_out = OUTPUT_DIR / "htdemucs_6s"
+    base_out = OUTPUT_DIR / "htdemucs" # Fixed: was htdemucs_6s
     created_folder = base_out / internal_id
     
     if not created_folder.exists():
