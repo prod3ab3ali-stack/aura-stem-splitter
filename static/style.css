@@ -4138,3 +4138,90 @@ h3 {
     gap: 10px;
     justify-content: flex-end;
 }
+
+/* --- FINAL POLISH v4 (Instant Play & Layout) --- */
+
+/* Job Card (Active Projects) Dark Style */
+.job-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+}
+.job-card:hover {
+    background: rgba(255,255,255,0.06);
+    transform: translateY(-2px);
+}
+[data-theme="light"] .job-card {
+    background: #fff;
+    border: 1px solid #e4e4e7;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.job-info { display: flex; flex-direction: column; gap: 4px; }
+.job-title { font-weight: 600; font-size: 0.95rem; }
+.job-meta { font-size: 0.8rem; opacity: 0.6; }
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge.completed { background: rgba(16, 185, 129, 0.2); color: #10B981; }
+.badge.processing { background: rgba(245, 158, 11, 0.2); color: #F59E0B; }
+.badge.failed { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
+
+.btn-action.open-mix {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+/* Transport Dock Polish */
+.transport-dock {
+    /* Sleek Pill */
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    height: 70px;
+}
+.transport-time, .transport-duration {
+    min-width: 50px;
+    text-align: center;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+/* Download Button in Strip */
+.btn-mini.btn-download {
+    margin-left: auto; /* Push to right */
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-sec);
+}
+.btn-mini.btn-download:hover {
+    background: #fff;
+    color: #000;
+}
+
+/* WaveSurfer Correction */
+.ws-waveform-container {
+    background: transparent !important; /* Let body bg shine or slight tint */
+}
+/* Ensure canvas inside WS is visible */
+.ws-pattern canvas {
+    /* Ensure no weird filters */
+}
+
