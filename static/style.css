@@ -4921,3 +4921,62 @@ h3 {
 [data-theme="light"] .ch-fader {
     background: rgba(0, 0, 0, 0.2) !important;
 }
+
+/* --- AUTH INPUT VISIBILITY FIX --- */
+.auth-sidebar input {
+    color: var(--text-main) !important;
+    /* Ensure text is visible in light/dark mode */
+    background: rgba(255, 255, 255, 0.05);
+    /* Slight tint for contrast */
+}
+
+/* Specific Selection Fix for Auth Inputs */
+.auth-sidebar input::selection {
+    background: var(--accent);
+    color: #ffffff;
+    /* White text on Purple background */
+    text-shadow: none;
+    /* remove shadow if any */
+}
+
+/* Ensure placeholder is Grey as requested */
+.auth-sidebar input::placeholder {
+    color: #888 !important;
+    opacity: 1;
+}
+
+[data-theme="light"] .auth-sidebar input {
+    background: #f5f5f5;
+    color: #000 !important;
+}
+
+[data-theme="light"] .auth-sidebar input::selection {
+    color: #fff;
+    background: var(--accent);
+}
+
+/* --- HERO ALIGNMENT TWEAKS --- */
+.hero-split {
+    /* Ensure content is centered and not cut off */
+    padding-bottom: 60px;
+    align-items: center;
+    /* Vertically center */
+}
+
+.hero-left {
+    /* Better spacing on large screens */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 10%;
+    /* Consistent padding */
+}
+
+.hero-right {
+    /* Ensure 3D stack doesn't overflow or look weird */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    /* Allow 3D elements to stick out slightly */
+}
