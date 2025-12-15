@@ -1,30 +1,33 @@
-FROM python:3.9
+FROM python:3.9-slim
 
-# Install system dependencies (FFmpeg is critical)
+# 1. Install System Dependencies (FFmpeg is critical)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
-    libsndfile1 \
-    dnsutils \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# 2. Setup Working Directory & Permissions
+# Hugging Face Spaces runs as user 1000. We must ensure they own the folder.
 WORKDIR /app
+RUN chown 1000:1000 /app
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
+# Switch to non-root user
+USER 1000
+ENV HOME=/app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# 3. Install Python Dependencies
+COPY --chown=1000 requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Create directories for app data with correct permissions for HF User (user 1000)
-RUN mkdir -p input output && \
-    chmod 777 input output
+# 4. Copy Application Code
+COPY --chown=1000 . .
 
-# Copy the rest of the application
-COPY . .
+# 5. Create necessary directories
+RUN mkdir -p input output && chmod 777 input output
 
-# Grant permissions to the DB file location if it needs to be created
-RUN chmod 777 /app
+# 6. Expose Port 7860 (Standard for Hugging Face Spaces)
+EXPOSE 7860
 
-# Command to run the app
+# 7. Start the Application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
