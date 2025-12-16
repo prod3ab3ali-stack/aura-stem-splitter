@@ -13,52 +13,7 @@ import time # Added for job start time
 # --- EARLY BOOT LOG ---
 print("BOOT: Starting Matchbox Audio Engine...")
 
-# --- REMOTE FILE PROCESSING (FIREBASE) ---
-class RemoteFileRequest(BaseModel):
-    url: str
-    filename: str
 
-@app.post("/api/process_remote_file")
-async def process_remote_file(
-    req: RemoteFileRequest,
-    background_tasks: BackgroundTasks,
-    user: dict = Depends(get_current_user)
-):
-    if user["credits"] < 1: raise HTTPException(status_code=402, detail="Insufficient credits")
-    
-    # 1. Download File
-    job_id = str(uuid.uuid4())
-    internal_id = job_id 
-    ext = Path(req.filename).suffix or ".wav" # Default to wav if missing
-    if not ext.startswith("."): ext = "." + ext
-    
-    final_path = INPUT_DIR / f"{internal_id}{ext}"
-    
-    try:
-        # Download from Firebase URL
-        print(f"Downloading remote file: {req.url}")
-        with requests.get(req.url, stream=True) as r:
-            r.raise_for_status()
-            with open(final_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-    except Exception as e:
-        print(f"Download Error: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to download file: {str(e)}")
-
-    # 2. Init Job
-    JOBS[job_id] = {
-        "status": "queued",
-        "progress": 0,
-        "start_time": time.time(),
-        "user_id": user["id"],
-        "message": "Queued for separation..."
-    }
-
-    # 3. Start Pipeline
-    background_tasks.add_task(run_separation_pipeline, job_id, final_path, req.filename, user)
-    
-    return {"job_id": job_id, "message": "Downloading & Processing..."}
 
 # --- YOUTUBE DOWNLOADER ---
 
@@ -637,6 +592,53 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
         print(f"Pipeline Error: {e}")
         JOBS[job_id]["error"] = str(e)
         JOBS[job_id]["status"] = "failed"
+
+# --- REMOTE FILE PROCESSING (FIREBASE) ---
+class RemoteFileRequest(BaseModel):
+    url: str
+    filename: str
+
+@app.post("/api/process_remote_file")
+async def process_remote_file(
+    req: RemoteFileRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user)
+):
+    if user["credits"] < 1: raise HTTPException(status_code=402, detail="Insufficient credits")
+    
+    # 1. Download File
+    job_id = str(uuid.uuid4())
+    internal_id = job_id 
+    ext = Path(req.filename).suffix or ".wav" # Default to wav if missing
+    if not ext.startswith("."): ext = "." + ext
+    
+    final_path = INPUT_DIR / f"{internal_id}{ext}"
+    
+    try:
+        # Download from Firebase URL
+        import requests
+        with requests.get(req.url, stream=True) as r:
+            r.raise_for_status()
+            with open(final_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+    except Exception as e:
+        print(f"Download Error: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to download file: {str(e)}")
+
+    # 2. Init Job
+    JOBS[job_id] = {
+        "status": "queued",
+        "progress": 0,
+        "start_time": time.time(),
+        "user_id": user["id"],
+        "message": "Queued for separation..."
+    }
+
+    # 3. Start Pipeline
+    background_tasks.add_task(run_separation_pipeline, job_id, final_path, req.filename, user)
+    
+    return {"job_id": job_id, "message": "Downloading & Processing..."}
 
 # --- ASYNC ROUTES ---
 
