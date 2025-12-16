@@ -118,12 +118,18 @@
 
             <div class="hero-right fade-in delay-2">
                 <!-- 3D Glass Stack - Updated Visual -->
+                <!-- 3D Glass Stack - Updated Visual -->
                 <div class="glass-stack-container" id="glass-stack">
                     <div class="hero-ambient-light"></div> <!-- New Glow Backing -->
-                    <div class="stack-layer layer-4 p-vocals">VOCALS</div>
-                    <div class="stack-layer layer-3 p-other">OTHER</div>
-                    <div class="stack-layer layer-2 p-bass">BASS</div>
-                    <div class="stack-layer layer-1 p-drums">DRUMS</div>
+                    <div class="stack-layer layer-4 p-vocals"
+                        style="background: rgba(138, 43, 226, 0.2); border: 1px solid rgba(255,255,255,0.3);">VOCALS
+                    </div>
+                    <div class="stack-layer layer-3 p-other"
+                        style="background: rgba(50, 50, 200, 0.2); border: 1px solid rgba(255,255,255,0.2);">OTHER</div>
+                    <div class="stack-layer layer-2 p-bass"
+                        style="background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(255,255,255,0.2);">BASS</div>
+                    <div class="stack-layer layer-1 p-drums"
+                        style="background: rgba(255, 0, 100, 0.1); border: 1px solid rgba(255,255,255,0.2);">DRUMS</div>
                 </div>
             </div>
         </section>
@@ -235,40 +241,106 @@
 
         <!-- SECTION 4: ACCESS (Pricing) -->
         <section id="pricing" class="section scroll-hidden" style="padding-bottom: 100px;">
-            <div class="section-head centered">
-                <h2 class="groovy-font">Get Access</h2>
-                <p>Choose your level of ascension.</p>
-            </div>
-            <!-- Reusing Access Grid with Professional Cards -->
-            <div class="access-grid">
-                <div class="max-card" style="width: 320px;">
-                    <h3>Guest</h3>
-                    <div class="access-price" style="margin: 20px 0;">Free</div>
-                    <ul class="access-features">
-                        <li><i class="fa-solid fa-check"></i> 3 Credits / Month</li>
-                        <li><i class="fa-solid fa-check"></i> Standard Quality (MP3)</li>
-                        <li><i class="fa-solid fa-check"></i> Web Player Access</li>
-                        <li><i class="fa-solid fa-check"></i> Basic Stem Separation</li>
-                        <li><i class="fa-solid fa-check"></i> Public Community Support</li>
-                    </ul>
-                    <button class="btn-primary-glow"
-                        style="width: 100%; margin-top: auto; background: transparent; border: 1px solid var(--border); color: var(--text-main); box-shadow: none;"
-                        onclick="toggleAuth('signup')">Get Started</button>
+            <div class="pricing-container" style="max-width: 1000px; margin: 0 auto; text-align: center;">
+                <div class="section-head centered">
+                    <h2 class="groovy-font">Get Access</h2>
+                    <p>Choose your level of ascension.</p>
                 </div>
-                <div class="max-card" style="width: 320px; border-color: var(--accent);">
-                    <div class="access-badge">RECOMMENDED</div>
-                    <h3>Creator</h3>
-                    <div class="access-price" style="margin: 20px 0;">$9<small>/mo</small></div>
-                    <ul class="access-features">
-                        <li><i class="fa-solid fa-check"></i> 50 Credits / Month</li>
-                        <li><i class="fa-solid fa-check"></i> Hi-Res WAV & FLAC 24-bit</li>
-                        <li><i class="fa-solid fa-check"></i> Priority GPU Processing</li>
-                        <li><i class="fa-solid fa-check"></i> Bulk Uploads (Batch)</li>
-                        <li><i class="fa-solid fa-check"></i> Commercial License</li>
-                    </ul>
-                    <button class="btn-primary-glow"
-                        style="width: 100%; margin-top: 30px; background: var(--accent); color: #fff; box-shadow: 0 5px 20px var(--accent-glow);"
-                        onclick="handleLandingSubscribe('pro')">Upgrade Now</button>
+
+                <!-- Toggle -->
+                <div class="billing-toggle"
+                    style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 50px;">
+                    <span style="color: var(--text-sec); font-weight: 600;">Monthly</span>
+                    <div class="toggle-switch" onclick="toggleLandingBilling()"
+                        style="width: 60px; height: 30px; background: var(--bg-panel); border-radius: 30px; position: relative; cursor: pointer; border: 1px solid var(--border-color);">
+                        <div id="lp-bill-knob"
+                            style="width: 24px; height: 24px; background: var(--text-main); border-radius: 50%; position: absolute; top: 2px; left: 3px; transition: 0.3s ease;">
+                        </div>
+                    </div>
+                    <span style="color: var(--text-main); font-weight: 700;">Yearly <span
+                            style="color: #00ff88; font-size: 0.8rem;">(Save 20%)</span></span>
+                </div>
+
+                <!-- Pricing Grid -->
+                <div class="pricing-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; padding: 0 20px;">
+
+                    <!-- GUEST -->
+                    <div class="p-card"
+                        style="background: var(--bg-surface); border-radius: 20px; padding: 30px; border: 1px solid var(--border-color); text-align: left; position: relative;">
+                        <h3 style="color: var(--text-sec); margin-bottom: 10px;">Guest</h3>
+                        <div class="price-wrap" style="margin-bottom: 20px;">
+                            <span style="font-size: 2.5rem; font-weight: 800;">Free</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 30px; min-height: 40px;">
+                            Perfect for testing the waters.</p>
+                        <button class="btn-sub" onclick="toggleAuth('signup')"
+                            style="width: 100%; padding: 12px; border-radius: 10px; background: transparent; border: 1px solid var(--text-main); color: var(--text-main); font-weight: 600; cursor: pointer;">Sign
+                            Up</button>
+                        <ul
+                            style="list-style: none; padding: 0; margin-top: 30px; color: var(--text-main); font-size: 0.9rem;">
+                            <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                    style="color: #00ff88; margin-right: 10px;"></i> 3 Credits / Month</li>
+                            <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                    style="color: #00ff88; margin-right: 10px;"></i> Standard Quality</li>
+                            <li style="margin-bottom: 12px; opacity: 0.5;"><i class="fa-solid fa-xmark"
+                                    style="margin-right: 10px;"></i> Web Player Only</li>
+                        </ul>
+                    </div>
+
+                    <!-- CREATOR (Pro) -->
+                    <div class="p-card pro"
+                        style="background: radial-gradient(circle at top right, rgba(138, 43, 226, 0.2), var(--bg-panel)); border-radius: 20px; padding: 30px; border: 1px solid var(--accent); text-align: left; position: relative; transform: scale(1.05); box-shadow: 0 0 30px rgba(138, 43, 226, 0.15);">
+                        <div
+                            style="position: absolute; top: 0; right: 0; background: var(--accent); color: white; padding: 5px 15px; border-bottom-left-radius: 15px; font-weight: 700; font-size: 0.8rem;">
+                            POPULAR</div>
+                        <h3 style="color: var(--accent); margin-bottom: 10px;">Creator</h3>
+                        <div class="price-wrap" style="margin-bottom: 20px;">
+                            <span class="p-currency" style="vertical-align: top; font-size: 1.2rem;">$</span>
+                            <span class="p-val" id="lp-price-pro" style="font-size: 3rem; font-weight: 800;">19</span>
+                            <span class="p-period lp-period" style="color: var(--text-sec);">/mo</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 30px; min-height: 40px;">For
+                            serious artists and remixers.</p>
+                        <button class="btn-primary" onclick="toggleAuth('signup')"
+                            style="width: 100%; padding: 12px; border-radius: 10px; background: var(--accent); color: white; font-weight: 700; border: none; cursor: pointer;">Get
+                            Started</button>
+                        <ul
+                            style="list-style: none; padding: 0; margin-top: 30px; color: var(--text-main); font-size: 0.9rem;">
+                            <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                    style="color: #00ff88; margin-right: 10px;"></i> 100 Credits / Month</li>
+                            <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                    style="color: #00ff88; margin-right: 10px;"></i> Hi-Res WAV & FLAC</li>
+                            <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                    style="color: #00ff88; margin-right: 10px;"></i> Commercial Rights</li>
+                        </ul>
+                    </div>
+
+                    <!-- STUDIO -->
+                    <div class="p-card"
+                        style="background: var(--bg-surface); border-radius: 20px; padding: 30px; border: 1px solid var(--border-color); text-align: left; position: relative;">
+                        <h3 style="color: white; margin-bottom: 10px;">Studio</h3>
+                        <div class="price-wrap" style="margin-bottom: 20px;">
+                            <span class="p-currency" style="vertical-align: top; font-size: 1.2rem;">$</span>
+                            <span class="p-val" id="lp-price-studio"
+                                style="font-size: 3rem; font-weight: 800;">99</span>
+                            <span class="p-period lp-period" style="color: var(--text-sec);">/mo</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 30px; min-height: 40px;">
+                            Unlimited power for labels.</p>
+                        <button class="btn-sub" onclick="toggleAuth('signup')"
+                            style="width: 100%; padding: 12px; border-radius: 10px; background: transparent; border: 1px solid var(--text-main); color: var(--text-main); font-weight: 600; cursor: pointer;">Join
+                            Now</button>
+                        <ul
+                            style="list-style: none; padding: 0; margin-top: 30px; color: var(--text-main); font-size: 0.9rem;">
+                            <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                    style="color: #00ff88; margin-right: 10px;"></i> Unlimited Stems</li>
+                            <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                    style="color: #00ff88; margin-right: 10px;"></i> Batch Processing</li>
+                            <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                    style="color: #00ff88; margin-right: 10px;"></i> API Access</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>
