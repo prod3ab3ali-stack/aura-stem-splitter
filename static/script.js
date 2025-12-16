@@ -486,10 +486,8 @@ async function processFile(file) {
 
         } catch (e) {
             console.error("Firebase Upload Error", e);
-            showToast("Cloud Upload Failed: " + e.message);
-            // Fallback? No, user explicitly requested Firebase.
-            resetWorkspace();
-            return;
+            showToast("Cloud Bucket not ready. Switching to Local...");
+            // Allow fall-through to Local Upload logic below!
         }
     }
 
