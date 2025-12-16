@@ -503,14 +503,124 @@
 
                 <!-- PANE: STORE -->
                 <div id="pane-store" class="pane hidden">
-                    <header class="pane-header">
-                        <h1>Plans</h1>
-                    </header>
-                    <div class="store-ui">
-                        <div class="s-card">
-                            <h3>Pro Plan</h3>
-                            <div class="price">$9.99</div>
-                            <button class="btn-pill" onclick="subscribe('pro')">Buy Now</button>
+                    <div class="pricing-container" style="max-width: 1000px; margin: 0 auto; text-align: center;">
+
+                        <!-- Header & Copy -->
+                        <div style="margin-bottom: 40px; position: relative;">
+                            <div
+                                style="display: inline-block; background: linear-gradient(90deg, #ff00cc, #333399); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; color: white; margin-bottom: 15px; box-shadow: 0 0 15px rgba(255,0,204,0.5);">
+                                <i class="fa-solid fa-fire"></i> FIRST 100 USERS: 50% OFF
+                            </div>
+                            <h1
+                                style="font-size: 3rem; font-weight: 800; background: -webkit-linear-gradient(#fff, #aaa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;">
+                                Unlock Your Sonic Potential
+                            </h1>
+                            <p style="color: var(--text-sec); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+                                Stop letting technology hold back your creativity. Upgrade to Aura Pro and isolate stems
+                                with
+                                <span style="color: var(--accent);">studio-grade precision</span> in seconds, not hours.
+                            </p>
+                        </div>
+
+                        <!-- Toggle -->
+                        <div class="billing-toggle"
+                            style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 50px;">
+                            <span style="color: var(--text-sec); font-weight: 600;">Monthly</span>
+                            <div class="toggle-switch" onclick="toggleBilling()"
+                                style="width: 60px; height: 30px; background: var(--bg-panel); border-radius: 30px; position: relative; cursor: pointer; border: 1px solid var(--border-color);">
+                                <div id="bill-knob"
+                                    style="width: 24px; height: 24px; background: var(--text-main); border-radius: 50%; position: absolute; top: 2px; left: 3px; transition: 0.3s ease;">
+                                </div>
+                            </div>
+                            <span style="color: var(--text-main); font-weight: 700;">Yearly <span
+                                    style="color: #00ff88; font-size: 0.8rem;">(Save 20%)</span></span>
+                        </div>
+
+                        <!-- Pricing Grid -->
+                        <div class="pricing-grid"
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
+
+                            <!-- STARTER -->
+                            <div class="p-card"
+                                style="background: var(--bg-panel); border-radius: 20px; padding: 30px; border: 1px solid var(--border-color); text-align: left; position: relative; overflow: hidden;">
+                                <h3 style="color: var(--text-sec); margin-bottom: 10px;">Starter</h3>
+                                <div class="price-wrap" style="margin-bottom: 20px;">
+                                    <span style="font-size: 2.5rem; font-weight: 800;">Free</span>
+                                </div>
+                                <p
+                                    style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 30px; min-height: 40px;">
+                                    Perfect for hobbyists and bedroom producers getting started.</p>
+                                <button class="btn-sub disabled"
+                                    style="width: 100%; padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.1); color: var(--text-sec); font-weight: 600; border: none; cursor: default;">Current
+                                    Plan</button>
+                                <ul
+                                    style="list-style: none; padding: 0; margin-top: 30px; color: var(--text-main); font-size: 0.9rem;">
+                                    <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                            style="color: #00ff88; margin-right: 10px;"></i> 3 Stems per month</li>
+                                    <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                            style="color: #00ff88; margin-right: 10px;"></i> Standard Quality</li>
+                                    <li style="margin-bottom: 12px; opacity: 0.5;"><i class="fa-solid fa-xmark"
+                                            style="margin-right: 10px;"></i> No Batch Processing</li>
+                                </ul>
+                            </div>
+
+                            <!-- PRO (Highlighted) -->
+                            <div class="p-card pro"
+                                style="background: radial-gradient(circle at top right, rgba(138, 43, 226, 0.2), var(--bg-panel)); border-radius: 20px; padding: 30px; border: 1px solid var(--accent); text-align: left; position: relative; transform: scale(1.05); box-shadow: 0 0 30px rgba(138, 43, 226, 0.15);">
+                                <div
+                                    style="position: absolute; top: 0; right: 0; background: var(--accent); color: white; padding: 5px 15px; border-bottom-left-radius: 15px; font-weight: 700; font-size: 0.8rem;">
+                                    POPULAR</div>
+                                <h3 style="color: var(--accent); margin-bottom: 10px;">Pro Artist</h3>
+                                <div class="price-wrap" style="margin-bottom: 20px;">
+                                    <span class="p-currency" style="vertical-align: top; font-size: 1.2rem;">$</span>
+                                    <span class="p-val" id="price-pro"
+                                        style="font-size: 3rem; font-weight: 800;">19</span>
+                                    <span class="p-period" style="color: var(--text-sec);">/mo</span>
+                                </div>
+                                <p
+                                    style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 30px; min-height: 40px;">
+                                    For serious artists who need power and speed daily.</p>
+                                <button class="btn-primary" onclick="subscribe('pro')"
+                                    style="width: 100%; padding: 12px; border-radius: 10px; background: var(--accent); color: white; font-weight: 700; border: none; cursor: pointer; transition: 0.2s;">Get
+                                    Pro Access</button>
+                                <ul
+                                    style="list-style: none; padding: 0; margin-top: 30px; color: var(--text-main); font-size: 0.9rem;">
+                                    <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                            style="color: #00ff88; margin-right: 10px;"></i> 100 Stems per month</li>
+                                    <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                            style="color: #00ff88; margin-right: 10px;"></i> High Fidelity (Float32)
+                                    </li>
+                                    <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                            style="color: #00ff88; margin-right: 10px;"></i> Priority Processing</li>
+                                </ul>
+                            </div>
+
+                            <!-- STUDIO -->
+                            <div class="p-card"
+                                style="background: var(--bg-panel); border-radius: 20px; padding: 30px; border: 1px solid var(--border-color); text-align: left; position: relative; overflow: hidden;">
+                                <h3 style="color: white; margin-bottom: 10px;">Studio Label</h3>
+                                <div class="price-wrap" style="margin-bottom: 20px;">
+                                    <span class="p-currency" style="vertical-align: top; font-size: 1.2rem;">$</span>
+                                    <span class="p-val" id="price-studio"
+                                        style="font-size: 3rem; font-weight: 800;">99</span>
+                                    <span class="p-period" style="color: var(--text-sec);">/mo</span>
+                                </div>
+                                <p
+                                    style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 30px; min-height: 40px;">
+                                    Uncapped potential for labels and power users.</p>
+                                <button class="btn-sub" onclick="subscribe('studio')"
+                                    style="width: 100%; padding: 12px; border-radius: 10px; background: transparent; border: 1px solid var(--text-main); color: var(--text-main); font-weight: 600; cursor: pointer;">Contact
+                                    Sales</button>
+                                <ul
+                                    style="list-style: none; padding: 0; margin-top: 30px; color: var(--text-main); font-size: 0.9rem;">
+                                    <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                            style="color: #00ff88; margin-right: 10px;"></i> Unlimited Stems</li>
+                                    <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                            style="color: #00ff88; margin-right: 10px;"></i> Zero Queue Time</li>
+                                    <li style="margin-bottom: 12px;"><i class="fa-solid fa-check"
+                                            style="color: #00ff88; margin-right: 10px;"></i> API Access</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>

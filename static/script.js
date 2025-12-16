@@ -2451,6 +2451,30 @@ async function adminCleanSystem() {
 }
 
 // Dev Helper
+// Billing Toggle
+let isYearly = false;
+window.toggleBilling = () => {
+    isYearly = !isYearly;
+    const knob = document.getElementById('bill-knob');
+    const pricePro = document.getElementById('price-pro');
+    const priceStudio = document.getElementById('price-studio');
+    const periods = document.querySelectorAll('.p-period');
+
+    if (isYearly) {
+        knob.style.left = '33px';
+        knob.style.background = '#00ff88'; // Active Green
+        pricePro.textContent = '15';
+        priceStudio.textContent = '79';
+        periods.forEach(p => p.textContent = '/mo (billed yearly)');
+    } else {
+        knob.style.left = '3px';
+        knob.style.background = 'var(--text-main)';
+        pricePro.textContent = '19';
+        priceStudio.textContent = '99';
+        periods.forEach(p => p.textContent = '/mo');
+    }
+};
+
 window.makeMeAdmin = async () => {
     const res = await fetchHeader('/api/dev/make_admin', 'POST');
     const data = await res.json();
