@@ -8,10 +8,68 @@ import math
 import wave
 from pathlib import Path
 from typing import Optional, List
-import requests # Added for remote file processing
-import time # Added for job start time
-# --- EARLY BOOT LOG ---
-print("BOOT: Starting Matchbox Audio Engine...")
+import firebase_admin
+from firebase_admin import credentials, firestore
+import logging
+
+# --- CONSTANTS (Early Init) ---
+BASE_DIR = Path(__file__).resolve().parent
+
+# --- DB ABSTRACTION ---
+class DatabaseInterface:
+    def get_user(self, user_id): pass
+    def get_user_by_email(self, email): pass
+    def create_user(self, user_id, username, password, email): pass
+    def create_session(self, token, user_id): pass
+    def get_session(self, token): pass
+    # Add other methods as needed...
+    
+# --- CONFIG ---
+SERVICE_KEY = BASE_DIR / "serviceAccountKey.json"
+HAS_FIREBASE = SERVICE_KEY.exists()
+
+db_client = None
+
+if HAS_FIREBASE:
+    print("BOOT: Found serviceAccountKey.json. Using FIRESTORE.")
+    try:
+        cred = credentials.Certificate(str(SERVICE_KEY))
+        firebase_admin.initialize_app(cred)
+        db_client = firestore.client()
+    except Exception as e:
+        print(f"BOOT ERROR: Failed to init Firestore: {e}")
+        HAS_FIREBASE = False
+
+# ... Only defined if HAS_FIREBASE is True
+def firestore_get_user(user_id):
+    if not db_client: return None
+    doc = db_client.collection('users').document(user_id).get()
+    if doc.exists:
+        return doc.to_dict()
+    return None
+
+# Helpers for fallback
+def get_user_compat(user_id):
+    if HAS_FIREBASE:
+        u = firestore_get_user(user_id)
+        if u: return u
+        # Fallback logic if needed? No, Firestore is master.
+        return None
+    else:
+        # SQLite Legacy
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return {
+                "id": row[0], "username": row[1], "password": row[2],
+                "is_admin": bool(row[3]), "credits": row[4], "plan": row[5],
+                "email": row[7] if len(row)>7 else ""
+            }
+        return None
+
 
 
 
@@ -27,7 +85,7 @@ import yt_dlp
 import sys
 
 # --- Constants & Config ---
-BASE_DIR = Path(__file__).resolve().parent
+# BASE_DIR defined at top
 INPUT_DIR = BASE_DIR / "input"
 OUTPUT_DIR = BASE_DIR / "output"
 DB_PATH = BASE_DIR / "data.db"
@@ -134,29 +192,28 @@ def get_current_user(authorization: Optional[str] = Header(None)):
     
     token = authorization.replace("Bearer ", "")
     
+    # 1. Check Session in SQLite (Hybrid Approach: Sessions are local/ephemeral ok?)
+    # ideally sessions should be in Firestore too.
+    # But for now let's keep sessions in sqlite to avoid 1000s of reads on Firestore per request.
+    # We only fetch USER DATA from Firestore.
+    
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT user_id FROM sessions WHERE token = ?", (token,))
     row = c.fetchone()
+    conn.close()
     
     if not row:
-        conn.close()
         raise HTTPException(status_code=401, detail="Invalid Token")
     
     user_id = row[0]
-    c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    user_row = c.fetchone()
-    conn.close()
     
-    if not user_row:
-        raise HTTPException(status_code=401, detail="User not found")
-        
-    # User Row Map: 0:id, 1:username, 2:password, 3:admin, 4:credits, 5:plan, 6:created, 7:email
-    return {
-        "id": user_row[0], "username": user_row[1], "password": user_row[2],
-        "is_admin": bool(user_row[3]), "credits": user_row[4], "plan": user_row[5],
-        "created_at": user_row[6], "email": user_row[7] if len(user_row) > 7 else ""
-    }
+    # 2. Get User Data (Compat)
+    user = get_user_compat(user_id)
+    if not user:
+         raise HTTPException(status_code=401, detail="User Not Found")
+         
+    return user
 
 # --- Auth Routes ---
 @app.post("/api/signup")
@@ -213,51 +270,76 @@ class FireAuth(BaseModel):
 
 @app.post("/api/auth/firebase")
 def firebase_sync(auth: FireAuth):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    
-    # Check if user exists by Email or UID (we use UID as ID here potentially, or keep GUID)
-    # Let's verify by email first to link legacy, or just use UID as key.
-    # Strategy: Store Firebase UID in 'password' field or a new column? 
-    # Let's simply lookup by email.
-    
-    c.execute("SELECT * FROM users WHERE email = ?", (auth.email,))
-    row = c.fetchone()
-    
-    user_id = None
-    if row:
-        user_id = row[0]
-        # Update UID if needed?
-    else:
-        # Create New Shadow User
-        user_id = str(uuid.uuid4())
-        # Username fallback
-        final_user = auth.username if auth.username else auth.email.split('@')[0]
-        c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                  (user_id, final_user, "firebase_managed", 0, 3, 'free', str(datetime.datetime.now()), auth.email))
+    user_id = auth.uid # Use Firebase UID as the ID
+    final_email = auth.email
+    final_user = auth.username if auth.username else auth.email.split('@')[0]
+
+    if HAS_FIREBASE:
+        # FIRESTORE LOGIC
+        doc_ref = db_client.collection('users').document(user_id)
+        doc = doc_ref.get()
+        
+        if not doc.exists:
+            # Create User
+            new_user = {
+                "id": user_id,
+                "username": final_user,
+                "email": final_email,
+                "credits": 3,
+                "plan": "free",
+                "is_admin": False,
+                "created_at": str(datetime.datetime.now())
+            }
+            doc_ref.set(new_user)
+        else:
+            # Sync Fields (Optional)
+            pass
+            
+        # Create Session (Keep sessions local in SQLite for speed/simplicity)
+        conn = sqlite3.connect(DB_PATH)
+        token = str(uuid.uuid4())
+        conn.execute("INSERT INTO sessions VALUES (?, ?, ?)", (token, user_id, str(datetime.datetime.now())))
         conn.commit()
-    
-    # Create Session
-    token = str(uuid.uuid4())
-    c.execute("INSERT INTO sessions VALUES (?, ?, ?)", (token, user_id, str(datetime.datetime.now())))
-    conn.commit()
-    
-    # Fetch latest data
-    c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    row = c.fetchone()
-    conn.close()
-    
-    return {
-        "token": token,
-        "user": {
-            "id": user_id,
-            "username": row[1],
-            "is_admin": bool(row[3]),
-            "credits": row[4],
-            "plan": row[5],
-            "email": row[7]
+        conn.close()
+        
+        # Return Fresh Data
+        u = doc_ref.get().to_dict()
+        return {"token": token, "user": u}
+
+    else:
+        # SQLITE LEGACY LOGIC
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE email = ?", (auth.email,))
+        row = c.fetchone()
+        
+        if not row:
+            # Create Shadow User
+            c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                      (user_id, final_user, "firebase_managed", 0, 3, 'free', str(datetime.datetime.now()), auth.email))
+            conn.commit()
+        else:
+            user_id = row[0]
+        
+        token = str(uuid.uuid4())
+        c.execute("INSERT INTO sessions VALUES (?, ?, ?)", (token, user_id, str(datetime.datetime.now())))
+        conn.commit()
+        
+        c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        row = c.fetchone()
+        conn.close()
+        
+        return {
+            "token": token,
+            "user": {
+                "id": user_id,
+                "username": row[1],
+                "is_admin": bool(row[3]),
+                "credits": row[4],
+                "plan": row[5],
+                "email": row[7]
+            }
         }
-    }
 
 @app.get("/api/me")
 def get_me(user: dict = Depends(get_current_user)):
