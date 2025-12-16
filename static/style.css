@@ -3692,21 +3692,23 @@ h3 {
     background: var(--border);
 }
 
-/* --- GLASS STACK VISUALIZATION (HIGH VISIBILITY FIX) --- */
+/* --- GLASS STACK 3D (RE-INVENTED: HOLOGRAPHIC FAN) --- */
 .glass-stack-container {
     position: relative;
-    width: 340px;
-    height: 440px;
+    width: 320px;
+    height: 420px;
     transform-style: preserve-3d;
-    transition: transform 0.1s ease-out;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* Smoother damping */
     transform: rotateY(-15deg) rotateX(10deg);
 }
 
 .stack-layer {
     position: absolute;
     inset: 0;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    /* Glassy & Darker by default for contrast */
+    background: rgba(15, 15, 20, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -3716,36 +3718,40 @@ h3 {
     font-size: 1.8rem;
     font-weight: 800;
     color: #fff;
-    box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.3);
-    transition: 0.3s;
-    letter-spacing: 2px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Elastic Pop */
+    transform-origin: center bottom;
+    /* Fan from bottom */
 }
 
-/* LIGHT MODE FIX - HIGH CONTRAST */
+/* LIGHT MODE STACK */
 [data-theme="light"] .stack-layer {
-    background: rgba(255, 255, 255, 0.85);
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    color: #000;
-    box-shadow: 15px 15px 40px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #111;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-/* EXPLOSIVE HOVER EFFECT (INTERESTING) */
+/* GENIUS HOVER: THE FAN SPREAD */
 .glass-stack-container:hover .layer-1 {
-    transform: translateZ(-20px) translateY(10px);
+    transform: translateZ(0px) rotateZ(-10deg) translateY(10px);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .glass-stack-container:hover .layer-2 {
-    transform: translateZ(30px) translateX(40px) translateY(-30px);
+    transform: translateZ(40px) rotateZ(-3deg) translateY(-10px);
 }
 
 .glass-stack-container:hover .layer-3 {
-    transform: translateZ(100px) translateX(90px) translateY(-80px);
+    transform: translateZ(80px) rotateZ(4deg) translateY(-30px);
 }
 
 .glass-stack-container:hover .layer-4 {
-    transform: translateZ(180px) translateX(140px) translateY(-130px);
+    transform: translateZ(120px) rotateZ(12deg) translateY(-60px);
     background: var(--accent);
     color: #fff;
+    box-shadow: 0 0 40px var(--accent-glow);
 }
 
 [data-theme="light"] .glass-stack-container:hover .layer-4 {
@@ -3755,14 +3761,44 @@ h3 {
     box-shadow: 0 10px 40px var(--accent-glow);
 }
 
-/* Auth Padding Fix */
+/* AUTH MODAL FIXES (PIXEL PERFECT) */
 .input-group {
+    position: relative;
     margin-bottom: 12px;
+    /* Tight Spacing */
+    width: 100%;
+}
+
+.input-with-icon i {
+    position: absolute;
+    left: 20px;
+    /* Fixed Left Position */
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-sec);
+    z-index: 10;
+    pointer-events: none;
+    font-size: 0.9rem;
 }
 
 .auth-input {
-    padding: 12px 16px;
-    margin-bottom: 0;
+    width: 100%;
+    padding: 14px 14px 14px 50px !important;
+    /* Padded left to clear Icon */
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    transition: 0.2s;
+    height: 50px;
+    /* Consistent Height */
+}
+
+.auth-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    background: var(--bg-body);
 }
 
 /* Footer Light Mode Force Fix */
