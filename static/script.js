@@ -640,6 +640,8 @@ async function toggleAuth(mode) {
         sidebar.classList.add('open');
     }, 10);
 
+    const emailInput = document.getElementById('auth-email');
+
     // Reset Form
     document.getElementById('auth-form').reset();
 
@@ -650,7 +652,9 @@ async function toggleAuth(mode) {
         tog.setAttribute('onclick', "toggleAuth('signup')");
         document.getElementById('auth-submit').textContent = 'Log In';
         document.getElementById('auth-form').dataset.mode = 'login';
+
         if (emailGroup) emailGroup.style.display = 'none';
+        if (emailInput) emailInput.removeAttribute('required'); // Prevent validation error
     } else {
         title.textContent = 'Create Account';
         msg.textContent = 'Already have an account?';
@@ -658,7 +662,9 @@ async function toggleAuth(mode) {
         tog.setAttribute('onclick', "toggleAuth('login')");
         document.getElementById('auth-submit').textContent = 'Sign Up';
         document.getElementById('auth-form').dataset.mode = 'signup';
+
         if (emailGroup) emailGroup.style.display = 'block';
+        if (emailInput) emailInput.setAttribute('required', 'true'); // Enforce requirement
     }
 }
 
