@@ -1504,62 +1504,7 @@ function stopPlayback() {
 }
 
 // --- WAVEFORM HELPERS ---
-async function loadAndDecode(url) {
-    try {
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        return await audioContext.decodeAudioData(arrayBuffer);
-    } catch (e) {
-        console.error("Decode Error:", e);
-        return null;
-    }
-}
-
-function renderWaveformToOffscreenCanvas(buffer, color, width, height) {
-    const offCvs = document.createElement('canvas');
-    offCvs.width = width;
-    offCvs.height = height;
-    const ctx = offCvs.getContext('2d');
-
-    // Gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, color + '20');
-    gradient.addColorStop(0.5, color);
-    gradient.addColorStop(1, color + '20');
-
-    const data = buffer.getChannelData(0); // Mono
-    const step = Math.ceil(data.length / width);
-    const amp = height / 2;
-
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.moveTo(0, amp);
-
-    for (let i = 0; i < width; i++) {
-        let min = 1.0;
-        let max = -1.0;
-        for (let j = 0; j < step; j++) {
-            const datum = data[(i * step) + j];
-            if (datum < min) min = datum;
-            if (datum > max) max = datum;
-        }
-        ctx.lineTo(i, (1 + min) * amp);
-        ctx.lineTo(i, (1 + max) * amp);
-    }
-
-    ctx.lineTo(width, amp);
-    ctx.fill();
-
-    // Zero Line
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-    ctx.beginPath();
-    ctx.moveTo(0, amp);
-    ctx.lineTo(width, amp);
-    ctx.stroke();
-
-    return offCvs;
-}
+// (Legacy functions removed in favor of renderWaveform)
 
 function drawChanVis(cvs, stemData, color, currentTime, duration) {
     const ctx = cvs.getContext('2d');
