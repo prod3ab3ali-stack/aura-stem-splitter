@@ -1,7 +1,7 @@
 fastapi==0.109.0
 uvicorn==0.27.0
 python-multipart==0.0.6
-firebase-admin==0.0.6
+firebase-admin>=6.0.0
 yt-dlp==2023.11.16
 demucs==4.0.1
 static-ffmpeg==2.5
