@@ -690,25 +690,40 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-        // TODO: REPLACE WITH YOUR FIREBASE CONFIG
-        // The user must provide these keys.
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID",
-            analyticsId: "YOUR_G_ID"
+            apiKey: "AIzaSyDRWUwm06xX2ROWxTGh67ob4-ULCI_5H6g",
+            authDomain: "aura-stem-splitter.firebaseapp.com",
+            projectId: "aura-stem-splitter",
+            storageBucket: "aura-stem-splitter.firebasestorage.app",
+            messagingSenderId: "662501098658",
+            appId: "1:662501098658:web:d0c22887578e7e863b03fb"
         };
 
         // Initialize Firebase
-        // window.firebaseApp = initializeApp(firebaseConfig);
-        // window.firebaseAuth = getAuth(window.firebaseApp);
-        // console.log("Firebase Initialized (Check Config)");
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const storage = getStorage(app);
+
+        // Export to Global Scope for script.js
+        window.firebase = {
+            app,
+            auth,
+            storage,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged,
+            ref,
+            uploadBytes,
+            getDownloadURL
+        };
+
+        console.log("Firebase Initialized: Aura v4");
     </script>
     <script src="script.js?v=7.0"></script>
 </body>
