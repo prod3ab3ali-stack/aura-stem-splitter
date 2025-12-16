@@ -745,61 +745,51 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
     const emailIn = document.getElementById('auth-email') ? document.getElementById('auth-email').value : "";
 
     const btn = document.getElementById('auth-submit');
-
-    // MANUAL VALIDATION (Since novalidate is on)
-    if (!userIn || userIn.trim() === " ") {
-        showToast("Please enter a username", "error");
-        return;
-    }
-    if (!passIn || passIn.trim() === "") {
-        showToast("Please enter a password", "error");
-        return;
-    }
-    if (mode === 'signup') {
-        if (!emailIn || !emailIn.includes('@')) {
-            showToast("Please enter a valid email address", "error");
-            return;
-        }
-    }
-
     const originalText = btn.textContent;
     btn.textContent = '...';
     btn.disabled = true;
 
     try {
-        const endpoint = mode === 'login' ? '/api/login' : '/api/signup';
-        const payload = { username: userIn, password: passIn, email: emailIn };
+        let fbUser;
+        let displayName = userIn || emailIn.split('@')[0];
 
-        const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+        // 1. FIREBASE AUTH
+        if (mode === 'signup') {
+            const credential = await window.firebase.createUserWithEmailAndPassword(window.firebase.auth, emailIn, passIn);
+            fbUser = credential.user;
+        } else {
+            const credential = await window.firebase.signInWithEmailAndPassword(window.firebase.auth, emailIn || userIn, passIn);
+            // Note: Login requires Email in Firebase usually, but user might input username. 
+            // We assume Email for now as we made it required.
+            fbUser = credential.user;
+        }
+
+        console.log("Firebase Auth Success:", fbUser.uid);
+
+        // 2. BACKEND SYNC (Get Session Token)
+        const res = await fetchHeader('/api/auth/firebase', 'POST', {
+            uid: fbUser.uid,
+            email: fbUser.email,
+            username: displayName
         });
+
+        if (!res.ok) throw new Error("Backend Sync Failed");
 
         const data = await res.json();
 
-        if (res.ok) {
-            if (mode === 'signup') {
-                showToast('Account created! Logging in...');
-                await new Promise(r => setTimeout(r, 1000));
-                // Auto login
-                const loginRes = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: userIn, password: passIn })
-                });
-                const loginData = await loginRes.json();
-                handleLoginSuccess(loginData);
-            } else {
-                handleLoginSuccess(data);
-            }
-            closeAuth();
-        } else {
-            showToast(data.detail || 'Error');
-        }
-    } catch (err) {
-        showToast('Connection Error');
-        console.error(err);
+        // 3. COMPLETE LOGIN
+        showToast("Welcome " + data.user.username);
+        handleLoginSuccess(data);
+        closeAuth();
+
+    } catch (e) {
+        console.error("Auth Error", e);
+        let msg = e.message;
+        if (e.code === 'auth/email-already-in-use') msg = "Email already exists";
+        if (e.code === 'auth/wrong-password') msg = "Invalid Password";
+        if (e.code === 'auth/user-not-found') msg = "User not found";
+        if (e.code === 'auth/invalid-email') msg = "Invalid Email";
+        showToast(msg, "error");
     } finally {
         btn.textContent = originalText;
         btn.disabled = false;
@@ -899,6 +889,7 @@ function logout() {
     authToken = null;
     localStorage.removeItem('aura_token');
     currentUser = null;
+    try { window.firebase.signOut(window.firebase.auth); } catch (e) { }
     switchView('landing');
 
     // Reset form

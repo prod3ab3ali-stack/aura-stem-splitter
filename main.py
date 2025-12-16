@@ -206,6 +206,59 @@ def login(auth: UserAuth):
         }
     }
 
+class FireAuth(BaseModel):
+    uid: str
+    email: str
+    username: Optional[str] = "User"
+
+@app.post("/api/auth/firebase")
+def firebase_sync(auth: FireAuth):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    
+    # Check if user exists by Email or UID (we use UID as ID here potentially, or keep GUID)
+    # Let's verify by email first to link legacy, or just use UID as key.
+    # Strategy: Store Firebase UID in 'password' field or a new column? 
+    # Let's simply lookup by email.
+    
+    c.execute("SELECT * FROM users WHERE email = ?", (auth.email,))
+    row = c.fetchone()
+    
+    user_id = None
+    if row:
+        user_id = row[0]
+        # Update UID if needed?
+    else:
+        # Create New Shadow User
+        user_id = str(uuid.uuid4())
+        # Username fallback
+        final_user = auth.username if auth.username else auth.email.split('@')[0]
+        c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                  (user_id, final_user, "firebase_managed", 0, 3, 'free', str(datetime.datetime.now()), auth.email))
+        conn.commit()
+    
+    # Create Session
+    token = str(uuid.uuid4())
+    c.execute("INSERT INTO sessions VALUES (?, ?, ?)", (token, user_id, str(datetime.datetime.now())))
+    conn.commit()
+    
+    # Fetch latest data
+    c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    row = c.fetchone()
+    conn.close()
+    
+    return {
+        "token": token,
+        "user": {
+            "id": user_id,
+            "username": row[1],
+            "is_admin": bool(row[3]),
+            "credits": row[4],
+            "plan": row[5],
+            "email": row[7]
+        }
+    }
+
 @app.get("/api/me")
 def get_me(user: dict = Depends(get_current_user)):
     user_safe = user.copy()
