@@ -1307,19 +1307,20 @@ function loadMixer(title, stems) {
             const ch = cvs.clientHeight || 40;
             cvs.width = cw;
             cvs.height = ch;
-            drawMockWaveform(cvs.getContext('2d'), cw, ch, color, name);
+            drawMockWaveform(cvs.getContext('2d'), cw, ch, color, name); // Ensure name is passed
 
-            // 2. Trigger Background Load for Real Static Waveform
-            // loadAndDecode(url).then(buffer => {
-            //     if (!buffer) return;
-            //     const offRender = renderWaveformToOffscreenCanvas(buffer, color, 800, 100);
-            //     stemsAudio[name].bgCanvas = offRender;
-            // }); 
-            // DISABLING REAL DECODE for speed - Mock is good enough and users prefer speed!
-            // If user wants accurate waveform, we can uncomment. 
-            // But for now, speed is priority per feedback "taking too much time".
+            // 2. Async Real Waveform Generation
+            renderWaveform(url, color).then(bg => {
+                if (stemsAudio[name]) {
+                    stemsAudio[name].bgCanvas = bg;
+                    // Force a redraw
+                    const ctx = cvs.getContext('2d');
+                    // We don't need to manually redraw here, as the loop updates every frame.
+                    // But to be snappy:
+                    drawChanVis(cvs, stemsAudio[name], stemsAudio[name].color, stemsAudio[name].audio.currentTime, stemsAudio[name].audio.duration || globalDuration);
+                }
+            });
 
-            // Interaction: Click to Seek & Play (Sync)
             // Interaction: Click to Seek & Play (Sync)
             cvs.style.cursor = 'crosshair';
             cvs.onclick = async (e) => {
@@ -1366,48 +1367,37 @@ function loadMixer(title, stems) {
     if (seekerInterval) cancelAnimationFrame(seekerInterval);
 
     function updateSeekerLoop() {
-        if (!wsMixer || wsMixer.classList.contains('hidden')) return; // Stop if closed
+        if (!document.getElementById('ws-mixer') || document.getElementById('ws-mixer').classList.contains('hidden')) return;
 
         if (masterState === 'playing' && stemsAudio) {
             const first = Object.values(stemsAudio)[0];
-            if (first && !first.audio.paused) {
+            if (first) {
                 const t = first.audio.currentTime;
                 const d = first.audio.duration || globalDuration;
 
-                // Update Slider if NOT dragging (checking valid state)
-                // We assume user drag stops the update via 'input' event listener logic if we had one
-                // But for now, just update
+                // Update Slider if NOT dragging
+                const seekSlider = document.getElementById('seek-slider');
                 if (seekSlider && document.activeElement !== seekSlider) {
                     seekSlider.value = t;
                 }
 
-                const m = Math.floor(t / 60);
-                const s = Math.floor(t % 60).toString().padStart(2, '0');
-                if (timeDisplay) timeDisplay.textContent = `${m}:${s}`;
-
-                // Draw Visualizers
-                Object.entries(stemsAudio).forEach(([name, stemData]) => {
-                    const strip = document.querySelectorAll('.channel-strip'); // Inefficient selector
-                    // Better: find canvas in loop
-                    // Let's assume drawChanVis handles finding canvas? No, it takes CVS arg.
-                    // We need to store canvas ref in stemsAudio
-                });
+                // Update Time Display
+                const timeDisplay = document.getElementById('time-display');
+                if (timeDisplay) {
+                    const m = Math.floor(t / 60);
+                    const s = Math.floor(t % 60).toString().padStart(2, '0');
+                    timeDisplay.textContent = `${m}:${s}`;
+                }
             }
         }
 
-        // Draw Loop separate from Time Loop? 
-        // We need to redraw Playhead every frame.
+        // Redraw Visuals
         Object.entries(stemsAudio).forEach(([name, stem]) => {
             if (stem.canvas) {
                 const t = stem.audio.currentTime;
                 const d = stem.audio.duration || globalDuration;
-                let color = '#fff';
-                if (STEM_COLORS[name]) color = STEM_COLORS[name];
-                // Vocals etc are not direct keys usually, need mapping
-                // Actually we passed color to drawChanVis...
-                // Let's rely on the fact that stemsAudio has everything?
-                // We need to store color in stemsAudio
-                drawChanVis(stem.canvas, stem, stem.color || '#fff', t, d);
+                let color = stem.color || '#fff';
+                drawChanVis(stem.canvas, stem, color, t, d);
             }
         });
 
@@ -1416,6 +1406,63 @@ function loadMixer(title, stems) {
 
     seekerInterval = requestAnimationFrame(updateSeekerLoop);
 }
+
+// --- Waveform Service ---
+async function renderWaveform(url, color) {
+    try {
+        const resp = await fetch(url);
+        const arrayBuffer = await resp.arrayBuffer();
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+        // Setup Canvas
+        const cvs = document.createElement('canvas');
+        cvs.width = 800; // High res
+        cvs.height = 100;
+        const ctx = cvs.getContext('2d');
+
+        const data = audioBuffer.getChannelData(0); // Mono
+        const step = Math.ceil(data.length / cvs.width);
+        const amp = cvs.height / 2;
+
+        ctx.fillStyle = color;
+
+        // Draw centered bars
+        for (let i = 0; i < cvs.width; i++) {
+            let min = 1.0;
+            let max = -1.0;
+
+            for (let j = 0; j < step; j++) {
+                const datum = data[(i * step) + j];
+                if (datum < min) min = datum;
+                if (datum > max) max = datum;
+            }
+
+            // Normalize height slightly
+            const h = Math.max(2, (max - min) * amp * 1.2);
+            const y = amp - (h / 2);
+
+            // Rounded Caps Style
+            ctx.beginPath();
+            ctx.roundRect(i, y, 2, h, 20); // standard width 2
+            ctx.fill();
+        }
+
+        return cvs;
+    } catch (e) {
+        console.warn("Waveform Gen Failed", e);
+        return null; // Fallback
+    }
+}
+// End renderWaveform
+
+// Ensure explicit global access
+window.renderWaveform = renderWaveform;
+
+// Remaining File content starts here? No, I am replacing up to updateSeekerLoop.
+// Actually updating the nested updateSeekerLoop is risky.
+// I will just replace the "Mock Draw" block and append renderWaveform at the END of the file or outside setupMixer.
+
 
 // Ensure stemsAudio items have canvas refs
 // I need to update the object creation in loadMixer to store canvas and color.
