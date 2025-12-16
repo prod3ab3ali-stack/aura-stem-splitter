@@ -1161,16 +1161,67 @@ def subscribe(plan: str, user: dict = Depends(get_current_user)):
 
 @app.get("/api/admin/users")
 def admin_users(user: dict = Depends(get_current_user)):
-    if not user["is_admin"]:
+    if not user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin only")
     
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute("SELECT id, username, credits, plan, created_at, email FROM users")
-    users = [dict(row) for row in c.fetchall()]
-    conn.close()
+    users = []
+    if HAS_FIREBASE:
+        try:
+            docs = db_client.collection('users').stream()
+            for doc in docs:
+                users.append(doc.to_dict())
+        except: pass
+    
+    # Merge with SQLite or just return what we have (Hybrid view?)
+    # For now, let's just return what we found in Firestore if available, else SQLite
+    if not users:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("SELECT * FROM users")
+        rows = c.fetchall()
+        conn.close()
+        for r in rows:
+            users.append({
+                "id": r[0], "username": r[1],
+                "is_admin": bool(r[3]), "credits": r[4], 
+                "plan": r[5], "created_at": r[6], "email": r[7]
+            })
+            
     return {"users": users}
+
+class AdminUpdate(BaseModel):
+    user_id: str
+    credits: int
+    plan: str
+
+@app.post("/api/admin/update_user")
+def admin_update_user(data: AdminUpdate, admin: dict = Depends(get_current_user)):
+    if not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin only")
+        
+    set_subscription(data.user_id, data.plan, data.credits)
+    return {"message": "User updated"}
+
+@app.post("/api/admin/delete_user")
+def admin_delete_user(payload: dict, admin: dict = Depends(get_current_user)):
+    if not admin.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    target_id = payload.get("user_id")
+    
+    if HAS_FIREBASE:
+        try:
+            db_client.collection('users').document(target_id).delete()
+        except: pass
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("DELETE FROM users WHERE id = ?", (target_id,))
+    conn.execute("DELETE FROM sessions WHERE user_id = ?", (target_id,))
+    conn.execute("DELETE FROM projects WHERE user_id = ?", (target_id,))
+    conn.commit()
+    conn.close()
+    
+    return {"message": "User deleted"}
 
 @app.get("/api/admin/stats")
 def admin_stats(user: dict = Depends(get_current_user)):

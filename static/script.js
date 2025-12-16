@@ -820,7 +820,7 @@ function handleLoginSuccess(data) {
     // 5. Navigate
     switchView('app');
     loadLibrary(); // Now works because authToken is set
-    showToast(`Welcome, ${state.user.username}`);
+    // showToast(`Welcome, ${state.user.username}`); // Removed duplicate toast
 
     // Synced Inputs
     if (state.user.email) document.getElementById('set-email').value = state.user.email;
@@ -2352,13 +2352,40 @@ async function loadAdminData() {
 
         data.users.forEach(u => {
             const tr = document.createElement('tr');
+            tr.className = 'admin-row';
+
+            // Avatar Generator
+            const initial = u.username[0].toUpperCase();
+            const avatarColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+
             tr.innerHTML = `
-                <td>${u.id.substring(0, 8)}...</td>
-                <td><div style="font-weight:700;">${u.username}</div></td>
-                <td>${u.email || '-'}</td>
-                <td>${u.credits}</td>
-                <td><span class="badge ${u.plan === 'pro' ? 'badge-pro' : ''}">${u.plan}</span></td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:32px; height:32px; background:${avatarColor}; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:14px;">${initial}</div>
+                        <div>
+                            <div style="font-weight:700; color:var(--text-primary);">${u.username}</div>
+                            <div style="font-size:11px; color:var(--text-secondary); opacity:0.7;">${u.id.substring(0, 8)}...</div>
+                        </div>
+                    </div>
+                </td>
+                <td>${u.email || '<span style="opacity:0.3">-</span>'}</td>
+                <td>
+                    <input type="number" id="cred-${u.id}" value="${u.credits}" style="width:60px; padding:5px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-secondary); color:var(--text-primary);">
+                </td>
+                <td>
+                    <select id="plan-${u.id}" style="padding:5px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-secondary); color:var(--text-primary);">
+                        <option value="free" ${u.plan === 'free' ? 'selected' : ''}>Free</option>
+                        <option value="pro" ${u.plan === 'pro' ? 'selected' : ''}>Pro</option>
+                        <option value="studio" ${u.plan === 'studio' ? 'selected' : ''}>Studio</option>
+                    </select>
+                </td>
                 <td>${new Date(u.created_at).toLocaleDateString()}</td>
+                <td>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="updateUser('${u.id}')" class="btn-icon" title="Save Changes" style="color:var(--accent-color);"><i class="fa-solid fa-floppy-disk"></i></button>
+                        <button onclick="deleteUser('${u.id}')" class="btn-icon" title="Delete User" style="color:#ff4444;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </td>
             `;
             tbody.appendChild(tr);
         });
@@ -2367,6 +2394,34 @@ async function loadAdminData() {
         showToast("Admin Access Denied", "error");
     }
 }
+
+// Admin Helpers
+window.updateUser = async (uid) => {
+    const credits = parseInt(document.getElementById(`cred-${uid}`).value);
+    const plan = document.getElementById(`plan-${uid}`).value;
+
+    try {
+        const res = await fetchHeader('/api/admin/update_user', 'POST', { user_id: uid, credits, plan });
+        if (res.ok) {
+            showToast("User Updated Successfully", "success");
+        } else {
+            showToast("Update Failed", "error");
+        }
+    } catch (e) { showToast("Error Updating User", "error"); }
+};
+
+window.deleteUser = async (uid) => {
+    if (!confirm("Are you sure you want to delete this user? This cannot be undone.")) return;
+    try {
+        const res = await fetchHeader('/api/admin/delete_user', 'POST', { user_id: uid });
+        if (res.ok) {
+            showToast("User Deleted", "success");
+            loadAdminData(); // Refresh
+        } else {
+            showToast("Delete Failed", "error");
+        }
+    } catch (e) { showToast("Error Deleting User", "error"); }
+};
 
 async function loadAdminStats() {
     try {
