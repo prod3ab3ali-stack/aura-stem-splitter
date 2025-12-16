@@ -684,6 +684,23 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
     const emailIn = document.getElementById('auth-email') ? document.getElementById('auth-email').value : "";
 
     const btn = document.getElementById('auth-submit');
+
+    // MANUAL VALIDATION (Since novalidate is on)
+    if (!userIn || userIn.trim() === " ") {
+        showToast("Please enter a username", "error");
+        return;
+    }
+    if (!passIn || passIn.trim() === "") {
+        showToast("Please enter a password", "error");
+        return;
+    }
+    if (mode === 'signup') {
+        if (!emailIn || !emailIn.includes('@')) {
+            showToast("Please enter a valid email address", "error");
+            return;
+        }
+    }
+
     const originalText = btn.textContent;
     btn.textContent = '...';
     btn.disabled = true;
