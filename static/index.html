@@ -361,8 +361,13 @@
                                 <input type="file" id="file-input" hidden accept="audio/*">
                             </div>
 
-                            <!-- Youtube View -->
-                            <div id="view-youtube" class="view-section hidden">
+                            <!-- Youtube View (LOCKED) -->
+                            <div id="view-youtube" class="view-section hidden"
+                                style="position: relative; opacity: 0.5; pointer-events: none;">
+                                <div
+                                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; background: var(--accent); color: #fff; padding: 10px 20px; border-radius: 20px; font-weight: 800; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                                    COMING SOON
+                                </div>
                                 <div style="margin-bottom:20px; color:#f00; font-size:3rem; opacity:0.8;">
                                     <i class="fa-brands fa-youtube"></i>
                                 </div>
@@ -370,11 +375,8 @@
                                 <div class="hero-input-group">
                                     <input type="text" id="yt-url-input" class="hero-input"
                                         placeholder="Paste YouTube Link...">
-                                    <button class="hero-btn" onclick="processUrl()">Split</button>
+                                    <button class="hero-btn">Split</button>
                                 </div>
-                                <p style="margin-top:20px; color:var(--text-sec); font-size:0.8rem;">
-                                    <i class="fa-solid fa-bolt" style="color:var(--accent);"></i> Ultra-Fast Download
-                                </p>
                             </div>
                         </div>
                     </div>
@@ -631,18 +633,25 @@
         <div class="auth-container">
             <h2 id="auth-title" style="text-align:center;">Welcome</h2>
             <form id="auth-form">
+                <!-- Username -->
                 <div class="input-group input-with-icon">
                     <input type="text" id="auth-user" class="auth-input" placeholder="Username" required>
                     <i class="fa-solid fa-user"></i>
                 </div>
-                <div class="input-group input-with-icon" id="auth-email-group" style="display:none">
-                    <input type="email" id="auth-email" class="auth-input" placeholder="Email Address">
+
+                <!-- Email (Required) -->
+                <div class="input-group input-with-icon" id="auth-email-group">
+                    <input type="email" id="auth-email" class="auth-input" placeholder="Email Address (Required)"
+                        required>
                     <i class="fa-solid fa-envelope"></i>
                 </div>
+
+                <!-- Password -->
                 <div class="input-group input-with-icon">
                     <input type="password" id="auth-pass" class="auth-input" placeholder="Password" required>
                     <i class="fa-solid fa-key"></i>
                 </div>
+
                 <button type="submit" class="btn-block filled" id="auth-submit">Continue</button>
             </form>
             <div class="auth-footer" style="margin-top: 25px; text-align: center;">
@@ -678,6 +687,29 @@
         </div>
     </template>
 
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+
+        // TODO: REPLACE WITH YOUR FIREBASE CONFIG
+        // The user must provide these keys.
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID",
+            analyticsId: "YOUR_G_ID"
+        };
+
+        // Initialize Firebase
+        // window.firebaseApp = initializeApp(firebaseConfig);
+        // window.firebaseAuth = getAuth(window.firebaseApp);
+        // console.log("Firebase Initialized (Check Config)");
+    </script>
     <script src="script.js?v=7.0"></script>
 </body>
 

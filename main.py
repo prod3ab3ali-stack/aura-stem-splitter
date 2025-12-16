@@ -937,10 +937,60 @@ def admin_users(user: dict = Depends(get_current_user)):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("SELECT id, username, credits, plan, created_at FROM users")
+    c.execute("SELECT id, username, credits, plan, created_at, email FROM users")
     users = [dict(row) for row in c.fetchall()]
     conn.close()
     return {"users": users}
+
+@app.get("/api/admin/stats")
+def admin_stats(user: dict = Depends(get_current_user)):
+    if not user["is_admin"]:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    total_users = c.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    conn.close()
+    return {"total_users": total_users}
+
+@app.delete("/api/admin/clean_system")
+def admin_clean_system(user: dict = Depends(get_current_user)):
+    if not user["is_admin"]:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    # 1. Delete Jobs
+    JOBS.clear()
+    
+    # 2. Delete DB Projects
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("DELETE FROM projects")
+    conn.commit()
+    conn.close()
+    
+    # 3. Delete Files (Input/Output)
+    def clean_dir(path: Path):
+        for item in path.glob('*'):
+            if item.is_file() and item.name != ".gitkeep":
+                item.unlink()
+            elif item.is_dir():
+                shutil.rmtree(item)
+    
+    clean_dir(INPUT_DIR)
+    clean_dir(OUTPUT_DIR)
+    
+    # Re-create htdemucs folder
+    (OUTPUT_DIR / "htdemucs").mkdir(exist_ok=True)
+    
+    return {"message": "System Purged"}
+
+@app.post("/api/dev/make_admin")
+def dev_make_admin(user: dict = Depends(get_current_user)):
+    # LOCAL DEV ONLY: Promote current user to admin
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("UPDATE users SET is_admin = 1 WHERE id = ?", (user["id"],))
+    conn.commit()
+    conn.close()
+    return {"message": f"User {user['username']} is now Admin"}
 
 # --- Static Mounts ---
 app.mount("/stems", StaticFiles(directory=OUTPUT_DIR), name="stems")
@@ -949,4 +999,5 @@ app.mount("/", StaticFiles(directory=BASE_DIR / "static", html=True), name="stat
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=3000)
+    # Changed default port to 3001 for local dev
+    uvicorn.run(app, host="0.0.0.0", port=3001)

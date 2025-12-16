@@ -22,6 +22,16 @@ let masterState = 'stopped';
 let currentTheme = localStorage.getItem('aura_theme') || 'light';
 
 const API_BASE = '/api';
+const AUTH_HEADER = () => ({ 'Authorization': `Bearer ${localStorage.getItem('aura_token')}` });
+
+async function fetchHeader(endpoint, method = 'GET', body = null) {
+    const opts = {
+        method,
+        headers: { ...AUTH_HEADER(), 'Content-Type': 'application/json' }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    return fetch(endpoint.startsWith('/api') ? endpoint : API_BASE + endpoint, opts);
+}
 
 // --- DOM References ---
 const viewLanding = document.getElementById('view-landing');
@@ -1689,13 +1699,33 @@ async function deleteProject(e, pid) {
 }
 
 async function loadAdmin() {
-    const table = document.getElementById('admin-list');
-    if (!table) return;
+    loadAdminStats(); // Load Stats Cards (Defined at bottom)
+
     try {
-        const res = await fetch(`${API_BASE} /admin/users`, { headers: { 'Authorization': `Bearer ${authToken} ` } });
+        const res = await fetchHeader('/api/admin/users');
         const data = await res.json();
-        table.innerHTML = data.users.map(u => `< tr ><td>${u.username}</td><td>${u.credits}</td><td>${u.plan}</td></tr > `).join('');
-    } catch (e) { table.innerHTML = 'Access Denied'; }
+
+        if (!res.ok) throw new Error(data.detail);
+
+        const tbody = document.getElementById('admin-list');
+        tbody.innerHTML = '';
+
+        data.users.forEach(u => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span style="font-family:monospace; opacity:0.7">${u.id.substring(0, 8)}</span></td>
+                <td><div style="font-weight:700;">${u.username}</div></td>
+                <td>${u.email || '-'}</td>
+                <td>${u.credits}</td>
+                <td><span class="badge ${u.plan === 'pro' ? 'badge-pro' : ''}">${u.plan}</span></td>
+                <td>${new Date(u.created_at).toLocaleDateString()}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (e) {
+        console.error("Admin Load Error", e);
+        showToast("Admin Access Denied", "error");
+    }
 }
 
 // --- Payment System ---
@@ -2226,3 +2256,69 @@ function initMaximalistEffects() {
         });
     });
 }
+
+// --- Admin Functions ---
+async function loadAdminData() {
+    loadAdminStats(); // Load Stats Cards
+
+    try {
+        const res = await fetchHeader('/api/admin/users');
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.detail);
+
+        const tbody = document.getElementById('admin-list');
+        tbody.innerHTML = '';
+
+        data.users.forEach(u => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${u.id.substring(0, 8)}...</td>
+                <td><div style="font-weight:700;">${u.username}</div></td>
+                <td>${u.email || '-'}</td>
+                <td>${u.credits}</td>
+                <td><span class="badge ${u.plan === 'pro' ? 'badge-pro' : ''}">${u.plan}</span></td>
+                <td>${new Date(u.created_at).toLocaleDateString()}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (e) {
+        console.error("Admin Load Error", e);
+        showToast("Admin Access Denied", "error");
+    }
+}
+
+async function loadAdminStats() {
+    try {
+        const res = await fetchHeader('/api/admin/stats');
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById('adm-total-users').textContent = data.total_users;
+        }
+    } catch (e) { console.log("Stats error", e); }
+}
+
+async function adminCleanSystem() {
+    if (!confirm("WARNING: This will delete ALL projects, files, and reset the system. Are you sure?")) return;
+
+    try {
+        const res = await fetchHeader('/api/admin/clean_system', 'DELETE');
+        const data = await res.json();
+        if (res.ok) {
+            showToast("System Purged Successfully", "success");
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showToast("Error: " + data.detail, "error");
+        }
+    } catch (e) {
+        showToast("Request Failed", "error");
+    }
+}
+
+// Dev Helper
+window.makeMeAdmin = async () => {
+    const res = await fetchHeader('/api/dev/make_admin', 'POST');
+    const data = await res.json();
+    alert(data.message);
+    window.location.reload();
+};
