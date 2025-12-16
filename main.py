@@ -345,10 +345,20 @@ def firebase_sync(auth: FireAuth):
     row = c.fetchone()
     
     if not row:
-        # Create Shadow User
-        c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                  (user_id, final_user, "firebase_managed", 0, 3, 'free', str(datetime.datetime.now()), auth.email))
-        conn.commit()
+        # Check by Username to prevent IntegrityError (Duplicate Username)
+        c.execute("SELECT * FROM users WHERE username = ?", (final_user,))
+        existing_chk = c.fetchone()
+        
+        if existing_chk:
+             # Link existing user to this Firebase Email
+             user_id = existing_chk[0]
+             c.execute("UPDATE users SET email = ? WHERE id = ?", (auth.email, user_id))
+             conn.commit()
+        else:
+            # Create Shadow User
+            c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                      (user_id, final_user, "firebase_managed", 0, 3, 'free', str(datetime.datetime.now()), auth.email))
+            conn.commit()
     else:
         user_id = row[0]
     
