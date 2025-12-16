@@ -4860,62 +4860,33 @@ h3 {
     font-variant-numeric: tabular-nums;
 }
 
-/* --- MAXIMALIST / GROOVY DESIGN SYSTEM --- */
+/* --- MAXIMALIST STYLES (REMOVED CONFLICTS) --- */
 
-/* 1. Global Dithering Texture */
+/* 1. Global Dithering Texture - Disabled per user request */
 .dither-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 9000;
-    pointer-events: none;
-    opacity: 0.08;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    mix-blend-mode: overlay;
+    display: none;
 }
 
-/* 2. Fluid Gradient Background Animation */
-@keyframes gradient-roll {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
-}
-
+/* 2. Background - Force Variable Use */
 .groovy-gradient-bg {
-    background: linear-gradient(-45deg, #111, #1a0b2e, #2e0b1f, #111);
-    background-size: 400% 400%;
-    animation: gradient-roll 15s ease infinite;
+    background: var(--bg-body) !important;
+    animation: none;
 }
 
-/* 3. Liquid Text Shader Effect (CSS Only for Performance) */
+/* 3. Liquid Text - Use Global Vars (No Pink) */
 .liquid-text {
     background: linear-gradient(to right,
             var(--text-main) 20%,
-            var(--accent) 30%,
-            #ec4899 70%,
+            var(--accent) 50%,
             var(--text-main) 80%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     text-fill-color: transparent;
     background-size: 200% auto;
-    animation: shine 5s linear infinite;
+    animation: shine 6s linear infinite;
     font-weight: 800;
-    /* Responsive Sizing */
-    font-size: clamp(2.5rem, 5vw, 5rem);
     width: 100%;
-    word-break: break-word;
-    /* Prevent overflow */
 }
 
 @keyframes shine {
