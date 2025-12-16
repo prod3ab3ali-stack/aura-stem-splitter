@@ -56,22 +56,21 @@ def get_user_compat(user_id):
     if HAS_FIREBASE:
         u = firestore_get_user(user_id)
         if u: return u
-        # Fallback logic if needed? No, Firestore is master.
-        return None
-    else:
-        # SQLite Legacy
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-        row = c.fetchone()
-        conn.close()
-        if row:
-             return {
-                "id": row[0], "username": row[1], "password": row[2],
-                "is_admin": bool(row[3]), "credits": row[4], "plan": row[5],
-                "email": row[7] if len(row)>7 else ""
-            }
-        return None
+        # Fallback to SQLite
+    
+    # SQLite Legacy
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    row = c.fetchone()
+    conn.close()
+    if row:
+         return {
+            "id": row[0], "username": row[1], "password": row[2],
+            "is_admin": bool(row[3]), "credits": row[4], "plan": row[5],
+            "email": row[7] if len(row)>7 else ""
+        }
+    return None
 
 def deduct_credit(user_id):
     if HAS_FIREBASE:
