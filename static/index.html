@@ -221,46 +221,38 @@
         </div>
 
         <!-- SECTION 4: ACCESS (Pricing) -->
-        <section id="pricing" class="section scroll-hidden" style="padding-bottom: 120px;">
+        <section id="pricing" class="section scroll-hidden" style="padding-bottom: 100px;">
             <div class="section-head centered">
-                <h2 class="groovy-font text-gradient">Get Access</h2>
-                <p style="opacity: 0.7; max-width: 500px; margin: 10px auto;">Choose your level of ascension. Cancel
-                    anytime.</p>
+                <h2 class="groovy-font">Get Access</h2>
+                <p>Choose your level of ascension.</p>
             </div>
-
-            <div class="access-grid" style="gap: 40px; align-items: stretch;">
-
-                <!-- Card 1: Guest -->
-                <div class="max-card pricing-card">
-                    <div class="pc-header">
-                        <h3 class="pc-title">Guest</h3>
-                        <div class="pc-price">Free</div>
-                        <p class="pc-desc">For casual experimentation.</p>
-                    </div>
-                    <ul class="pc-features">
-                        <li><i class="fa-solid fa-check"></i> 3 Free Credits</li>
+            <!-- Reusing Access Grid but with Max Cards -->
+            <div class="access-grid">
+                <div class="max-card" style="width: 320px;">
+                    <h3>Guest</h3>
+                    <div class="access-price" style="margin: 20px 0;">Free</div>
+                    <ul class="access-features">
+                        <li><i class="fa-solid fa-check"></i> 3 Credits / Month</li>
                         <li><i class="fa-solid fa-check"></i> Standard Quality</li>
-                        <li><i class="fa-solid fa-check"></i> Basic Separation (2 Stems)</li>
+                        <li><i class="fa-solid fa-check"></i> MP3 Output</li>
                     </ul>
-                    <button class="btn-glass outline full-width" onclick="toggleAuth('signup')">Start Free</button>
+                    <button class="btn-primary-glow"
+                        style="width: 100%; margin-top: auto; background: transparent; border: 1px solid var(--border); color: var(--text-main);"
+                        onclick="toggleAuth('signup')">Start</button>
                 </div>
-
-                <!-- Card 2: Creator -->
-                <div class="max-card pricing-card featured neon-border">
-                    <div class="pc-badge">RECOMMENDED</div>
-                    <div class="pc-header">
-                        <h3 class="pc-title">Creator</h3>
-                        <div class="pc-price">$9<small>/mo</small></div>
-                        <p class="pc-desc">For serious producers & DJs.</p>
-                    </div>
-                    <ul class="pc-features">
-                        <li><i class="fa-solid fa-check"></i> 50 Credits / mo</li>
-                        <li><i class="fa-solid fa-check"></i> Hi-Res WAV Downloads</li>
-                        <li><i class="fa-solid fa-check"></i> Full 4-Stem Separation</li>
+                <div class="max-card" style="width: 320px; border-color: var(--accent);">
+                    <div class="access-badge">RECOMMENDED</div>
+                    <h3>Creator</h3>
+                    <div class="access-price" style="margin: 20px 0;">$9<small>/mo</small></div>
+                    <ul class="access-features">
+                        <li><i class="fa-solid fa-check"></i> 50 Credits / Month</li>
+                        <li><i class="fa-solid fa-check"></i> Hi-Res WAV & FLAC</li>
                         <li><i class="fa-solid fa-check"></i> Priority Processing</li>
+                        <li><i class="fa-solid fa-check"></i> Bulk Uploads</li>
                     </ul>
-                    <button class="btn-primary-glow full-width" onclick="handleLandingSubscribe('pro')">Ascend
-                        Now</button>
+                    <button class="btn-primary-glow"
+                        style="width: 100%; margin-top: 30px; background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow);"
+                        onclick="handleLandingSubscribe('pro')">Ascend</button>
                 </div>
             </div>
         </section>
