@@ -43,9 +43,12 @@ if HAS_FIREBASE:
 # ... Only defined if HAS_FIREBASE is True
 def firestore_get_user(user_id):
     if not db_client: return None
-    doc = db_client.collection('users').document(user_id).get()
-    if doc.exists:
-        return doc.to_dict()
+    try:
+        doc = db_client.collection('users').document(user_id).get()
+        if doc.exists:
+            return doc.to_dict()
+    except Exception as e:
+        print(f"Firestore Read Error: {e}")
     return None
 
 # Helpers for fallback
@@ -72,24 +75,29 @@ def get_user_compat(user_id):
 
 def deduct_credit(user_id):
     if HAS_FIREBASE:
-        # Transactional would be better but simple increment is fine for now
-        ref = db_client.collection('users').document(user_id)
-        ref.update({"credits": firestore.Increment(-1)})
-    else:
-        conn = sqlite3.connect(DB_PATH)
-        conn.execute("UPDATE users SET credits = credits - 1 WHERE id = ?", (user_id,))
-        conn.commit()
-        conn.close()
+        try:
+            ref = db_client.collection('users').document(user_id)
+            ref.update({"credits": firestore.Increment(-1)})
+            return
+        except: pass # Fallback to SQLite just in case?
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("UPDATE users SET credits = credits - 1 WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
 
 def set_subscription(user_id, plan, credits):
     if HAS_FIREBASE:
-        ref = db_client.collection('users').document(user_id)
-        ref.update({"plan": plan, "credits": credits})
-    else:
-        conn = sqlite3.connect(DB_PATH)
-        conn.execute("UPDATE users SET credits = ?, plan = ? WHERE id = ?", (credits, plan, user_id))
-        conn.commit()
-        conn.close()
+        try:
+            ref = db_client.collection('users').document(user_id)
+            ref.update({"plan": plan, "credits": credits})
+            return
+        except: pass
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("UPDATE users SET credits = ?, plan = ? WHERE id = ?", (credits, plan, user_id))
+    conn.commit()
+    conn.close()
 
 
 
@@ -296,71 +304,74 @@ def firebase_sync(auth: FireAuth):
     final_user = auth.username if auth.username else auth.email.split('@')[0]
 
     if HAS_FIREBASE:
-        # FIRESTORE LOGIC
-        doc_ref = db_client.collection('users').document(user_id)
-        doc = doc_ref.get()
-        
-        if not doc.exists:
-            # Create User
-            new_user = {
-                "id": user_id,
-                "username": final_user,
-                "email": final_email,
-                "credits": 3,
-                "plan": "free",
-                "is_admin": False,
-                "created_at": str(datetime.datetime.now())
-            }
-            doc_ref.set(new_user)
-        else:
-            # Sync Fields (Optional)
-            pass
+        # FIRESTORE LOGIC with Fallback
+        try:
+            doc_ref = db_client.collection('users').document(user_id)
+            doc = doc_ref.get()
             
-        # Create Session (Keep sessions local in SQLite for speed/simplicity)
-        conn = sqlite3.connect(DB_PATH)
-        token = str(uuid.uuid4())
-        conn.execute("INSERT INTO sessions VALUES (?, ?, ?)", (token, user_id, str(datetime.datetime.now())))
-        conn.commit()
-        conn.close()
-        
-        # Return Fresh Data
-        u = doc_ref.get().to_dict()
-        return {"token": token, "user": u}
-
-    else:
-        # SQLITE LEGACY LOGIC
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE email = ?", (auth.email,))
-        row = c.fetchone()
-        
-        if not row:
-            # Create Shadow User
-            c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                      (user_id, final_user, "firebase_managed", 0, 3, 'free', str(datetime.datetime.now()), auth.email))
+            if not doc.exists:
+                # Create User
+                new_user = {
+                    "id": user_id,
+                    "username": final_user,
+                    "email": final_email,
+                    "credits": 3,
+                    "plan": "free",
+                    "is_admin": False,
+                    "created_at": str(datetime.datetime.now())
+                }
+                doc_ref.set(new_user)
+            else:
+                pass
+                
+            # Create Session (Local)
+            conn = sqlite3.connect(DB_PATH)
+            token = str(uuid.uuid4())
+            conn.execute("INSERT INTO sessions VALUES (?, ?, ?)", (token, user_id, str(datetime.datetime.now())))
             conn.commit()
-        else:
-            user_id = row[0]
-        
-        token = str(uuid.uuid4())
-        c.execute("INSERT INTO sessions VALUES (?, ?, ?)", (token, user_id, str(datetime.datetime.now())))
+            conn.close()
+            
+            u = doc_ref.get().to_dict()
+            return {"token": token, "user": u}
+
+        except Exception as e:
+            print(f"FIREBASE ERROR (Falling back to SQLite): {e}")
+            # Fallthrough to SQLite logic below
+            pass
+
+    # SQLITE LEGACY LOGIC (Fallback)
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT * FROM users WHERE email = ?", (auth.email,))
+    row = c.fetchone()
+    
+    if not row:
+        # Create Shadow User
+        c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                  (user_id, final_user, "firebase_managed", 0, 3, 'free', str(datetime.datetime.now()), auth.email))
         conn.commit()
-        
-        c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-        row = c.fetchone()
-        conn.close()
-        
-        return {
-            "token": token,
-            "user": {
-                "id": user_id,
-                "username": row[1],
-                "is_admin": bool(row[3]),
-                "credits": row[4],
-                "plan": row[5],
-                "email": row[7]
-            }
+    else:
+        user_id = row[0]
+    
+    token = str(uuid.uuid4())
+    c.execute("INSERT INTO sessions VALUES (?, ?, ?)", (token, user_id, str(datetime.datetime.now())))
+    conn.commit()
+    
+    c.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    row = c.fetchone()
+    conn.close()
+    
+    return {
+        "token": token,
+        "user": {
+            "id": user_id,
+            "username": row[1],
+            "is_admin": bool(row[3]),
+            "credits": row[4],
+            "plan": row[5],
+            "email": row[7]
         }
+    }
 
 @app.get("/api/me")
 def get_me(user: dict = Depends(get_current_user)):
