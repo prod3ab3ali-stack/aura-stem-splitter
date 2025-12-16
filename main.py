@@ -63,12 +63,33 @@ def get_user_compat(user_id):
         row = c.fetchone()
         conn.close()
         if row:
-            return {
+             return {
                 "id": row[0], "username": row[1], "password": row[2],
                 "is_admin": bool(row[3]), "credits": row[4], "plan": row[5],
                 "email": row[7] if len(row)>7 else ""
             }
         return None
+
+def deduct_credit(user_id):
+    if HAS_FIREBASE:
+        # Transactional would be better but simple increment is fine for now
+        ref = db_client.collection('users').document(user_id)
+        ref.update({"credits": firestore.Increment(-1)})
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute("UPDATE users SET credits = credits - 1 WHERE id = ?", (user_id,))
+        conn.commit()
+        conn.close()
+
+def set_subscription(user_id, plan, credits):
+    if HAS_FIREBASE:
+        ref = db_client.collection('users').document(user_id)
+        ref.update({"plan": plan, "credits": credits})
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        conn.execute("UPDATE users SET credits = ?, plan = ? WHERE id = ?", (credits, plan, user_id))
+        conn.commit()
+        conn.close()
 
 
 
@@ -703,14 +724,17 @@ def run_separation_pipeline(job_id: str, input_path: Path, meta_title: str, user
                 final_stems[f.stem] = f"/stems/htdemucs/{created_folder.name}/{f.name}"
 
         # 4. Save DB
+        deduct_credit(user["id"])
         conn = sqlite3.connect(DB_PATH)
-        conn.execute("UPDATE users SET credits = credits - 1 WHERE id = ?", (user["id"],))
+        # conn.execute("UPDATE users SET credits = credits - 1 WHERE id = ?", (user["id"],)) # Handled by helper
         safe_human_name = Path(meta_title).stem
         current_time = str(datetime.datetime.now())
         conn.execute("INSERT INTO projects VALUES (?, ?, ?, ?, ?)",
                      (internal_id, user["id"], safe_human_name, internal_id, current_time))
         conn.commit()
         conn.close()
+
+
 
         result = {
             "message": "Success",
@@ -1111,10 +1135,8 @@ def subscribe(plan: str, user: dict = Depends(get_current_user)):
     credits_map = {'free': 10, 'pro': 100, 'studio': 99999}
     credits_to_set = credits_map.get(plan, 10)
     
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("UPDATE users SET credits = ?, plan = ? WHERE id = ?", (credits_to_set, plan, user["id"]))
-    conn.commit()
-    conn.close()
+    set_subscription(user["id"], plan, credits_to_set)
+    
     return {"message": f"Subscribed to {plan}", "credits_left": credits_to_set}
 
 @app.get("/api/admin/users")
