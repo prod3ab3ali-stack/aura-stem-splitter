@@ -433,6 +433,8 @@ async function processFile(file) {
     const uText = document.getElementById('upload-percent');
 
     // --- FIREBASE UPLOAD STRATEGY ---
+    // DISABLED BY USER REQUEST (Local File Handling Preferred to avoid CORS/Complexity)
+    /*
     if (window.firebase && window.firebase.storage) {
         try {
             console.log("Starting Firebase Upload...");
@@ -490,6 +492,8 @@ async function processFile(file) {
             // Allow fall-through to Local Upload logic below!
         }
     }
+    */
+    // FALLTHROUGH TO LOCAL UPLOAD 👇
 
     // FALLBACK (Original Local Upload)
     const formData = new FormData();
