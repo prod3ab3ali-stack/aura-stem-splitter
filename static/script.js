@@ -746,8 +746,6 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
     const mode = e.target.dataset.mode;
     const userIn = document.getElementById('auth-user').value;
     const passIn = document.getElementById('auth-pass').value;
-    const emailIn = document.getElementById('auth-email') ? document.getElementById('auth-email').value : "";
-
     const btn = document.getElementById('auth-submit');
     const originalText = btn.textContent;
     btn.textContent = '...';
@@ -755,16 +753,19 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
 
     try {
         let fbUser;
-        let displayName = userIn || emailIn.split('@')[0];
+        // FORCE USERNAME-ONLY FLOW
+        // Construct a consistent fake email
+        const cleanUser = userIn.trim().toLowerCase().replace(/\s+/g, '');
+        const generatedEmail = `${cleanUser}@aura.app`;
+
+        console.log(`Attempting Auth as: ${generatedEmail}`);
 
         // 1. FIREBASE AUTH
         if (mode === 'signup') {
-            const credential = await window.firebase.createUserWithEmailAndPassword(window.firebase.auth, emailIn, passIn);
+            const credential = await window.firebase.createUserWithEmailAndPassword(window.firebase.auth, generatedEmail, passIn);
             fbUser = credential.user;
         } else {
-            const credential = await window.firebase.signInWithEmailAndPassword(window.firebase.auth, emailIn || userIn, passIn);
-            // Note: Login requires Email in Firebase usually, but user might input username. 
-            // We assume Email for now as we made it required.
+            const credential = await window.firebase.signInWithEmailAndPassword(window.firebase.auth, generatedEmail, passIn);
             fbUser = credential.user;
         }
 
@@ -774,7 +775,7 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
         const res = await fetchHeader('/api/auth/firebase', 'POST', {
             uid: fbUser.uid,
             email: fbUser.email,
-            username: displayName
+            username: userIn.trim()
         });
 
         if (!res.ok) throw new Error("Backend Sync Failed");
@@ -789,10 +790,10 @@ document.getElementById('auth-form').addEventListener('submit', async (e) => {
     } catch (e) {
         console.error("Auth Error", e);
         let msg = e.message;
-        if (e.code === 'auth/email-already-in-use') msg = "Email already exists";
+        if (e.code === 'auth/email-already-in-use') msg = "Username already taken"; // Mapped from email
         if (e.code === 'auth/wrong-password') msg = "Invalid Password";
         if (e.code === 'auth/user-not-found') msg = "User not found";
-        if (e.code === 'auth/invalid-email') msg = "Invalid Email";
+        if (e.code === 'auth/invalid-email') msg = "Invalid Username format";
         showToast(msg, "error");
     } finally {
         btn.textContent = originalText;
