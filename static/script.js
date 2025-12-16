@@ -1751,7 +1751,7 @@ async function seekTo(time) {
 
 async function createTestProject() {
     try {
-        const res = await fetch(`${API_BASE} /debug/test_project`, {
+        const res = await fetch(`${API_BASE}/debug/test_project`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${authToken} ` }
         });
@@ -1771,7 +1771,7 @@ async function deleteProject(e, pid) {
     e.stopPropagation();
 
     try {
-        const res = await fetch(`${API_BASE} /projects/${pid} `, {
+        const res = await fetch(`${API_BASE}/projects/${pid} `, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${authToken} ` }
         });
