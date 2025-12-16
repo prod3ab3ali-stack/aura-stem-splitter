@@ -71,49 +71,62 @@
         </nav>
 
         <!-- Interactive Hero (Enhanced Text) -->
-        <header class="hero-split">
+        <section class="hero-split">
             <div class="hero-left">
-                <div class="hero-badge fade-in" style="background: var(--accent); color:black; font-weight:800;">V4.0
-                    MAXIMALIST</div>
-                <!-- FLUID TEXT SHADER -->
+                <div class="fade-in">
+                    <span class="hero-badge"><i class="fa-solid fa-sparkles"></i> AURA V4.0 // QUANTUM AUDIO</span>
+                </div>
+
                 <h1 class="hero-title-split fade-in delay-1">
-                    Unleash<br>
-                    <span class="liquid-text">The Music</span><br>
+                    Unleash <br>
+                    <span class="liquid-text">The Music</span> <br>
                     Within.
                 </h1>
-                <p class="hero-sub-split fade-in delay-2" style="font-size: 1.2rem; max-width: 500px;">
-                    Experience audio separation through a kaleidoscope of neural networks.
-                    Groovy separation. Maximum fidelity.
+
+                <p class="hero-sub-split fade-in delay-2">
+                    Deconstruct any song into its primal elements.
+                    Experience <span style="color:var(--accent); font-weight:700;">crystal clear</span> vocal isolation
+                    and drum separation powered by next-gen neural networks.
                 </p>
+
                 <div class="hero-actions fade-in delay-3">
-                    <button class="btn-primary-glow" onclick="toggleAuth('signup')"
-                        style="border-radius: 50px; padding: 15px 40px; font-weight: 800;">
+                    <button class="btn-primary-glow"
+                        onclick="document.getElementById('demo-section').scrollIntoView({behavior: 'smooth'})">
                         Start Splitting
                     </button>
-                    <button class="btn-text-glow" onclick="scrollToDemo()">
-                        <i class="fa-solid fa-play"></i> Listen
+                    <button class="btn-text-glow">
+                        <i class="fa-solid fa-play"></i> Listen to Demos
                     </button>
                 </div>
-                <!-- Stats (Kept) -->
+
                 <div class="hero-stats fade-in delay-4">
-                    <div class="stat-item"><span class="stat-num">4.0</span><span class="stat-lbl">Model Ver</span>
+                    <div class="stat-item">
+                        <div class="stat-num">4.0</div>
+                        <div class="stat-lbl">Model Ver</div>
                     </div>
-                    <div class="stat-item"><span class="stat-num">99%</span><span class="stat-lbl">Accuracy</span></div>
-                    <div class="stat-item"><span class="stat-num">0ms</span><span class="stat-lbl">Latency</span></div>
+                    <div class="stat-item">
+                        <div class="stat-num">99%</div>
+                        <div class="stat-lbl">Accuracy</div>
+                    </div>
+                    <!-- Simulating Latency for Tech Vibe -->
+                    <div class="stat-item">
+                        <div class="stat-num">0ms</div>
+                        <div class="stat-lbl">Latency</div>
+                    </div>
                 </div>
             </div>
-            <!-- Hero Right (3D Glass Stack - Kept) -->
+
             <div class="hero-right fade-in delay-2">
-                <div class="glass-stack-container">
-                    <!-- ... existing stack content ... -->
-                    <div class="stack-layer layer-1">VOCALS</div>
-                    <div class="stack-layer layer-2">OTHER</div>
-                    <div class="stack-layer layer-3">BASS</div>
-                    <div class="stack-layer layer-4">DRUMS</div>
-                    <div class="hero-ambient-light"></div>
+                <!-- 3D Glass Stack - Updated Visual -->
+                <div class="glass-stack-container" id="glass-stack">
+                    <div class="hero-ambient-light"></div> <!-- New Glow Backing -->
+                    <div class="stack-layer layer-4 p-vocals">VOCALS</div>
+                    <div class="stack-layer layer-3 p-other">OTHER</div>
+                    <div class="stack-layer layer-2 p-bass">BASS</div>
+                    <div class="stack-layer layer-1 p-drums">DRUMS</div>
                 </div>
             </div>
-        </header>
+        </section>
 
         <!-- SECTION 1: SONIC ALCHEMY (Features) -->
         <div class="section-wave" style="background: var(--bg-body);">

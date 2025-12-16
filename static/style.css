@@ -3692,90 +3692,119 @@ h3 {
     background: var(--border);
 }
 
-/* --- 3D LAYER VISUALIZATION --- */
-.layer-stack-3d {
+/* --- GLASS STACK VISUALIZATION (HIGH VISIBILITY FIX) --- */
+.glass-stack-container {
     position: relative;
-    width: 300px;
-    height: 400px;
+    width: 340px;
+    height: 440px;
     transform-style: preserve-3d;
-    transform: rotateX(55deg) rotateZ(-35deg) rotateY(10deg);
-    animation: floatStack 8s ease-in-out infinite;
+    transition: transform 0.1s ease-out;
+    transform: rotateY(-15deg) rotateX(10deg);
 }
 
-@keyframes floatStack {
-
-    0%,
-    100% {
-        transform: rotateX(55deg) rotateZ(-35deg) translateZ(0);
-    }
-
-    50% {
-        transform: rotateX(55deg) rotateZ(-35deg) translateZ(20px);
-    }
-}
-
-.layer-plate {
+.stack-layer {
     position: absolute;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 20px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 800;
     color: #fff;
-    font-weight: 700;
+    box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.3);
+    transition: 0.3s;
     letter-spacing: 2px;
-    backdrop-filter: blur(5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    transition: transform 0.5s;
 }
 
-[data-theme="light"] .layer-plate {
-    background: rgba(255, 255, 255, 0.4);
-    border-color: rgba(0, 0, 0, 0.05);
+/* LIGHT MODE FIX - HIGH CONTRAST */
+[data-theme="light"] .stack-layer {
+    background: rgba(255, 255, 255, 0.6);
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    /* Visible Border */
     color: #000;
+    /* Black Text */
+    box-shadow: 15px 15px 40px rgba(0, 0, 0, 0.1);
+    /* Soft Shadow */
 }
 
-.p-drums {
+[data-theme="light"] .stack-layer:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: #fff;
+    transform: translateZ(20px);
+    /* Pop out */
+}
+
+/* Auth Padding Fix */
+.input-group {
+    margin-bottom: 12px;
+    /* Reduced from 20px+ */
+}
+
+.auth-input {
+    padding: 12px 16px;
+    /* Slightly tighter */
+    margin-bottom: 0;
+    /* Let group handle spacing */
+}
+
+/* Footer Light Mode Fix */
+.mega-footer {
+    background: var(--bg-surface);
+    color: var(--text-main);
+    border-top: 1px solid var(--border);
+}
+
+[data-theme="light"] .mega-footer {
+    background: #f4f4f5;
+    /* Light Grey Surface */
+    color: #09090b;
+}
+
+/* Layer Positioning */
+.layer-1 {
     transform: translateZ(0px);
     z-index: 1;
 }
 
-.p-bass {
-    transform: translateZ(60px);
+.layer-2 {
+    transform: translateZ(50px) translateX(30px) translateY(-30px);
     z-index: 2;
 }
 
-.p-other {
-    transform: translateZ(120px);
+.layer-3 {
+    transform: translateZ(100px) translateX(60px) translateY(-60px);
     z-index: 3;
 }
 
-.p-vocals {
-    transform: translateZ(180px);
+.layer-4 {
+    transform: translateZ(150px) translateX(90px) translateY(-90px);
     z-index: 4;
-    border-color: var(--accent);
-    color: var(--accent);
 }
 
-.layer-plate:hover {
-    background: var(--accent);
-    color: var(--accent-fg);
-}
-
-/* Background Glow */
-.hero-glow-orb {
+/* Product Showcase Blob - Behind the stack */
+.hero-ambient-light {
     position: absolute;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--accent) 0%, transparent 60%);
     opacity: 0.15;
     filter: blur(80px);
-    z-index: -1;
-    transform: translateZ(-100px);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateZ(-200px);
+    border-radius: 50%;
     pointer-events: none;
+}
+
+[data-theme="light"] .hero-ambient-light {
+    opacity: 0.1;
+    background: radial-gradient(circle, #6366f1 0%, transparent 70%);
 }
 
 @media(max-width: 900px) {
