@@ -541,11 +541,11 @@ function initGlassParallax() {
             const dx = (e.clientX - cx) / cx;
             const dy = (e.clientY - cy) / cy;
 
-            // Limit tilt angles
-            const tiltX = 55 + (dy * 10);  // Base 55deg
-            const tiltZ = -35 + (dx * 10); // Base -35deg
+            // Limit tilt angles (Updated for V4 Standing Stack)
+            const tiltY = -15 + (dx * 15);  // Base -15deg (Y-axis)
+            const tiltX = 10 - (dy * 10);   // Base 10deg (X-axis)
 
-            glassStack.style.transform = `rotateX(${tiltX}deg) rotateZ(${tiltZ}deg) rotateY(10deg)`;
+            glassStack.style.transform = `rotateY(${tiltY}deg) rotateX(${tiltX}deg)`;
         });
     }
 }

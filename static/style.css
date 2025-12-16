@@ -3723,47 +3723,59 @@ h3 {
 
 /* LIGHT MODE FIX - HIGH CONTRAST */
 [data-theme="light"] .stack-layer {
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.85);
     border: 2px solid rgba(0, 0, 0, 0.1);
-    /* Visible Border */
     color: #000;
-    /* Black Text */
     box-shadow: 15px 15px 40px rgba(0, 0, 0, 0.1);
-    /* Soft Shadow */
 }
 
-[data-theme="light"] .stack-layer:hover {
+/* EXPLOSIVE HOVER EFFECT (INTERESTING) */
+.glass-stack-container:hover .layer-1 {
+    transform: translateZ(-20px) translateY(10px);
+}
+
+.glass-stack-container:hover .layer-2 {
+    transform: translateZ(30px) translateX(40px) translateY(-30px);
+}
+
+.glass-stack-container:hover .layer-3 {
+    transform: translateZ(100px) translateX(90px) translateY(-80px);
+}
+
+.glass-stack-container:hover .layer-4 {
+    transform: translateZ(180px) translateX(140px) translateY(-130px);
+    background: var(--accent);
+    color: #fff;
+}
+
+[data-theme="light"] .glass-stack-container:hover .layer-4 {
+    background: var(--accent);
+    color: #fff;
     border-color: var(--accent);
-    color: var(--accent);
-    background: #fff;
-    transform: translateZ(20px);
-    /* Pop out */
+    box-shadow: 0 10px 40px var(--accent-glow);
 }
 
 /* Auth Padding Fix */
 .input-group {
     margin-bottom: 12px;
-    /* Reduced from 20px+ */
 }
 
 .auth-input {
     padding: 12px 16px;
-    /* Slightly tighter */
     margin-bottom: 0;
-    /* Let group handle spacing */
 }
 
-/* Footer Light Mode Fix */
+/* Footer Light Mode Force Fix */
 .mega-footer {
     background: var(--bg-surface);
     color: var(--text-main);
     border-top: 1px solid var(--border);
 }
 
-[data-theme="light"] .mega-footer {
-    background: #f4f4f5;
-    /* Light Grey Surface */
-    color: #09090b;
+html[data-theme="light"] .mega-footer,
+body[data-theme="light"] .mega-footer {
+    background: #f4f4f5 !important;
+    color: #09090b !important;
 }
 
 /* Layer Positioning */
