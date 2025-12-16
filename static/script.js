@@ -157,12 +157,18 @@ function startJobPolling(job_id) {
                 updateDashboard();
             }
 
-            const res = await fetch(`${API_BASE}/jobs/${job_id}`);
+            let res;
+            try {
+                res = await fetch(`${API_BASE}/jobs/${job_id}`);
+            } catch (err) {
+                console.warn("Poll Network Error (retrying):", err);
+                return; // Skip this tick
+            }
+
             if (!res.ok) {
                 // Job might be gone?
                 clearInterval(poll);
                 localStorage.removeItem('active_stem_job');
-                // showToast("Job Check Failed"); // Optional
                 return;
             }
             const job = await res.json();
