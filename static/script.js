@@ -166,9 +166,12 @@ function startJobPolling(job_id) {
             }
 
             if (!res.ok) {
-                // Job might be gone?
+                // Job is gone (404)
                 clearInterval(poll);
                 localStorage.removeItem('active_stem_job');
+                console.warn("Job not found, resetting UI");
+                showToast("Previous active job lost (Server Restart?)");
+                resetWorkspace();
                 return;
             }
             const job = await res.json();
@@ -1538,80 +1541,7 @@ function drawChanVis(cvs, stemData, color, currentTime, duration) {
     }
 }
 
-// Procedural Waveform Generator (Visual Trick)
-// --- ULTRA-REALISTIC MOCK WAVEFORM GENERATOR ---
-function drawMockWaveform(ctx, w, h, color, type) {
-    const steps = w / 2; // Resolution
-    const mid = h / 2;
-
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(0, mid);
-
-    // Seeded Random (LCG) for deterministic 'Stable' look
-    let seed = type.length * w;
-    const random = () => {
-        const x = Math.sin(seed++) * 10000;
-        return x - Math.floor(x);
-    };
-
-    // Pattern Configuration
-    let density = 0.5;   // How full the waveform is
-    let burst = 0;       // For vocals (phrasing)
-    let spikiness = 0.1; // For drums
-
-    if (type === 'vocals') { density = 0.3; burst = 0.98; spikiness = 0.3; }
-    if (type === 'drums') { density = 0.1; burst = 0.6; spikiness = 1.0; }
-    if (type === 'bass') { density = 0.9; burst = 0.1; spikiness = 0.05; }
-
-    // Smooth Envelope followers
-    let currentAmp = 0;
-    let isSinging = false; // For vocal gaps
-
-    for (let i = 0; i <= steps; i++) {
-        const x = (i / steps) * w;
-
-        // 1. Generate Base Noise
-        let noise = random();
-
-        // 2. Logic Per Type
-        if (type === 'vocals') {
-            // Random Phrasing (Gaps)
-            if (random() > 0.99) isSinging = !isSinging;
-            if (!isSinging) noise *= 0.1;
-        }
-
-        if (type === 'drums') {
-            // Sharp Transients
-            if (random() > 0.95) noise = 1.0;
-            else noise *= 0.2;
-        }
-
-        // 3. Smoothing (Linear Interpolation)
-        currentAmp += (noise - currentAmp) * 0.5;
-
-        // 4. Draw
-        const height = currentAmp * (h * 0.48) * (isLightMode() ? 1 : 0.9);
-
-        // Mirror visuals
-        ctx.lineTo(x, mid - height);
-        // We will do the bottom half in a second pass or just fill? 
-        // Let's do a symmetric fill for simplicity and look
-    }
-
-    // Draw bottom half mirrored
-    for (let i = steps; i >= 0; i--) {
-        const x = (i / steps) * w;
-        // We need to re-calculate simple noise or store points? 
-        // Storing points is better but let's cheat for speed:
-        // Actually, let's just make it a solid block for "Modern" look
-        ctx.lineTo(x, mid + 1); // Slight thickness center
-    }
-
-    // Standard aesthetic: Mirrored bars are tedious to calculate without array.
-    // Let's use a simpler loop for visual speed:
-    // Just drawing bars is faster and looks cooler:
-}
+// (Old procedural mock removed)
 
 // Redefining for BETTER VISUALS (Bars style)
 function drawMockWaveform(ctx, w, h, color, type) {
